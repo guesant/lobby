@@ -1,8 +1,13 @@
 <script lang="ts">
   import { requiredText } from './validation-primitives.ts';
 
-  let { label, level = 3 }: { label: string | undefined; level?: 2 | 3 | 4 } =
-    $props();
+  let {
+    label,
+    level = 3,
+  }: {
+    label: string | undefined;
+    level?: 2 | 3 | 4;
+  } = $props();
 
   const title = $derived(requiredText(label, 'listing.heading'));
 </script>

@@ -7,7 +7,11 @@
     type EmptyAction,
     type ListingDestination,
   } from './listing-presentation.ts';
-  import { editorialKinds, type EditorialRecord } from './site-data.ts';
+  import {
+    editorialKinds,
+    type EditorialRecord,
+    type LinkDestination,
+  } from './site-data.ts';
 
   let {
     items,
@@ -36,7 +40,7 @@
   const kinds = $derived(
     editorialKinds[sectionID] || [
       ...new Set(
-        items.map((item) => {
+        items.map((item): string => {
           return item.type;
         }),
       ),
@@ -45,28 +49,35 @@
 
   const groups = $derived(
     kinds
-      .map((type) => {
-        return {
+      .map(
+        (
           type,
-          items: items.filter((item) => {
-            return item.type === type;
-          }),
-        };
-      })
-      .filter((group) => {
+        ): {
+          type: string;
+          items: EditorialRecord[];
+        } => {
+          return {
+            type,
+            items: items.filter((item): boolean => {
+              return item.type === type;
+            }),
+          };
+        },
+      )
+      .filter((group): number => {
         return group.items.length;
       }),
   );
 
   const missing = $derived(
-    kinds.filter((type) => {
-      return !items.some((item) => {
+    kinds.filter((type): boolean => {
+      return !items.some((item): boolean => {
         return item.type === type;
       });
     }),
   );
 
-  const fallback = $derived.by(() => {
+  const fallback = $derived.by((): LinkDestination | undefined => {
     if (emptyAction) {
       return destination({
         url: emptyAction.href,
@@ -87,15 +98,15 @@
         />
         <div class="editorial-group-items divided-list">
           {#each group.items as item}<EditorialEntry
-              {item}
-              {ui}
-              {thirdPartyLabel}
-              {locale}
-              {interfaceName}
-              {sectionID}
-              {destination}
-              headingLevel={itemHeadingLevel(headingLevel)}
-            />{/each}
+            {item}
+            {ui}
+            {thirdPartyLabel}
+            {locale}
+            {interfaceName}
+            {sectionID}
+            {destination}
+            headingLevel={itemHeadingLevel(headingLevel)}
+          />{/each}
         </div>
       </section>
     {/each}
@@ -105,17 +116,17 @@
 {#if missing.length || (empty && !items.length)}
   <div class="editorial-empty-state" data-editorial-empty={sectionID}>
     {#if missing.length}{#each missing as type}<p
-          class="editorial-empty"
-          data-empty-kind={type}
-        >
-          {ui[`empty_${type}`] || ui.empty}
-        </p>{/each}{:else}<p class="editorial-empty">{ui.empty}</p>{/if}
+      class="editorial-empty"
+      data-empty-kind={type}
+    >
+      {ui[`empty_${type}`] || ui.empty}
+    </p>{/each}{:else}<p class="editorial-empty">{ui.empty}</p>{/if}
     {#if fallback && emptyAction}<ActionRow
-        title={emptyAction.label}
-        action={fallback}
-        {thirdPartyLabel}
-        {interfaceName}
-        className="editorial-related"
-      />{/if}
+      title={emptyAction.label}
+      action={fallback}
+      {thirdPartyLabel}
+      {interfaceName}
+      className="editorial-related"
+    />{/if}
   </div>
 {/if}

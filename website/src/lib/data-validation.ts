@@ -1,3 +1,4 @@
+import { validateLinks } from './link-contract.ts';
 import { optionalProperty } from './object-fields.ts';
 import type {
   LinkDocument,
@@ -19,275 +20,8 @@ import {
   requiredBoolean,
   requiredText,
   strings,
-  text,
   validateTextMap,
 } from './validation-primitives.ts';
-
-function validateLinks(value: unknown): void {
-  const links = record(value, 'links data');
-
-  const profile = record(links.profile, 'links.profile');
-
-  text(profile.name, 'links.profile.name');
-  text(profile.username, 'links.profile.username');
-  text(profile.birth_date, 'links.profile.birth_date');
-  strings(profile.same_as_links, 'links.profile.same_as_links');
-
-  const site = record(links.site, 'links.site');
-
-  text(site.repository, 'links.site.repository');
-  strings(site.first_party_domains, 'links.site.first_party_domains');
-
-  const preference = record(
-    links.language_preference,
-    'links.language_preference',
-  );
-
-  const navigation = record(links.navigation, 'links.navigation');
-
-  const languages = array(links.language_options, 'links.language_options');
-
-  if (!languages.length) {
-    throw new Error('Invalid links.language_options: empty list');
-  }
-
-  for (const [
-    index,
-    entry,
-  ] of languages.entries()) {
-    const language = record(entry, `links.language_options[${index}]`);
-
-    text(language.id, `links.language_options[${index}].id`);
-    text(language.path, `links.language_options[${index}].path`);
-  }
-
-  const languageIDs = new Set(
-    languages.map((entry, index) => {
-      return requiredText(
-        record(entry, `links.language_options[${index}]`).id,
-        `links.language_options[${index}].id`,
-      );
-    }),
-  );
-
-  if (languageIDs.size !== languages.length) {
-    throw new Error('Invalid links.language_options: duplicate language id');
-  }
-
-  text(preference.default, 'links.language_preference.default');
-
-  if (!languageIDs.has(preference.default)) {
-    throw new Error('Invalid links.language_preference.default');
-  }
-
-  const localized = record(links.locales, 'links.locales');
-
-  for (const id of languageIDs) {
-    const locale = record(localized[id], `links.locales.${id}`);
-
-    record(locale.seo, `links.locales.${id}.seo`);
-    record(locale.profile, `links.locales.${id}.profile`);
-    record(locale.ui, `links.locales.${id}.ui`);
-    record(locale.presentation, `links.locales.${id}.presentation`);
-  }
-
-  const navigationSections = strings(
-    navigation.sections,
-    'links.navigation.sections',
-  );
-
-  const navigationLinks = strings(navigation.links, 'links.navigation.links');
-
-  record(navigation.home, 'links.navigation.home');
-
-  const sections = array(links.sections, 'links.sections');
-
-  const sectionIDs = new Set<string>();
-
-  const linkIDs = new Set<string>();
-
-  for (const [
-    index,
-    entry,
-  ] of sections.entries()) {
-    const section = record(entry, `links.sections[${index}]`);
-
-    text(section.id, `links.sections[${index}].id`);
-
-    if (sectionIDs.has(section.id)) {
-      throw new Error(`Duplicate links.sections id: ${section.id}`);
-    }
-
-    sectionIDs.add(section.id);
-
-    for (const item of array(
-      section.links || [],
-      `links.sections[${index}].links`,
-    )) {
-      const link = record(item, `links.sections[${index}].links[]`);
-
-      text(link.id, `links.sections[${index}].links[].id`);
-
-      if (linkIDs.has(link.id)) {
-        throw new Error(`Duplicate links.sections link id: ${link.id}`);
-      }
-
-      linkIDs.add(link.id);
-
-      if (link.url !== undefined) {
-        text(link.url, `links.sections[${index}].links[].url`);
-
-        if (/^\s*(javascript|data|vbscript):/i.test(link.url)) {
-          throw new Error(`Invalid links.sections[${index}].links[].url`);
-        }
-      } else if (link.localized_urls === undefined) {
-        throw new Error(
-          `Missing destination at links.sections[${index}].links[]`,
-        );
-      }
-
-      if (link.localized_urls !== undefined) {
-        const localizedURLs = record(
-          link.localized_urls,
-          `links.sections[${index}].links[].localized_urls`,
-        );
-
-        for (const [
-          locale,
-          destination,
-        ] of Object.entries(localizedURLs)) {
-          if (!languageIDs.has(locale)) {
-            throw new Error(`Unknown localized URL language: ${locale}`);
-          }
-
-          text(
-            destination,
-            `links.sections[${index}].links[].localized_urls.${locale}`,
-          );
-
-          if (/^\s*(javascript|data|vbscript):/i.test(destination)) {
-            throw new Error(
-              `Invalid localized URL at links.sections[${index}].links[]`,
-            );
-          }
-        }
-      }
-
-      for (const flag of [
-        'enabled',
-        'public',
-        'private',
-        'draft',
-      ]) {
-        if (link[flag] !== undefined && typeof link[flag] !== 'boolean') {
-          throw new Error(`Invalid link visibility flag: ${flag}`);
-        }
-      }
-
-      const labels = record(
-        link.labels,
-        `links.sections[${index}].links[].labels`,
-      );
-
-      for (const language of languageIDs) {
-        const localizedLabel = record(
-          labels[language],
-          `links.sections[${index}].links[].labels.${language}`,
-        );
-
-        text(
-          localizedLabel.title,
-          `links.sections[${index}].links[].labels.${language}.title`,
-        );
-      }
-    }
-
-    if (section.link_refs !== undefined) {
-      strings(section.link_refs, `links.sections[${index}].link_refs`);
-    }
-
-    const labels = record(section.labels, `links.sections[${index}].labels`);
-
-    for (const language of languageIDs) {
-      const localizedLabel = record(
-        labels[language],
-        `links.sections[${index}].labels.${language}`,
-      );
-
-      text(
-        localizedLabel.title,
-        `links.sections[${index}].labels.${language}.title`,
-      );
-      text(
-        localizedLabel.description,
-        `links.sections[${index}].labels.${language}.description`,
-      );
-    }
-  }
-
-  const quickContacts = strings(links.quick_contacts, 'links.quick_contacts');
-
-  for (const id of quickContacts) {
-    if (!linkIDs.has(id)) {
-      throw new Error(`Unknown quick contact link: ${id}`);
-    }
-  }
-
-  for (const id of navigationSections) {
-    if (!sectionIDs.has(id)) {
-      throw new Error(`Unknown navigation section: ${id}`);
-    }
-  }
-
-  for (const id of navigationLinks) {
-    if (!linkIDs.has(id)) {
-      throw new Error(`Unknown navigation link: ${id}`);
-    }
-  }
-
-  for (const [
-    index,
-    entry,
-  ] of sections.entries()) {
-    const section = record(entry, `links.sections[${index}]`);
-
-    const resolveRefs = () => {
-      if (section.link_refs) {
-        return strings(section.link_refs, `links.sections[${index}].link_refs`);
-      }
-
-      return [];
-    };
-
-    const refs = resolveRefs();
-
-    const ownLinks = array(
-      section.links || [],
-      `links.sections[${index}].links`,
-    ).map((link, linkIndex) => {
-      return requiredText(
-        record(link, `links.sections[${index}].links[${linkIndex}]`).id,
-        `links.sections[${index}].links[${linkIndex}].id`,
-      );
-    });
-
-    if (
-      new Set([
-        ...ownLinks,
-        ...refs,
-      ]).size !==
-      ownLinks.length + refs.length
-    ) {
-      throw new Error(`Duplicate link in section ${section.id}`);
-    }
-
-    for (const id of refs) {
-      if (!linkIDs.has(id)) {
-        throw new Error(`Unknown link reference: ${id}`);
-      }
-    }
-  }
-}
 
 function positiveInteger(value: unknown, label: string): number {
   if (!Number.isInteger(value) || Number(value) < 1) {
@@ -305,22 +39,30 @@ function validateNow(
 
   const seo = record(source.seo, `${label}.seo`);
 
-  const sections = array(source.sections, `${label}.sections`).map(
-    (rawSection, index) => {
-      const itemLabel = `${label}.sections[${index}]`;
+  const sections = array(source.sections, `${label}.sections`)
+    .map(
+      (
+        rawSection,
+        index,
+      ): {
+        id: string;
+        title: string;
+        description: string;
+      } => {
+        const itemLabel = `${label}.sections[${index}]`;
 
-      const section = record(rawSection, itemLabel);
+        const section = record(rawSection, itemLabel);
 
-      return {
-        id: requiredText(section.id, `${itemLabel}.id`),
-        title: requiredText(section.title, `${itemLabel}.title`),
-        description: requiredText(
-          section.description,
-          `${itemLabel}.description`,
-        ),
-      };
-    },
-  );
+        return {
+          id: requiredText(section.id, `${itemLabel}.id`),
+          title: requiredText(section.title, `${itemLabel}.title`),
+          description: requiredText(
+            section.description,
+            `${itemLabel}.description`,
+          ),
+        };
+      },
+    );
 
   return {
     seo: {
@@ -395,7 +137,7 @@ function linkFromUnknown(
     throw new Error(`Missing destination at ${label}`);
   }
 
-  const resolveAudiences = () => {
+  const resolveAudiences = (): string[] | undefined => {
     if (source.audiences === undefined) {
       return undefined;
     }
@@ -449,7 +191,13 @@ function linkFromUnknown(
     };
   }
 
-  const localizedURLFields = () => {
+  const localizedURLFields = ():
+    | {
+      localized_urls: Record<string, string>;
+    }
+    | {
+      localized_urls?: never;
+    } => {
     if (Object.keys(localizedURLs).length) {
       return {
         localized_urls: localizedURLs,
@@ -489,13 +237,14 @@ function sectionFromUnknown(
 
   const source = record(value, label);
 
-  const links = array(source.links ?? [], `${label}.links`).map(
-    (item, linkIndex) => {
-      return linkFromUnknown(item, `${label}.links[${linkIndex}]`, languages);
-    },
-  );
+  const links = array(source.links ?? [], `${label}.links`)
+    .map(
+      (item, linkIndex): LinkRecord => {
+        return linkFromUnknown(item, `${label}.links[${linkIndex}]`, languages);
+      },
+    );
 
-  const resolveSectionReferences = () => {
+  const resolveSectionReferences = (): string[] | undefined => {
     if (source.link_refs === undefined) {
       return undefined;
     }
@@ -550,7 +299,7 @@ function sectionFromUnknown(
   };
 }
 
-function linkDocumentFromUnknown(value: unknown): LinkDocument {
+export function linkDocumentFromUnknown(value: unknown): LinkDocument {
   validateLinks(value);
 
   const source = record(value, 'links data');
@@ -558,21 +307,34 @@ function linkDocumentFromUnknown(value: unknown): LinkDocument {
   const languageOptions = array(
     source.language_options,
     'links.language_options',
-  ).map((item, index) => {
-    const label = `links.language_options[${index}]`;
+  )
+    .map(
+      (
+        item,
+        index,
+      ): {
+        id: string;
+        path: string;
+        label: string;
+        hreflang: string;
+      } => {
+        const label = `links.language_options[${index}]`;
 
-    const language = record(item, label);
+        const language = record(item, label);
 
-    return {
-      id: requiredText(language.id, `${label}.id`),
-      path: requiredText(language.path, `${label}.path`),
-      label: requiredText(language.label, `${label}.label`),
-      hreflang: requiredText(language.hreflang, `${label}.hreflang`),
-    };
-  });
+        return {
+          id: requiredText(language.id, `${label}.id`),
+          path: requiredText(language.path, `${label}.path`),
+          label: requiredText(language.label, `${label}.label`),
+          hreflang: requiredText(language.hreflang, `${label}.hreflang`),
+        };
+      },
+    );
 
   const languages = new Set(
-    languageOptions.map(({ id }) => {
+    languageOptions.map(({
+      id
+    }): string => {
       return id;
     }),
   );
@@ -601,11 +363,12 @@ function linkDocumentFromUnknown(value: unknown): LinkDocument {
     throw new Error('Invalid links.language_preference.default');
   }
 
-  const sections = array(source.sections, 'links.sections').map(
-    (section, index) => {
-      return sectionFromUnknown(section, index, languages);
-    },
-  );
+  const sections = array(source.sections, 'links.sections')
+    .map(
+      (section, index): SectionRecord => {
+        return sectionFromUnknown(section, index, languages);
+      },
+    );
 
   const languageStatistics = record(source.statistics, 'links.statistics');
 
@@ -648,18 +411,25 @@ function linkDocumentFromUnknown(value: unknown): LinkDocument {
 
     const ui = validateTextMap(locale.ui, `${label}.ui`);
 
-    const facts = array(presentation.facts, `${label}.presentation.facts`).map(
-      (fact, index) => {
-        const itemLabel = `${label}.presentation.facts[${index}]`;
+    const facts = array(presentation.facts, `${label}.presentation.facts`)
+      .map(
+        (
+          fact,
+          index,
+        ): {
+          icon: string;
+          text: string;
+        } => {
+          const itemLabel = `${label}.presentation.facts[${index}]`;
 
-        const item = record(fact, itemLabel);
+          const item = record(fact, itemLabel);
 
-        return {
-          icon: requiredText(item.icon, `${itemLabel}.icon`),
-          text: requiredText(item.text, `${itemLabel}.text`),
-        };
-      },
-    );
+          return {
+            icon: requiredText(item.icon, `${itemLabel}.icon`),
+            text: requiredText(item.text, `${itemLabel}.text`),
+          };
+        },
+      );
 
     locales[language] = {
       seo: {
@@ -697,18 +467,25 @@ function linkDocumentFromUnknown(value: unknown): LinkDocument {
     now[language] = validateNow(content, `links.now.${language}`);
   }
 
-  const rawAudiences = array(source.audiences, 'links.audiences').map(
-    (value, index) => {
-      const label = `links.audiences[${index}]`;
+  const rawAudiences = array(source.audiences, 'links.audiences')
+    .map(
+      (
+        value,
+        index,
+      ): {
+        id: string;
+        labels: Record<string, string>;
+      } => {
+        const label = `links.audiences[${index}]`;
 
-      const audience = record(value, label);
+        const audience = record(value, label);
 
-      return {
-        id: requiredText(audience.id, `${label}.id`),
-        labels: validateTextMap(audience.labels, `${label}.labels`),
-      };
-    },
-  );
+        return {
+          id: requiredText(audience.id, `${label}.id`),
+          labels: validateTextMap(audience.labels, `${label}.labels`),
+        };
+      },
+    );
 
   const rawHome = record(source.home, 'links.home');
 

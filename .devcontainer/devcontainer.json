@@ -3,7 +3,7 @@
   "build": {
     "dockerfile": "../.config/container/Dockerfile",
     "context": "..",
-    "target": "workspace"
+    "target": "workspace-fast"
   },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",

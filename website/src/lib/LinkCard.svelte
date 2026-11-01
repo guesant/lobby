@@ -27,7 +27,7 @@
     return 'link-button';
   });
 
-  const previewID = $derived.by(() => {
+  const previewID = $derived.by((): string | undefined => {
     if (preview) {
       return item.id;
     }
@@ -57,8 +57,8 @@
       <span class="link-url-text">{target.display}</span>
     </span>
     {#if item.description}<span class="link-description">
-        {item.description}
-      </span>{/if}
+      {item.description}
+    </span>{/if}
     {#if item.badge}<span class="link-badge">{item.badge}</span>{/if}
     {#if item.visual}
       <span class="link-visual">
@@ -77,18 +77,18 @@
         {#if item.statistics?.metrics}
           <dl class="statistics-grid">
             {#each item.statistics.metrics as metric}<div
-                class="statistic statistic-{metric.id}"
-              >
-                <dt>
-                  <IconButton name={metric.icon} optical />
-                  <span>{metric.label}</span>
-                </dt>
-                <dd>
-                  {metric.value}{#if metric.total}<span class="statistic-total">
-                      / {metric.total}
-                    </span>{/if}
-                </dd>
-              </div>{/each}
+              class="statistic statistic-{metric.id}"
+            >
+              <dt>
+                <IconButton name={metric.icon} optical />
+                <span>{metric.label}</span>
+              </dt>
+              <dd>
+                {metric.value}{#if metric.total}<span class="statistic-total">
+                  / {metric.total}
+                </span>{/if}
+              </dd>
+            </div>{/each}
           </dl>
           <p class="statistics-updated">
             <span>{item.statistics.updatedLabel}</span>

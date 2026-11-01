@@ -105,7 +105,7 @@ function validateEditorialEntry(
 
   const draft = optionalBoolean(item.draft, `${itemLabel}.draft`);
 
-  const resolveTags = () => {
+  const resolveTags = (): string[] | undefined => {
     if (item.tags === undefined) {
       return undefined;
     }
@@ -163,11 +163,12 @@ export function validateEditorial(value: unknown): SiteData['editorial'] {
     section,
     rawItems,
   ] of Object.entries(rawEntries)) {
-    entries[section] = array(rawItems, `editorial.entries.${section}`).map(
-      (rawItem, index) => {
-        return validateEditorialEntry(section, index, rawItem);
-      },
-    );
+    entries[section] = array(rawItems, `editorial.entries.${section}`)
+      .map(
+        (rawItem, index): EditorialEntry => {
+          return validateEditorialEntry(section, index, rawItem);
+        },
+      );
   }
 
   return {
@@ -197,28 +198,38 @@ export function validateCredits(value: unknown): SiteData['credits'] {
     };
   }
 
-  const entries = array(credits.entries, 'credits.entries').map(
-    (rawEntry, index) => {
-      const entry = record(rawEntry, `credits.entries[${index}]`);
+  const entries = array(credits.entries, 'credits.entries')
+    .map(
+      (
+        rawEntry,
+        index,
+      ): {
+        id: string;
+        name: string;
+        authors: string;
+        license: string;
+        official_url: string;
+      } => {
+        const entry = record(rawEntry, `credits.entries[${index}]`);
 
-      return {
-        id: requiredText(entry.id, `credits.entries[${index}].id`),
-        name: requiredText(entry.name, `credits.entries[${index}].name`),
-        authors: requiredText(
-          entry.authors,
-          `credits.entries[${index}].authors`,
-        ),
-        license: requiredText(
-          entry.license,
-          `credits.entries[${index}].license`,
-        ),
-        official_url: requiredText(
-          entry.official_url,
-          `credits.entries[${index}].official_url`,
-        ),
-      };
-    },
-  );
+        return {
+          id: requiredText(entry.id, `credits.entries[${index}].id`),
+          name: requiredText(entry.name, `credits.entries[${index}].name`),
+          authors: requiredText(
+            entry.authors,
+            `credits.entries[${index}].authors`,
+          ),
+          license: requiredText(
+            entry.license,
+            `credits.entries[${index}].license`,
+          ),
+          official_url: requiredText(
+            entry.official_url,
+            `credits.entries[${index}].official_url`,
+          ),
+        };
+      },
+    );
 
   const licenseIDs = new Set(Object.keys(validatedLicenses));
 
@@ -274,7 +285,7 @@ export function validateStatistics(value: unknown): SiteData['statistics'] {
       `statistics.${id}.metrics`,
     );
 
-    const resolveAvailable = () => {
+    const resolveAvailable = (): Record<string, number> | undefined => {
       if (entry.available === undefined) {
         return undefined;
       }
@@ -488,9 +499,12 @@ export function validateFederation(value: unknown): SiteData['federation'] {
 
   const identities = new Set<string>();
 
-  const items = array(feed.items, 'federation.items').map((item, index) => {
-    return validateFederationItem(item, index, identities);
-  });
+  const items = array(feed.items, 'federation.items')
+    .map(
+      (item, index): FederationItem => {
+        return validateFederationItem(item, index, identities);
+      },
+    );
 
   return {
     version: 1,

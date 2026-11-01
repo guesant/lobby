@@ -1,0 +1,111 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "America/Sao_Paulo",
+  "schedule": [
+    "* 0-5 * * 1"
+  ],
+  "automerge": false,
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "dependencyDashboard": true,
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": { "enabled": true, "schedule": [
+      "* 0-5 * * 1"
+    ] },
+  "vulnerabilityAlerts": { "enabled": true, "schedule": [
+      "at any time"
+    ], "automerge": false },
+  "ignorePaths": [
+    "**/node_modules/**",
+    ".local/**",
+    ".cache/**",
+    "website/.svelte-kit/**",
+    ".config/ast-grep/tests/**"
+  ],
+  "packageRules": [
+    { "matchUpdateTypes": [
+        "major"
+      ], "groupName": null, "automerge": false },
+    { "matchManagers": [
+        "npm"
+      ], "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ], "groupName": "javascript tooling and application" },
+    { "matchManagers": [
+        "github-actions"
+      ], "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ], "groupName": "github actions" },
+    { "matchDatasources": [
+        "docker"
+      ], "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ], "groupName": "container images" },
+    { "matchDatasources": [
+        "pypi"
+      ], "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin"
+      ], "groupName": "python tooling" },
+    { "matchDatasources": [
+        "deb"
+      ], "groupName": "debian packages", "registryUrls": [
+        "https://deb.debian.org/debian?suite=bookworm&components=main&binaryArch=amd64",
+        "https://deb.debian.org/debian-security?suite=bookworm-security&components=main&binaryArch=amd64"
+      ] },
+    { "matchFileNames": [
+        ".config/audit/**",
+        ".config/python/**"
+      ], "addLabels": [
+        "manual-audit-required"
+      ] }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.config/python/pyproject\\.toml$/"
+      ],
+      "matchStrings": [
+        "\"(?<depName>mcp)==(?<currentValue>[0-9.]+)\""
+      ],
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.*\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "(?<depName>node):(?<currentValue>[0-9.]+-bookworm-slim)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.config/container/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "corepack@(?<currentValue>[0-9.]+)"
+      ],
+      "depNameTemplate": "corepack",
+      "datasourceTemplate": "npm"
+    }
+  ]
+}

@@ -3,63 +3,66 @@ set shell := ["sh", "-eu", "-c"]
 compose := "docker compose --file .config/compose.yaml run --rm --build"
 runner := if env("LINKS_CONTAINER", "") == "1" { "" } else { compose + " workspace" }
 server := if env("LINKS_CONTAINER", "") == "1" { "" } else { compose + " --service-ports workspace" }
+audit := if env("LINKS_CONTAINER", "") == "1" { "" } else { compose + " audit" }
 
 default:
     @just --list
 
 dependencies:
-    {{ runner }} npm --prefix website ci
+    {{ runner }} node .config/scripts/dependencies.ts
 
 dev: dependencies
-    {{ server }} node .config/scripts/tasks.mjs dev
+    {{ server }} node .config/scripts/tasks.ts dev
 
 build: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs build
+    {{ runner }} node .config/scripts/tasks.ts build
 
-lighthouse-baseline: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs lighthouse-baseline
+lighthouse-baseline:
+    {{ audit }} node .config/scripts/dependencies.ts --audit
+    {{ audit }} node .config/scripts/tasks.ts lighthouse-baseline
 
-check: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs check
+check:
+    {{ audit }} node .config/scripts/dependencies.ts --audit
+    {{ audit }} node .config/scripts/tasks.ts check
 
 check-fast: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs check-fast
+    {{ runner }} node .config/scripts/tasks.ts check-fast
 
 ci: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs ci
+    {{ runner }} node .config/scripts/tasks.ts ci
 
 format: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs format
+    {{ runner }} node .config/scripts/tasks.ts format
 
 format-fix: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs format-fix
+    {{ runner }} node .config/scripts/tasks.ts format-fix
 
 test: dependencies
-    {{ runner }} node .config/scripts/tasks.mjs test
+    {{ runner }} node .config/scripts/tasks.ts test
 
 lint: dependencies
-    {{ runner }} npm --prefix website run lint
+    {{ runner }} node .config/scripts/quality.ts lint
 
 lint-fix: dependencies
-    {{ runner }} npm --prefix website run lint:fix
-
-lint-baseline: dependencies
-    {{ runner }} npm --prefix website run lint:baseline
+    {{ runner }} node .config/scripts/quality.ts lint-fix
 
 typecheck: dependencies
-    {{ runner }} npm --prefix website run check
+    {{ runner }} pnpm --dir website run check
+    {{ runner }} pnpm --dir .config exec tsc --project tsconfig.json
 
 stats: dependencies
-    {{ runner }} node .config/scripts/update-stats.mjs
+    {{ runner }} node .config/scripts/update-stats.ts
 
-icons: dependencies
-    {{ runner }} node .config/scripts/generate-icons.mjs
+icons:
+    {{ audit }} node .config/scripts/dependencies.ts --audit
+    {{ audit }} node .config/scripts/generate-icons.ts
 
-links: dependencies
-    {{ runner }} node .config/scripts/verify-links.mjs
+links:
+    {{ audit }} node .config/scripts/dependencies.ts --audit
+    {{ audit }} node .config/scripts/verify-links.ts
 
 preview: dependencies
-    {{ server }} node .config/scripts/tasks.mjs preview
+    {{ server }} node .config/scripts/tasks.ts preview
 
 shell:
     {{ runner }} bash

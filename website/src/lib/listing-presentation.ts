@@ -5,7 +5,10 @@ export type ListingDestination = (
   _item: Pick<LinkRecord, 'url' | 'target'>,
 ) => LinkDestination;
 
-export type EmptyAction = { href: string; label: string };
+export type EmptyAction = {
+  href: string;
+  label: string;
+};
 
 export function emptyActionFor({
   home,

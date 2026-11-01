@@ -1,5 +1,6 @@
 <script lang="ts">
   import IconButton from './IconButton.svelte';
+  import { sectionMenu } from './section-menu.ts';
   import SectionMenuItem from './SectionMenuItem.svelte';
   import { currentPage } from './render-utils.ts';
   import type { PageRecord } from './site-data.ts';
@@ -23,13 +24,13 @@
   } = $props();
 
   let sections = $derived(
-    pages.filter((entry) => {
+    pages.filter((entry): boolean => {
       return entry.type === 'home' || entry.type === 'links-page';
     }),
   );
 
   let updates = $derived(
-    pages.filter((entry) => {
+    pages.filter((entry): boolean => {
       return entry.id === 'now';
     }),
   );
@@ -48,7 +49,7 @@
     class="quick-navigation-divider quick-navigation-divider-start"
     aria-hidden="true"
   ></span>
-  <details class="section-switcher" data-section-switcher>
+  <details class="section-switcher" data-section-switcher {@attach sectionMenu}>
     <summary
       class="section-switcher-trigger"
       aria-controls="section-menu"

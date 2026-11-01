@@ -1,23 +1,96 @@
 import { optionalProperty } from './object-fields.ts';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parse } from 'yaml';
 import * as configuration from './configuration.ts';
 import { validateSiteDocuments } from './data-validation.ts';
+import {
+  federationStatuses,
+  type FederationStatus,
+} from './federation-status.ts';
 import type {
   DisplayLinkRecord,
+  LinkRecord,
   PageRecord,
   SectionRecord,
   SiteData,
 } from './site-data.ts';
 
-let cached: SiteData | undefined;
+const siteCache = new Map<
+  string,
+  {
+    signature: string;
+    data: SiteData;
+  }
+>();
+
+async function inputSignature(root: string): Promise<string> {
+  const files = [
+    'src/data/links.yaml',
+    'src/data/editorial.yaml',
+    'src/data/credits.yaml',
+    'src/data/statistics.yaml',
+    '../.cache/federation/assets/federation.json',
+  ];
+
+  const versions = await Promise.all(
+    files.map(async (file): Promise<string> => {
+      try {
+        const metadata = await stat(resolve(root, file), {
+          bigint: true,
+        });
+
+        return `${file}:${metadata.size}:${metadata.mtimeNs}`;
+      } catch (error) {
+        if (
+          file.endsWith('federation.json') &&
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'ENOENT'
+        ) {
+          return `${file}:missing`;
+        }
+
+        throw error;
+      }
+    }),
+  );
+
+  return versions.join('|');
+}
+
+export async function getFederationStatus(
+  websiteRoot: string = process.cwd(),
+): Promise<FederationStatus[]> {
+  try {
+    const value: unknown = JSON.parse(
+      await readFile(
+        resolve(websiteRoot, '../.cache/federation/assets/status.json'),
+        'utf8',
+      ),
+    );
+
+    return federationStatuses(value);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return [];
+    }
+
+    throw error;
+  }
+}
 
 export async function getSiteData(
   websiteRoot: string = process.cwd(),
 ): Promise<SiteData> {
-  if (cached) {
-    return cached;
+  websiteRoot = resolve(websiteRoot);
+
+  const signature = await inputSignature(websiteRoot);
+
+  const cached = siteCache.get(websiteRoot);
+
+  if (cached?.signature === signature) {
+    return cached.data;
   }
 
   const readYaml = async (name: string): Promise<unknown> => {
@@ -62,7 +135,7 @@ export async function getSiteData(
     }
   }
 
-  cached = validateSiteDocuments({
+  const data = validateSiteDocuments({
     links,
     editorial,
     credits,
@@ -70,7 +143,12 @@ export async function getSiteData(
     federation,
   });
 
-  return cached;
+  siteCache.set(websiteRoot, {
+    signature,
+    data,
+  });
+
+  return data;
 }
 
 export function pagesFor(
@@ -78,11 +156,11 @@ export function pagesFor(
   locale: string,
   interfaceName = 'minecraft',
 ): PageRecord[] {
-  const language = data.links.language_options.find((item) => {
+  const language = data.links.language_options.find((item): boolean => {
     return item.id === locale;
   });
 
-  const english = data.links.language_options.find((item) => {
+  const english = data.links.language_options.find((item): boolean => {
     return item.id === 'en';
   });
 
@@ -90,64 +168,83 @@ export function pagesFor(
     throw new Error(`Unknown language: ${locale}`);
   }
 
-  return configuration.pagesFor(data.links, locale).map((page) => {
-    const fallbackNow = page.id === 'now' && page.fallback;
+  return configuration.pagesFor(data.links, locale)
+    .map(
+      (
+        page,
+      ): {
+        section?: SectionRecord;
+        fallback: boolean;
+        description: string;
+        standard_url: string;
+        terminal_url: string;
+        url: string;
+        id: string;
+        type: string;
+        title: string;
+        icon: string;
+        links?: LinkRecord[];
+      } => {
+        const fallbackNow = page.id === 'now' && page.fallback;
 
-    const resolveStandardURL = () => {
-      if (fallbackNow) {
-        return `${english.path}now/`;
-      }
+        const resolveStandardURL = (): string => {
+          if (fallbackNow) {
+            return `${english.path}now/`;
+          }
 
-      return page.url;
-    };
+          return page.url;
+        };
 
-    const standardURL = resolveStandardURL();
+        const standardURL = resolveStandardURL();
 
-    let terminalURL = `${language.path}terminal/`;
+        let terminalURL = `${language.path}terminal/`;
 
-    if (page.id !== 'home' && !page.fallback) {
-      terminalURL = `${language.path}terminal/${page.id}/`;
-    }
+        if (page.id !== 'home' && !page.fallback) {
+          terminalURL = `${language.path}terminal/${page.id}/`;
+        }
 
-    if (fallbackNow) {
-      terminalURL = `${english.path}terminal/now/`;
-    }
+        if (fallbackNow) {
+          terminalURL = `${english.path}terminal/now/`;
+        }
 
-    const section = data.links.sections.find((candidate) => {
-      return candidate.id === page.id;
-    });
+        const section = data.links.sections.find((candidate): boolean => {
+          return candidate.id === page.id;
+        });
 
-    const resolveUrl = () => {
-      if (interfaceName === 'terminal') {
-        return terminalURL;
-      }
+        const resolveUrl = (): string => {
+          if (interfaceName === 'terminal') {
+            return terminalURL;
+          }
 
-      return standardURL;
-    };
+          return standardURL;
+        };
 
-    return {
-      ...page,
-      fallback: page.fallback || false,
-      description: page.description || '',
-      standard_url: standardURL,
-      terminal_url: terminalURL,
-      url: resolveUrl(),
-      ...optionalProperty('section', section),
-    };
-  });
+        return {
+          ...page,
+          fallback: page.fallback || false,
+          description: page.description || '',
+          standard_url: standardURL,
+          terminal_url: terminalURL,
+          url: resolveUrl(),
+          ...optionalProperty('section', section),
+        };
+      },
+    );
 }
 
 export function routeEntries(data: SiteData): string[] {
-  return data.links.language_options.flatMap(({ id }) => {
+  return data.links.language_options.flatMap(({
+    id
+  }): string[] => {
     return [
       'minecraft',
       'terminal',
-    ].flatMap((interfaceName) => {
+    ].flatMap((interfaceName): string[] => {
       return pagesFor(data, id, interfaceName)
-        .filter((page) => {
+        .filter((page): boolean => {
           return !page.fallback;
         })
-        .map((page) => {
+        .map((page): string => {
           return page.url.slice(1, -1);
         });
     });
@@ -159,9 +256,11 @@ export function sectionLinks(
   section: SectionRecord,
   locale: string,
 ): DisplayLinkRecord[] {
-  return configuration.linksForSection(data.links, section).map((item) => {
-    return displayLink(data, item, locale);
-  });
+  return configuration
+    .linksForSection(data.links, section)
+    .map((item): DisplayLinkRecord => {
+      return displayLink(data, item, locale);
+    });
 }
 
 type ConfiguredLink = ReturnType<typeof configuration.linksForSection>[number];
@@ -209,22 +308,34 @@ function linkStatistics(
       data.links.statistics.updated[locale] ||
       data.links.statistics.updated.en ||
       '',
-    updatedAt: new Date(snapshot.updated_at).toISOString().slice(0, 10),
-    metrics: item.stats.metrics.map((id) => {
-      const metric = data.links.statistics.metrics[id];
-
-      if (!metric) {
-        throw new Error(`Unknown metric: ${id}`);
-      }
-
-      return {
+    updatedAt: new Date(snapshot.updated_at)
+      .toISOString()
+      .slice(0, 10),
+    metrics: item.stats.metrics.map(
+      (
         id,
-        label: metric.labels[locale] || metric.labels.en || id,
-        icon: metric.icon,
-        value: String(snapshot.metrics[id]),
-        ...optionalProperty('total', snapshot.available?.[id]),
-      };
-    }),
+      ): {
+        total?: number;
+        id: string;
+        label: string;
+        icon: string;
+        value: string;
+      } => {
+        const metric = data.links.statistics.metrics[id];
+
+        if (!metric) {
+          throw new Error(`Unknown metric: ${id}`);
+        }
+
+        return {
+          id,
+          label: metric.labels[locale] || metric.labels.en || id,
+          icon: metric.icon,
+          value: String(snapshot.metrics[id]),
+          ...optionalProperty('total', snapshot.available?.[id]),
+        };
+      },
+    ),
   };
 }
 
@@ -233,7 +344,10 @@ function displayLink(
   item: ConfiguredLink,
   locale: string,
 ): DisplayLinkRecord {
-  const { visual, ...baseItem } = item;
+  const {
+    visual,
+    ...baseItem
+  } = item;
 
   const labels = item.labels[locale] || item.labels.en;
 
@@ -266,5 +380,3 @@ function displayLink(
     ...optionalProperty('statistics', statistics),
   };
 }
-
-export { configuration };

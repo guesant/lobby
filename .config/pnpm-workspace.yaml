@@ -1,0 +1,9 @@
+packages:
+  - '.'
+overrides:
+  serve>compression: 1.8.2
+  markdownlint>re2js: 2.8.7
+allowBuilds:
+  '@ast-grep/cli': true
+  sharp: true
+  unrs-resolver: true

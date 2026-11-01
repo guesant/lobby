@@ -1,5 +1,7 @@
 extends: default
 ignore: |
+  **/node_modules/**
+  .config/python/.venv/**
   .config/cursor-assets.yaml
   .config/design-assets.yaml
 rules:

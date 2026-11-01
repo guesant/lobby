@@ -7,29 +7,136 @@
   } from '$app/navigation';
   import { page } from '$app/state';
   import { onMount, type Snippet } from 'svelte';
-  import SitePage from '$lib/SitePage.svelte';
   import { languageContext } from '$lib/language-preference.ts';
+  import type {
+    LanguageContext,
+    LanguagePageData,
+  } from '$lib/language-preference.ts';
   import {
     createLanguageNavigation,
     type LanguageNavigation,
   } from '$lib/language-navigation.ts';
   import type { PageLoadData } from '$lib/site-data.ts';
+  import { on } from 'svelte/events';
+  import {
+    provideInterfaceState,
+    restorePreferences,
+  } from '$lib/preferences.svelte.ts';
+  import { createPointerSound, type PointerSound } from '$lib/pointer-sound.ts';
+  import pointerPress from '../assets/audio/mouse-press.wav';
+  import pointerRelease from '../assets/audio/mouse-release.wav';
 
-  let { children }: { children: Snippet } = $props();
+  const controls = provideInterfaceState();
 
-  let data: PageLoadData | null = $derived.by(() => {
-    if (page.status < 400 && page.data.page) {
-      return page.data as PageLoadData;
+  let sound = $state.raw<PointerSound>();
+
+  $effect((): void => {
+    document.documentElement.dataset.theme = controls.theme;
+    document.documentElement.dataset.themeReady = 'true';
+    document.documentElement.dataset.linkView = controls.view;
+    document.documentElement.dataset.linkViewReady = 'true';
+    document.documentElement.dataset.sound = controls.sound;
+    document.documentElement.dataset.motion = controls.motion;
+
+    if (controls.reducedMotion) {
+      document.documentElement.dataset.motion = 'off';
     }
 
-    return null;
+    sound?.setEnabled(controls.sound === 'on');
   });
+
+  function keydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+
+      if (controls.dialog === 'search') {
+        controls.dialog = 'none';
+
+        return;
+      }
+
+      controls.dialog = 'search';
+    }
+  }
+
+  function visibility(): void {
+    document.documentElement.dataset.pageHidden = String(document.hidden);
+  }
+
+  let {
+    children,
+  }: {
+    children: Snippet;
+  } = $props();
+
+  type NavigationPageData = LanguagePageData &
+    Pick<PageLoadData, 'page' | 'localized'>;
+
+  let data: NavigationPageData | null = $derived.by(
+    (): NavigationPageData | null => {
+      const {
+        config,
+        interfaceName,
+        isLanguageEntry,
+        locale,
+        languageRoutes,
+        localized,
+        page: currentPage,
+      } = page.data;
+
+      if (
+        page.status >= 400 ||
+        !config ||
+        !interfaceName ||
+        typeof isLanguageEntry !== 'boolean' ||
+        !locale ||
+        !languageRoutes ||
+        !localized ||
+        !currentPage
+      ) {
+        return null;
+      }
+
+      return {
+        config,
+        interfaceName,
+        isLanguageEntry,
+        locale,
+        languageRoutes,
+        localized,
+        page: currentPage,
+      };
+    },
+  );
 
   let navigation: LanguageNavigation | undefined;
 
-  onMount(() => {
+  onMount((): (() => void) => {
+    restorePreferences(controls);
+    visibility();
+    sound = createPointerSound(
+      {
+        pointerPress,
+        pointerRelease,
+      },
+      controls.sound === 'on',
+    );
+
+    const media = matchMedia('(prefers-reduced-motion: reduce)');
+
+    const updateMotion = (): void => {
+      controls.reducedMotion = media.matches;
+    };
+
+    updateMotion();
+
+    const stopMedia = on(media, 'change', updateMotion);
+
     navigation = createLanguageNavigation({
-      page: () => {
+      page: (): {
+        context: LanguageContext;
+        url: URL;
+      } | null => {
         if (!data) {
           return null;
         }
@@ -39,17 +146,17 @@
           url: new URL(window.location.href),
         };
       },
-      storage: () => {
+      storage: (): Storage => {
         return window.localStorage;
       },
-      languages: () => {
+      languages: (): readonly string[] => {
         return (
           navigator.languages || [
             navigator.language,
           ]
         );
       },
-      navigate: async (url) => {
+      navigate: async (url): Promise<void> => {
         await goto(url, {
           replaceState: true,
           keepFocus: true,
@@ -60,16 +167,18 @@
           throw new Error('Language destination could not be loaded');
         }
       },
-      replaceURL: (url) => {
+      replaceURL: (url): void => {
         replaceState(url, page.state);
       },
-      fallback: (url) => {
+      fallback: (url): void => {
         window.location.replace(url.href);
       },
     });
 
-    return () => {
+    return (): void => {
       navigation?.destroy();
+      sound?.destroy();
+      stopMedia();
     };
   });
 
@@ -88,22 +197,22 @@
     }
   };
 
-  beforeNavigate(({ to }) => {
+  beforeNavigate(({
+    to
+  }): void => {
     navigation?.beforeNavigate(to?.url || null);
   });
 
-  afterNavigate(() => {
+  afterNavigate((): void => {
     if (data) {
       document.documentElement.dataset.interface = data.interfaceName;
+      document.documentElement.dataset.interfaceReady = 'true';
       document.documentElement.dataset.page = data.page.id;
       document.documentElement.lang = data.localized.ui.html_lang;
       document.body.className = bodyClass(data.interfaceName);
     }
 
-    requestAnimationFrame(() => {
-      return document.dispatchEvent(new Event('lobby:navigate'));
-    });
-    queueMicrotask(() => {
+    queueMicrotask((): void => {
       void navigation?.normalize();
     });
   });
@@ -117,9 +226,12 @@
   }
 </script>
 
-<svelte:document onchange={changeLanguage} />
+<svelte:document onchange={changeLanguage} onvisibilitychange={visibility} />
+<svelte:window
+  onkeydown={keydown}
+  onstorage={(): void => {
+    restorePreferences(controls);
+  }}
+/>
 
-{#if data}
-  <SitePage {data} />
-{/if}
 {@render children()}

@@ -1,0 +1,9 @@
+packages:
+  - '.'
+allowBuilds:
+  puppeteer: false
+  sharp: true
+  core-js-pure: false
+  dtrace-provider: false
+  protobufjs: false
+  re2: true

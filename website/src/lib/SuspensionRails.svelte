@@ -1,7 +1,11 @@
 <script lang="ts">
   import geometry from '../assets/images/ui/suspension-rail.json';
 
-  let { lanternCount }: { lanternCount: number } = $props();
+  let {
+    lanternCount,
+  }: {
+    lanternCount: number;
+  } = $props();
 
   const lanternPositions = [
     'upper',
@@ -19,7 +23,10 @@
   const lanternWebpURL = '/assets/generated/rail-lantern.webp';
 </script>
 
-{#each ['start', 'end'] as side}
+{#each [
+  'start',
+  'end'
+] as side}
   <span class="suspension-rail suspension-rail-{side}" aria-hidden="true">
     <picture>
       <source type="image/webp" srcset={couplingWebpURL} />

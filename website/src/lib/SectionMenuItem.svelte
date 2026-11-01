@@ -7,9 +7,13 @@
     entry,
     active,
     nowShortcut = false,
-  }: { entry: PageRecord; active: boolean; nowShortcut?: boolean } = $props();
+  }: {
+    entry: PageRecord;
+    active: boolean;
+    nowShortcut?: boolean;
+  } = $props();
 
-  const navigationPage = $derived.by(() => {
+  const navigationPage = $derived.by((): string | undefined => {
     if (nowShortcut) {
       return undefined;
     }

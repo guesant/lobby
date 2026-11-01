@@ -1,6 +1,15 @@
 import type { PageLoadData } from './site-data.ts';
 
-export type LanguageRoute = { id: string; home: string; url: string };
+export type LanguagePageData = Pick<
+  PageLoadData,
+  'config' | 'interfaceName' | 'isLanguageEntry' | 'locale' | 'languageRoutes'
+>;
+
+export type LanguageRoute = {
+  id: string;
+  home: string;
+  url: string;
+};
 
 export type LanguageContext = {
   routes: LanguageRoute[];
@@ -9,10 +18,10 @@ export type LanguageContext = {
   neutral: boolean;
 };
 
-export function languageContext(data: PageLoadData): LanguageContext {
+export function languageContext(data: LanguagePageData): LanguageContext {
   const terminal = data.interfaceName === 'terminal';
 
-  const resolveCurrent = () => {
+  const resolveCurrent = (): string => {
     if (data.isLanguageEntry) {
       return '';
     }
@@ -24,33 +33,41 @@ export function languageContext(data: PageLoadData): LanguageContext {
     default: data.config.language_preference.default,
     current: resolveCurrent(),
     neutral: data.isLanguageEntry,
-    routes: data.languageRoutes.map((route) => {
-      const resolveHome = () => {
-        if (terminal) {
-          return 'terminal/';
-        }
+    routes: data.languageRoutes.map(
+      (
+        route,
+      ): {
+        id: string;
+        home: string;
+        url: string;
+      } => {
+        const resolveHome = (): '' | 'terminal/' => {
+          if (terminal) {
+            return 'terminal/';
+          }
 
-        return '';
-      };
-
-      const resolveUrl = () => {
-        if (!route.available) {
           return '';
-        }
+        };
 
-        if (terminal) {
-          return route.terminalURL;
-        }
+        const resolveUrl = (): string => {
+          if (!route.available) {
+            return '';
+          }
 
-        return route.standardURL;
-      };
+          if (terminal) {
+            return route.terminalURL;
+          }
 
-      return {
-        id: route.id,
-        home: `${route.path}${resolveHome()}`,
-        url: resolveUrl(),
-      };
-    }),
+          return route.standardURL;
+        };
+
+        return {
+          id: route.id,
+          home: `${route.path}${resolveHome()}`,
+          url: resolveUrl(),
+        };
+      },
+    ),
   };
 }
 
@@ -58,7 +75,7 @@ export function languageFor(
   context: LanguageContext,
   id: string | null,
 ): LanguageRoute | undefined {
-  return context.routes.find((route) => {
+  return context.routes.find((route): boolean => {
     return route.id === id;
   });
 }
@@ -68,11 +85,12 @@ function browserLanguage(
   languages: readonly string[],
 ): LanguageRoute | undefined {
   for (const tag of languages) {
-    const normalized = tag.toLowerCase().replaceAll('_', '-');
+    const normalized = tag.toLowerCase()
+      .replaceAll('_', '-');
 
     const match =
       languageFor(context, normalized) ||
-      context.routes.find((route) => {
+      context.routes.find((route): boolean => {
         return route.id.split('-')[0] === normalized.split('-')[0];
       });
 
@@ -114,7 +132,7 @@ export function languageDestination(
   source: URL,
   manual: boolean = false,
 ): URL | null {
-  const resolvePath = () => {
+  const resolvePath = (): string => {
     if (manual) {
       return route.home;
     }

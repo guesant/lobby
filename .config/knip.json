@@ -1,0 +1,53 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreBinaries": [
+    "osv-scanner",
+    "optipng",
+    "lychee",
+    "renovate"
+  ],
+  "workspaces": {
+    "../.config": {
+      "entry": [
+        "scripts/tasks.ts",
+        "scripts/ci-policy.ts",
+        "scripts/publish-stats.ts",
+        "scripts/dependencies.ts",
+        "scripts/quality.ts",
+        "scripts/generate-icons.ts",
+        "scripts/update-stats.ts",
+        "scripts/check-layout.ts",
+        "scripts/check-renovate.ts",
+        "scripts/check-osv.ts",
+        "scripts/check-comment-policy.ts",
+        "scripts/module-boundaries.ts",
+        "scripts/repository-quality.ts",
+        "scripts/prepare-svelte-assets.ts",
+        "scripts/lighthouse-audit.ts",
+        "scripts/lighthouse-baseline.ts",
+        "scripts/verify-links.ts",
+        "scripts/check-raster-browser.ts",
+        "scripts/*.test.ts",
+        "scripts/check-link-view.ts",
+        "scripts/check-{federation,pointer-sound,stats,search}.ts"
+      ],
+      "project": [
+        "**/*.ts"
+      ],
+      "svelte": false,
+      "eslint": { "config": [
+          "eslint.config.ts"
+        ] }
+    },
+    "../.config/audit": {},
+    ".": {
+      "entry": [
+        "src/routes/**/+*.{ts,svelte}",
+        "src/lib/PageNavigation.svelte"
+      ],
+      "project": [
+        "src/**/*.{ts,svelte}"
+      ]
+    }
+  }
+}

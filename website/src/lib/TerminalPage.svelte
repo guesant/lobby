@@ -1,5 +1,19 @@
 <script lang="ts">
+  import BuildMetadata from './BuildMetadata.svelte';
+  import { requiredText } from './validation-primitives.ts';
+  import NowActivity from './NowActivity.svelte';
+  import '../assets/css/reset.css';
+  import '../assets/css/terminal.css';
+  import '../assets/css/listing.css';
+  import '../assets/css/bios.css';
+  import { interfaceState } from './preferences.svelte.ts';
+  import Uptime from './Uptime.svelte';
+  import { reboot } from './reboot.ts';
+
+  const state = interfaceState();
+
   import LinkView from './LinkView.svelte';
+  import FederationStatus from './FederationStatus.svelte';
   import EditorialList from './EditorialList.svelte';
   import ActionRow from './ActionRow.svelte';
   import ContentListHeading from './ContentListHeading.svelte';
@@ -12,7 +26,11 @@
     PageLoadData,
   } from './site-data.ts';
 
-  let { data }: { data: PageLoadData } = $props();
+  let {
+    data,
+  }: {
+    data: PageLoadData;
+  } = $props();
 
   let {
     config,
@@ -38,7 +56,7 @@
     return id;
   };
 
-  const promptPath = $derived.by(() => {
+  const promptPath = $derived.by((): string => {
     if (home) {
       return '~';
     }
@@ -47,14 +65,15 @@
   });
 
   let nowActivities = $derived(
-    Object.entries(data.nowActivity).filter(
-      ([
-        key,
-        value,
-      ]) => {
-        return key !== 'updated' && typeof value === 'string' && value.trim();
-      },
-    ),
+    Object.entries(data.nowActivity)
+      .filter(
+        ([
+          key,
+          value,
+        ]): string | false => {
+          return key !== 'updated' && typeof value === 'string' && value.trim();
+        },
+      ),
   );
 
   function destination(
@@ -91,6 +110,9 @@
       class="terminal-window-search"
       type="button"
       data-search-open
+      onclick={(): void => {
+        state.dialog = 'search';
+      }}
       aria-label={editorialUI.search}
     >
       <span aria-hidden="true">$</span>
@@ -102,6 +124,9 @@
       type="button"
       data-dialog-open="settings-dialog"
       data-settings-open
+      onclick={(): void => {
+        state.dialog = 'settings';
+      }}
       aria-label={localized.ui.settings_label}
     >
       <span aria-hidden="true">$</span>
@@ -110,16 +135,16 @@
   </header>
   <nav class="terminal-navigation" aria-label={localized.ui.navigation_label}>
     <ul>
-      {#each pages.filter((entry) => {
+      {#each pages.filter((entry): boolean => {
         return entry.type === 'home' || entry.type === 'links-page' || entry.id === 'now';
       }) as entry}<li>
-          <a href={entry.url} aria-current={currentPage(entry.id === page.id)}>
-            <span aria-hidden="true">
-              {directoryName(entry.id)}
-            </span>
-            <span>{entry.title}</span>
-          </a>
-        </li>{/each}
+        <a href={entry.url} aria-current={currentPage(entry.id === page.id)}>
+          <span aria-hidden="true">
+            {directoryName(entry.id)}
+          </span>
+          <span>{entry.title}</span>
+        </a>
+      </li>{/each}
       <li>
         <a href={data.standardHomeURL}>
           <span aria-hidden="true">interface</span>
@@ -129,21 +154,15 @@
     </ul>
   </nav>
   {#if home}<header class="terminal-profile">
-      <p class="terminal-prompt">whoami</p>
-      <h1>{config.profile.name}</h1>
-      <p class="terminal-username">@{config.profile.username}</p>
-      <p class="terminal-bio">{localized.profile.bio}</p>
-      <p class="terminal-uptime">
-        <span>{localized.ui.uptime_label}</span>
-        <time
-          datetime={config.profile.birth_date}
-          data-uptime={config.profile.birth_date}
-          data-uptime-locale={locale}
-        >
-          {config.profile.birth_date}
-        </time>
-      </p>
-    </header>{/if}
+    <p class="terminal-prompt">whoami</p>
+    <h1>{config.profile.name}</h1>
+    <p class="terminal-username">@{config.profile.username}</p>
+    <p class="terminal-bio">{localized.profile.bio}</p>
+    <p class="terminal-uptime">
+      <span>{localized.ui.uptime_label}</span>
+      <Uptime birthDate={config.profile.birth_date} {locale} />
+    </p>
+  </header>{/if}
   <main class="terminal-content" id="main-content">
     {#if home}
       <section class="terminal-about">
@@ -152,13 +171,13 @@
         <div class="terminal-about-grid">
           <ul>
             {#each localized.presentation.facts as fact}<li>
-                {fact.text}
-              </li>{/each}
+              {fact.text}
+            </li>{/each}
           </ul>
           <ul>
             {#each localized.presentation.topics as topic}<li>
-                {topic}
-              </li>{/each}
+              {topic}
+            </li>{/each}
           </ul>
         </div>
       </section>
@@ -169,66 +188,66 @@
           <h2>{localized.ui.home_sections_label}</h2>
         </header>
         {#each homeSections as section}<section
-            class="terminal-directory-entry"
-            data-category={section.page.id}
-          >
-            <header>
-              <h3>{section.page.title}</h3>
-              {#if section.page.description}<p>
-                  {section.page.description}
-                </p>{/if}
-            </header>
-            {#if section.links.length}
-              <section class="content-link-group" id="links-{section.page.id}">
-                <ContentListHeading label={editorialUI.links} level={4} />
-                <ul class="terminal-link-list divided-list">
-                  {#each section.links as item}<li>
-                      {@render platformLink(item)}
-                    </li>{/each}
-                </ul>
-              </section>
-            {/if}
-            <EditorialList
-              items={section.editorial}
-              ui={editorialUI}
-              thirdPartyLabel={localized.ui.third_party}
-              sectionID={section.page.id}
-              {locale}
-              interfaceName="terminal"
-              {destination}
-              headingLevel={4}
-              emptyAction={emptyActionFor({
-                home: true,
-                pageURL: section.page.url,
-                homeURL: '',
-                sectionID: section.page.id,
-                linksCount: section.links.length,
-                ui: editorialUI,
-              })}
-              empty={!section.links.length}
-            />
-          </section>{/each}
+          class="terminal-directory-entry"
+          data-category={section.page.id}
+        >
+          <header>
+            <h3>{section.page.title}</h3>
+            {#if section.page.description}<p>
+              {section.page.description}
+            </p>{/if}
+          </header>
+          {#if section.links.length}
+            <section class="content-link-group" id="links-{section.page.id}">
+              <ContentListHeading label={editorialUI.links} level={4} />
+              <ul class="terminal-link-list divided-list">
+                {#each section.links as item}<li>
+                  {@render platformLink(item)}
+                </li>{/each}
+              </ul>
+            </section>
+          {/if}
+          <EditorialList
+            items={section.editorial}
+            ui={editorialUI}
+            thirdPartyLabel={localized.ui.third_party}
+            sectionID={section.page.id}
+            {locale}
+            interfaceName="terminal"
+            {destination}
+            headingLevel={4}
+            emptyAction={emptyActionFor({
+              home: true,
+              pageURL: section.page.url,
+              homeURL: '',
+              sectionID: section.page.id,
+              linksCount: section.links.length,
+              ui: editorialUI,
+            })}
+            empty={!section.links.length}
+          />
+        </section>{/each}
       </section>
-      {#each pages.filter((entry) => {
+      {#each pages.filter((entry): boolean => {
         return entry.id === 'now';
       }) as entry}<section class="terminal-directory-entry">
-          <header>
-            <h3>{entry.title}</h3>
-            <p>{now.intro}</p>
-          </header>
-          <ul class="terminal-link-list divided-list">
-            {#each now.sections as section}<li>
-                <ActionRow
-                  title={section.title}
-                  action={destination({
-                    url: `${entry.url}#now-${section.id}`,
-                  })}
-                  thirdPartyLabel={localized.ui.third_party}
-                  interfaceName="terminal"
-                />
-              </li>{/each}
-          </ul>
-        </section>{/each}
+        <header>
+          <h3>{entry.title}</h3>
+          <p>{now.intro}</p>
+        </header>
+        <ul class="terminal-link-list divided-list">
+          {#each now.sections as section}<li>
+            <ActionRow
+              title={section.title}
+              action={destination({
+                url: `${entry.url}#now-${section.id}`,
+              })}
+              thirdPartyLabel={localized.ui.third_party}
+              interfaceName="terminal"
+            />
+          </li>{/each}
+        </ul>
+      </section>{/each}
     {:else if page.id === 'now'}
       <header class="terminal-section-heading">
         <p class="terminal-prompt">cat ~/now/status.txt</p>
@@ -237,16 +256,14 @@
       </header>
       <div class="terminal-now-list">
         {#each now.sections as section}<section id="now-{section.id}">
-            <h2>{section.title}</h2>
-            <p>{section.description}</p>
-          </section>{/each}
+          <h2>{section.title}</h2>
+          <p>{section.description}</p>
+        </section>{/each}
       </div>
-      {#if nowActivities.length}<dl class="now-activity">
-          {#each nowActivities as [key, value]}<div id="now-activity-{key}">
-              <dt>{editorialUI[key]}</dt>
-              <dd>{value}</dd>
-            </div>{/each}
-        </dl>{/if}
+      {#if nowActivities.length}<NowActivity
+        entries={nowActivities}
+        labels={editorialUI}
+      />{/if}
     {:else}
       <header class="terminal-section-heading">
         <p class="terminal-prompt">cd ~/{page.id}/</p>
@@ -259,9 +276,9 @@
           <ContentListHeading label={editorialUI.links} level={2} />
           <ul class="terminal-link-list divided-list">
             {#each links as item}<li>
-                {@render platformLink(item)}
-                {#if item.description}<p>{item.description}</p>{/if}
-              </li>{/each}
+              {@render platformLink(item)}
+              {#if item.description}<p>{item.description}</p>{/if}
+            </li>{/each}
           </ul>
         </section>
       {/if}
@@ -298,45 +315,47 @@
       >
         {localized.ui.footer_repository}
       </a>
-      <button type="button" data-dialog-open="credits-dialog" data-credits-open>
+      <button
+        type="button"
+        data-dialog-open="credits-dialog"
+        data-credits-open
+        onclick={(): void => {
+          state.dialog = 'credits';
+        }}
+      >
         {localized.ui.credits}
       </button>
       <button
         type="button"
         data-dialog-open="settings-dialog"
         data-settings-open
+        onclick={(): void => {
+          state.dialog = 'settings';
+        }}
       >
         {localized.ui.settings_label}
       </button>
-      <a data-reboot data-sveltekit-reload href={`${page.url}?lobby-boot=1`}>
+      <a
+        data-reboot
+        onclick={reboot}
+        data-sveltekit-reload
+        href={`${page.url}?lobby-boot=1`}
+      >
         {editorialUI.reboot}
       </a>
     </nav>
-    <p class="site-footer-meta">
-      {#if build.commitLabel === localized.ui.local_commit}<span
-          class="site-footer-commit"
-        >
-          {build.versionLabel}
-          {build.commitLabel}
-        </span>{:else}<a
-          class="site-footer-commit"
-          href={build.commitURL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {build.versionLabel}
-          {build.commitLabel}
-        </a>{/if}
-      <span class="footer-meta-separator" aria-hidden="true">·</span>
-      <a
-        class="site-footer-build"
-        href={build.workflowURL}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {build.buildLabel}
-      </a>
-    </p>
+    <BuildMetadata
+      {build}
+      localCommitLabel={requiredText(
+        localized.ui.local_commit,
+        'local commit label',
+      )}
+    />
+    <FederationStatus
+      sources={data.federationStatus}
+      labels={editorialUI}
+      {locale}
+    />
     <p class="brand-disclaimer">{localized.ui.brand_disclaimer}</p>
   </footer>
 </div>

@@ -1,0 +1,43 @@
+{
+  "name": "lobby-tooling",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.16.1+sha512.091d1dee7927575661b25dab3c2ae31cafc1c54d6b71ed6a6600cf0c1cb10434a447eae14015f1b23e2e6bedeed79df94a932e2164d2832280dce3fb32f656d1",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "comments:test": "cd .. && ast-grep test --config .config/ast-grep/sgconfig.yml",
+    "comments:scan": "cd .. && ast-grep scan --config .config/ast-grep/sgconfig.yml .",
+    "markdown": "cd .. && markdownlint-cli2 --config .config/.markdownlint-cli2.jsonc README.md 'LICENSES/**/*.md' 'website/src/content/**/*.md'",
+    "duplicates": "cd .. && jscpd --min-tokens 50 --min-lines 5 --skip-comments --format javascript,svelte,typescript --ignore '**/*.test.*,**/fixtures/**' --reporters console --baseline .config/jscpd-baseline.json --fail-on-new-clones=0 website/src/lib website/src/routes .config/scripts"
+  },
+  "dependencies": {
+    "@ast-grep/cli": "0.45.3",
+    "@eslint/js": "^9.35.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/estree": "1.0.8",
+    "@types/node": "^24.5.2",
+    "@typescript-eslint/eslint-plugin": "8.72.1",
+    "@typescript-eslint/parser": "8.72.1",
+    "eslint": "^9.35.0",
+    "eslint-plugin-sonarjs": "^4.2.2",
+    "eslint-plugin-svelte": "^3.12.2",
+    "globals": "^16.4.0",
+    "jscpd": "^5.4.2",
+    "knip": "6.44.1",
+    "markdownlint-cli2": "0.24.0",
+    "prettier": "3.6.2",
+    "prettier-plugin-multiline-arrays": "4.1.9",
+    "prettier-plugin-svelte": "^3.4.0",
+    "puppeteer-core": "^25.16.0",
+    "serve": "14.2.6",
+    "sharp": "^0.35.5",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard": "^39.0.0",
+    "svelte": "^5.38.7",
+    "svelte-eslint-parser": "1.10.0",
+    "typescript": "^5.9.2",
+    "yaml": "^2.8.1"
+  }
+}

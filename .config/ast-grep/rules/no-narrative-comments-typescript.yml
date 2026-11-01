@@ -4,6 +4,7 @@ severity: error
 message: Narrative comments are not allowed; use tool directives only.
 files:
   - website/**/*.ts
+  - .config/**/*.ts
 rule:
   all:
     - kind: comment

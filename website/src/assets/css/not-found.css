@@ -1,0 +1,80 @@
+:root {
+  --error-zero: 0;
+  --error-full: 100%;
+  --error-height: 100svh;
+  --error-line-height: 1.6;
+  --error-gap: 1.5rem;
+  --error-width: 48rem;
+  --error-padding: 2rem;
+  --error-border: 0.0625rem;
+  --error-code-size: 4rem;
+  --error-font-size: 1rem;
+  --error-font: ui-monospace, monospace;
+  --error-background: light-dark(#f6f8fa, #0d1117);
+  --error-surface: light-dark(#fff, #161b22);
+  --error-border-color: light-dark(#d0d7de, #30363d);
+  --error-text: light-dark(#1f2328, #e6edf3);
+  --error-accent: light-dark(#0550ae, #79c0ff);
+  --error-wood-overlay: light-dark(#eee9d2eb, #00000075);
+
+  color-scheme: light dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+.error-interface {
+  display: grid;
+  min-block-size: var(--error-height);
+  margin: var(--error-zero);
+  padding: var(--error-padding);
+  box-sizing: border-box;
+  color: var(--error-text);
+  font: var(--error-font-size) / var(--error-line-height) var(--error-font);
+  background: var(--error-background);
+}
+
+.not-found {
+  display: grid;
+  gap: var(--error-gap);
+  place-self: center;
+  inline-size: min(var(--error-full), var(--error-width));
+  padding: var(--error-padding);
+  box-sizing: border-box;
+  border: var(--error-border) solid var(--error-border-color);
+  background: var(--error-surface);
+  overflow-wrap: anywhere;
+}
+
+.not-found [hidden] {
+  display: none;
+}
+
+.not-found-code {
+  margin: var(--error-zero);
+  font-size: var(--error-code-size);
+}
+
+.not-found nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--error-gap);
+}
+
+.not-found a {
+  color: var(--error-accent);
+}
+
+.not-found[data-error-interface='minecraft'] {
+  --error-border-color: #a7a075;
+  --error-accent: light-dark(#245119, #e7dfb5);
+
+  background-image:
+    linear-gradient(var(--error-wood-overlay), var(--error-wood-overlay)),
+    url('../../static/assets/generated/aged-oak.webp');
+}

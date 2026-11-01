@@ -13,26 +13,41 @@
     <meta name="color-scheme" content="dark light" />
     <script>
       document.documentElement.dataset.jsEnabled = 'true';
+      try {
+        const options = {
+          theme: [
+            'system',
+            'light',
+            'dark',
+          ],
+          view: [
+            'compact',
+            'detailed',
+          ],
+          motion: [
+            'on',
+            'off',
+          ],
+          sound: [
+            'on',
+            'off',
+          ],
+        };
+        for (const key of Object.keys(options)) {
+          const value = localStorage.getItem('guesant-links-' + key);
+          if (value && options[key].includes(value)) {
+            let attribute = key;
+            if (key === 'view') {
+              attribute = 'linkView';
+            }
+            document.documentElement.dataset[attribute] = value;
+          }
+        }
+      } catch {}
     </script>
     __EARLY_HEAD__ %sveltekit.head%
   </head>
   <body class="__BODY_CLASS__">
     <div style="display: contents">%sveltekit.body%</div>
-    <script src="/assets/js/theme-switcher.js" defer></script>
-    <script src="/assets/js/interface.js" defer></script>
-    <script src="/assets/js/link-view.js" defer></script>
-    <script src="/assets/js/search.js" defer></script>
-    <script src="/assets/js/page-navigation.js" defer></script>
-    <script src="/assets/js/dialogs.js" defer></script>
-    <script src="/assets/js/uptime.js" defer></script>
-    <script src="/assets/js/ambient-motion.js" defer></script>
-    <script src="/assets/js/rail-layout.js" defer></script>
-    <script
-      src="/assets/js/pointer-sound.js"
-      data-pointer-press="/assets/audio/mouse-press.wav"
-      data-pointer-release="/assets/audio/mouse-release.wav"
-      defer
-    ></script>
-    <script src="/assets/js/tooltips.js" defer></script>
   </body>
 </html>

@@ -29,7 +29,8 @@ export function emptyAttribute(enabled: boolean): '' | undefined {
 }
 
 export function profileInitials(name: string): string {
-  const parts: string[] = name.trim().split(/\s+/);
+  const parts: string[] = name.trim()
+    .split(/\s+/);
 
   const first: string = parts[0]?.[0] || '';
 
@@ -45,7 +46,14 @@ export function destinationFor(
   item: Pick<LinkRecord, 'url' | 'target'>,
   locale: string,
   interfaceName: 'minecraft' | 'terminal',
-) {
+): {
+  href: string;
+  external: boolean;
+  thirdParty: boolean;
+  target: string;
+  rel?: string;
+  display: string;
+} {
   const destination = resolveDestination(config.site, item);
 
   let href = destination.href;

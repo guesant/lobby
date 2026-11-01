@@ -23,11 +23,12 @@ export function array(value: unknown, label: string): unknown[] {
 }
 
 export function strings(value: unknown, label: string): string[] {
-  return array(value, label).map((entry, index) => {
-    text(entry, `${label}[${index}]`);
+  return array(value, label)
+    .map((entry, index): string => {
+      text(entry, `${label}[${index}]`);
 
-    return entry;
-  });
+      return entry;
+    });
 }
 
 export function optionalBoolean(

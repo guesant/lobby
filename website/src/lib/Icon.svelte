@@ -3,8 +3,13 @@
 
   export type IconName = keyof typeof manifest.icons;
 
-  let { name = 'link', optical = false }: { name?: string; optical?: boolean } =
-    $props();
+  let {
+    name = 'link',
+    optical = false,
+  }: {
+    name?: string;
+    optical?: boolean;
+  } = $props();
 
   const isIconName = (value: string): value is IconName => {
     return Object.hasOwn(manifest.icons, value);
@@ -23,7 +28,7 @@
   const metadata = $derived(manifest.icons[icon]);
 
   const style = $derived(
-    `--icon-sprite: url('/assets/icons/pixel-compact.png'); --icon-sprite-hd: url('/assets/icons/pixel.png'); --icon-columns: ${manifest.count}; --icon-position: ${metadata.position}%; --icon-optical-scale: ${metadata.opticalScale}`,
+    `--icon-columns: ${manifest.count}; --icon-position: ${metadata.position}%; --icon-optical-scale: ${metadata.opticalScale}`,
   );
 </script>
 

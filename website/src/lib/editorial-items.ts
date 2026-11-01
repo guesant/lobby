@@ -49,26 +49,26 @@ function federatedItems(
 ): EditorialRecord[] {
   const sourceItems = data.federation.items;
 
-  const resume = sourceItems.filter((item) => {
+  const resume = sourceItems.filter((item): boolean => {
     return item.source === 'resume';
   });
 
-  const preferredResume = resume.filter((item) => {
+  const preferredResume = resume.filter((item): boolean => {
     return item.language === locale;
   });
 
-  const resolveItems = () => {
+  const resolveItems = (): FederationItem[] => {
     if (preferredResume.length) {
       return preferredResume;
     }
 
-    return resume.filter((item) => {
+    return resume.filter((item): boolean => {
       return item.language === 'en';
     });
   };
 
   const items = [
-    ...sourceItems.filter((item) => {
+    ...sourceItems.filter((item): boolean => {
       return item.source === 'blog';
     }),
     ...resolveItems(),
@@ -85,15 +85,15 @@ function federatedItems(
       continue;
     }
 
-    const matching = items.filter((candidate) => {
+    const matching = items.filter((candidate): boolean => {
       return candidate.source === item.source && candidate.id === item.id;
     });
 
     output.push(
-      matching.find((candidate) => {
+      matching.find((candidate): boolean => {
         return candidate.language === locale;
       }) ||
-        matching.find((candidate) => {
+        matching.find((candidate): boolean => {
           return candidate.language === 'en';
         }) ||
         item,
@@ -109,46 +109,63 @@ function localItems(
   sectionID: string,
   locale: string,
 ): EditorialRecord[] {
-  return (data.editorial.entries?.[sectionID] || [])
-    .filter(visible)
-    .map((item) => {
-      const labels =
-        item.labels[locale] || item.labels['pt-br'] || item.labels.en;
-
-      const resolveLanguage = () => {
-        if (item.labels[locale]) {
-          return locale;
-        }
-
-        if (item.labels['pt-br']) {
-          return 'pt-br';
-        }
-
-        return 'en';
-      };
-
-      const language = resolveLanguage();
-
-      if (!item.id || !labels?.title) {
-        throw new Error(`Invalid editorial entry: ${sectionID}`);
-      }
-
-      return {
-        id: item.id,
-        type: sectionID,
-        source: 'lobby',
-        language,
-        title: labels.title,
-        summary: labels.description || '',
-        url: item.url || '',
-        tags: item.tags || [],
+  return (data.editorial.entries?.[sectionID] || []).filter(visible)
+    .map(
+      (
+        item,
+      ): {
+        id: string;
+        type: string;
+        source: string;
+        language: string;
+        title: string;
+        summary: string;
+        url: string;
+        tags: string[];
         metadata: {
-          group: item.group || '',
-          status: item.status || '',
-          updated: item.updated || '',
-        },
-      };
-    });
+          group: string;
+          status: string;
+          updated: string;
+        };
+      } => {
+        const labels =
+          item.labels[locale] || item.labels['pt-br'] || item.labels.en;
+
+        const resolveLanguage = (): string => {
+          if (item.labels[locale]) {
+            return locale;
+          }
+
+          if (item.labels['pt-br']) {
+            return 'pt-br';
+          }
+
+          return 'en';
+        };
+
+        const language = resolveLanguage();
+
+        if (!item.id || !labels?.title) {
+          throw new Error(`Invalid editorial entry: ${sectionID}`);
+        }
+
+        return {
+          id: item.id,
+          type: sectionID,
+          source: 'lobby',
+          language,
+          title: labels.title,
+          summary: labels.description || '',
+          url: item.url || '',
+          tags: item.tags || [],
+          metadata: {
+            group: item.group || '',
+            status: item.status || '',
+            updated: item.updated || '',
+          },
+        };
+      },
+    );
 }
 
 function platformFor(url: string): string {
@@ -232,7 +249,9 @@ export function editorialItems(
   return [
     ...federatedItems(data, sectionID, locale),
     ...localItems(data, sectionID, locale),
-  ].map((item) => {
+  ].map((item): EditorialRecord => {
     return decorateItem(item, data, locale);
   });
 }
+
+import type { FederationItem } from './site-data.ts';

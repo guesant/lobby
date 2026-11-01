@@ -1,21 +1,20 @@
 import { linkNavigation } from './link-navigation.ts';
+import type { FederationStatus } from './federation-status.ts';
 
-export { editorialItems, editorialKinds } from './editorial-items.ts';
+export { editorialKinds } from './editorial-items.ts';
 
-export type LocalizedText = Record<string, string>;
-
-export type LinkLabel = {
+type LinkLabel = {
   title: string;
   description?: string;
   badge?: string;
 };
 
-export type LinkStatistics = {
+type LinkStatistics = {
   provider: string;
   metrics: string[];
 };
 
-export type LinkStatisticsSnapshot = {
+type LinkStatisticsSnapshot = {
   updatedLabel?: string;
   updatedAt?: string;
   unavailable?: string;
@@ -82,9 +81,9 @@ export type PageRecord = {
   links?: LinkRecord[];
 };
 
-export type LocaleRecord = LinkDocument['locales'][string];
+type LocaleRecord = LinkDocument['locales'][string];
 
-export type NowRecord = LinkDocument['now'][string];
+type NowRecord = LinkDocument['now'][string];
 
 export type DisplayLinkRecord = Omit<
   LinkRecord,
@@ -95,7 +94,9 @@ export type DisplayLinkRecord = Omit<
   language: string;
   description?: string;
   badge?: string;
-  visual?: Omit<NonNullable<LinkRecord['visual']>, 'alt'> & { alt: string };
+  visual?: Omit<NonNullable<LinkRecord['visual']>, 'alt'> & {
+    alt: string;
+  };
   statistics?: LinkStatisticsSnapshot;
 };
 
@@ -124,12 +125,22 @@ export type EditorialEntry = {
   public?: boolean;
   private?: boolean;
   draft?: boolean;
-  labels: Record<string, { title: string; description?: string }>;
+  labels: Record<
+    string,
+    {
+      title: string;
+      description?: string;
+    }
+  >;
 };
 
-export type CreditLicense = { name: string; url: string; text: string };
+type CreditLicense = {
+  name: string;
+  url: string;
+  text: string;
+};
 
-export type CreditEntry = {
+type CreditEntry = {
   id: string;
   name: string;
   authors: string;
@@ -165,12 +176,19 @@ export type SiteData = {
     ui: Record<string, Record<string, string>>;
     now: Record<string, Record<string, string>>;
   };
-  credits: { licenses: Record<string, CreditLicense>; entries: CreditEntry[] };
+  credits: {
+    licenses: Record<string, CreditLicense>;
+    entries: CreditEntry[];
+  };
   statistics: Record<string, StatisticsSnapshot>;
-  federation: { version: 1; items: FederationItem[] };
+  federation: {
+    version: 1;
+    items: FederationItem[];
+  };
 };
 
 export type PageLoadData = {
+  federationStatus: FederationStatus[];
   isLanguageEntry: boolean;
   config: {
     profile: LinkDocument['profile'];
@@ -251,17 +269,34 @@ export type LinkDocument = {
   statistics: {
     updated: Record<string, string>;
     unavailable: Record<string, string>;
-    metrics: Record<string, { icon: string; labels: Record<string, string> }>;
+    metrics: Record<
+      string,
+      {
+        icon: string;
+        labels: Record<string, string>;
+      }
+    >;
   };
   locales: Record<
     string,
     {
-      seo: { title: string; description: string };
-      profile: { bio: string };
-      ui: Record<string, string> & { third_party: string; html_lang: string };
+      seo: {
+        title: string;
+        description: string;
+      };
+      profile: {
+        bio: string;
+      };
+      ui: Record<string, string> & {
+        third_party: string;
+        html_lang: string;
+      };
       presentation: {
         title: string;
-        facts: Array<{ icon: string; text: string }>;
+        facts: Array<{
+          icon: string;
+          text: string;
+        }>;
         site_title: string;
         topics: string[];
       };
@@ -270,21 +305,38 @@ export type LinkDocument = {
   now: Record<
     string,
     {
-      seo: { title: string; description: string };
+      seo: {
+        title: string;
+        description: string;
+      };
       title: string;
       intro: string;
-      sections: Array<{ id: string; title: string; description: string }>;
+      sections: Array<{
+        id: string;
+        title: string;
+        description: string;
+      }>;
     }
   >;
-  language_preference: { default: string };
+  language_preference: {
+    default: string;
+  };
   navigation: {
     sections: string[];
     links: string[];
-    home: { icon: string; labels: Record<string, string> };
+    home: {
+      icon: string;
+      labels: Record<string, string>;
+    };
     labels: Record<string, string>;
   };
-  home: { illustration_enabled: boolean };
-  audiences: Array<{ id: string; labels: Record<string, string> }>;
+  home: {
+    illustration_enabled: boolean;
+  };
+  audiences: Array<{
+    id: string;
+    labels: Record<string, string>;
+  }>;
 };
 
 export type LinkDestination = {
@@ -311,14 +363,15 @@ export function resolveDestination(
   let thirdParty = false;
 
   if (/^https?:/i.test(url)) {
-    const host = new URL(url).hostname.toLowerCase().replace(/\.$/, '');
+    const host = new URL(url).hostname.toLowerCase()
+      .replace(/\.$/, '');
 
-    thirdParty = !site.first_party_domains.some((domain) => {
+    thirdParty = !site.first_party_domains.some((domain): boolean => {
       return host === domain || host.endsWith(`.${domain}`);
     });
   }
 
-  const resolveTarget = () => {
+  const resolveTarget = (): string => {
     if (navigation.external) {
       return '_blank';
     }
@@ -328,7 +381,7 @@ export function resolveDestination(
 
   const target = resolveTarget();
 
-  const resolveHref = () => {
+  const resolveHref = (): string => {
     if (absolute) {
       return url;
     }
@@ -336,7 +389,13 @@ export function resolveDestination(
     return url.replace(/^\//, '/');
   };
 
-  const externalRelAttributes = () => {
+  const externalRelAttributes = ():
+    | {
+      rel: string;
+    }
+    | {
+      rel?: never;
+    } => {
     if (target === '_blank') {
       return {
         rel: 'noopener noreferrer',
@@ -354,11 +413,4 @@ export function resolveDestination(
     ...externalRelAttributes(),
     display: url.replace(/^mailto:/i, ''),
   };
-}
-
-export function destination(
-  data: SiteData,
-  item: Pick<LinkRecord, 'url' | 'target'>,
-) {
-  return resolveDestination(data.links.site, item);
 }

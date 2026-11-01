@@ -1,0 +1,188 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  createPointerFeedback,
+  type PointerInput,
+  type SoundPlayer,
+  type SoundKind,
+  type SoundTiming,
+  type PointerFeedback,
+} from '../../website/src/lib/pointer-sound.ts';
+
+type FeedbackHarness = {
+  feedback: PointerFeedback;
+  sounds: SoundKind[];
+  timers: Set<() => void>;
+  setReady(value: boolean): void;
+  elapsed(value: number): void;
+  flush(): void;
+  prepared(): number;
+  destroyed(): boolean;
+};
+
+function harness(enabled: boolean = true): FeedbackHarness {
+  let now = 0;
+
+  let ready = true;
+
+  let prepared = 0;
+
+  let destroyed = false;
+
+  const sounds: SoundKind[] = [];
+
+  const timers = new Set<() => void>();
+
+  const player: SoundPlayer = {
+    prepare(): void {
+      prepared += 1;
+    },
+    resume(): void {},
+    ready(): boolean {
+      return ready;
+    },
+    play(kind): void {
+      sounds.push(kind);
+    },
+    stop(): void {},
+    destroy(): void {
+      destroyed = true;
+    },
+  };
+
+  const timing: SoundTiming = {
+    now(): number {
+      return now;
+    },
+    delay(callback): () => void {
+      timers.add(callback);
+
+      return (): void => {
+        timers.delete(callback);
+      };
+    },
+  };
+
+  const feedback = createPointerFeedback(player, enabled, timing);
+
+  return {
+    feedback,
+    sounds,
+    timers,
+    setReady(value: boolean): void {
+      ready = value;
+    },
+    elapsed(value: number): void {
+      now = value;
+    },
+    flush(): void {
+      for (const callback of [
+        ...timers,
+      ]) {
+        timers.delete(callback);
+        callback();
+      }
+    },
+    prepared(): number {
+      return prepared;
+    },
+    destroyed(): boolean {
+      return destroyed;
+    },
+  };
+}
+
+const mouse: PointerInput = {
+  isTrusted: true,
+  pointerType: 'mouse',
+  pointerId: 7,
+  button: 0,
+};
+
+void test('press plays immediately and a quick release waits without delaying press', (): void => {
+  const h = harness();
+
+  h.feedback.press(mouse);
+  assert.deepEqual(h.sounds, [
+    'press',
+  ]);
+  h.elapsed(10);
+  h.feedback.release(mouse);
+  assert.deepEqual(h.sounds, [
+    'press',
+  ]);
+  assert.equal(h.timers.size, 1);
+  h.flush();
+  assert.deepEqual(h.sounds, [
+    'press',
+    'release',
+  ]);
+});
+
+void test('rapid clicks cancel an older pending release', (): void => {
+  const h = harness();
+
+  h.feedback.press(mouse);
+  h.feedback.release(mouse);
+  h.feedback.press(mouse);
+  h.flush();
+  assert.deepEqual(h.sounds, [
+    'press',
+    'press',
+  ]);
+});
+
+void test('touch, pen, secondary buttons and synthetic events are silent', (): void => {
+  const h = harness();
+
+  for (const invalid of [
+    {
+      ...mouse,
+      pointerType: 'touch',
+    },
+    {
+      ...mouse,
+      pointerType: 'pen',
+    },
+    {
+      ...mouse,
+      button: 1,
+    },
+    {
+      ...mouse,
+      button: 2,
+    },
+    {
+      ...mouse,
+      isTrusted: false,
+    },
+  ]) {
+    h.feedback.press(invalid);
+    h.feedback.release(invalid);
+  }
+
+  assert.deepEqual(h.sounds, []);
+});
+
+void test('cancellation, focus loss and visibility reset discard a pending release', (): void => {
+  for (const cancel of [
+    'pointer',
+    'reset',
+  ]) {
+    const h = harness();
+
+    h.feedback.press(mouse);
+    h.feedback.release(mouse);
+
+    if (cancel === 'pointer') {
+      h.feedback.cancel(mouse.pointerId);
+    } else {
+      h.feedback.reset();
+    }
+
+    h.flush();
+    assert.deepEqual(h.sounds, [
+      'press',
+    ]);
+  }
+});

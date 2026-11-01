@@ -5,9 +5,12 @@ import {
   type LanguageContext,
 } from './language-preference.ts';
 
-export const languageStorageKey = 'guesant-links-language';
+const languageStorageKey = 'guesant-links-language';
 
-type LanguagePage = { context: LanguageContext; url: URL };
+type LanguagePage = {
+  context: LanguageContext;
+  url: URL;
+};
 
 type Dependencies = {
   page: () => LanguagePage | null;
@@ -40,7 +43,8 @@ export function createLanguageNavigation(
 
   const savedLanguage = (): string | null => {
     try {
-      return dependencies.storage().getItem(languageStorageKey);
+      return dependencies.storage()
+        .getItem(languageStorageKey);
     } catch {
       return null;
     }
@@ -87,7 +91,10 @@ export function createLanguageNavigation(
         return;
       }
 
-      const { context, url } = page;
+      const {
+        context,
+        url
+      } = page;
 
       const selected = selectedLanguage(
         context,

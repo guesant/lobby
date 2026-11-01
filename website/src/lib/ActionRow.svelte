@@ -40,12 +40,12 @@
   <span class="action-row-title link-title">{title}</span>
   <span class="action-row-indicators">
     {#if action.thirdParty}<span class="link-third-party-badge">
-        {thirdPartyLabel}
-      </span>{/if}
+      {thirdPartyLabel}
+    </span>{/if}
     {#if action.external}<span class="external-link-icon" aria-hidden="true">
-        {#if interfaceName === 'terminal'}↗{:else}<Icon
-            name="external-link"
-          />{/if}
-      </span>{/if}
+      {#if interfaceName === 'terminal'}↗{:else}<Icon
+        name="external-link"
+      />{/if}
+    </span>{/if}
   </span>
 </a>

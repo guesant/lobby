@@ -52,19 +52,20 @@
   });
 
   const metadata = $derived(
-    Object.entries(item.metadata).filter(
-      ([
-        key,
-        value,
-      ]) => {
-        return (
-          value &&
-          key !== 'content_url' &&
-          !(item.type === 'experience' && key === 'position') &&
-          !(item.type === 'education' && key === 'degree')
-        );
-      },
-    ),
+    Object.entries(item.metadata)
+      .filter(
+        ([
+          key,
+          value,
+        ]): boolean | '' => {
+          return (
+            value &&
+            key !== 'content_url' &&
+            !(item.type === 'experience' && key === 'position') &&
+            !(item.type === 'education' && key === 'degree')
+          );
+        },
+      ),
   );
 
   function metadataValue(value: EditorialRecord['metadata'][string]): string {
@@ -86,36 +87,39 @@
   <header class="editorial-entry-heading">
     <svelte:element this={`h${headingLevel}`}>
       {#if primary}<ActionRow
-          title={item.title}
-          action={primary}
-          {thirdPartyLabel}
-          {interfaceName}
-          {icon}
-          className="editorial-primary"
-        />{:else}<span class="editorial-information">{item.title}</span>{/if}
+        title={item.title}
+        action={primary}
+        {thirdPartyLabel}
+        {interfaceName}
+        {icon}
+        className="editorial-primary"
+      />{:else}<span class="editorial-information">{item.title}</span>{/if}
     </svelte:element>
     {#if interfaceName === 'terminal'}<span class="editorial-origin">
-        {item.source}{#if item.language !== locale}
-          · {ui.language}: {item.language}{/if}
-      </span>{:else if item.language !== locale}<span class="editorial-origin">
-        {ui.language}: {item.language}
-      </span>{/if}
+      {item.source}{#if item.language !== locale}
+        · {ui.language}: {item.language}{/if}
+    </span>{:else if item.language !== locale}<span class="editorial-origin">
+      {ui.language}: {item.language}
+    </span>{/if}
   </header>
   {#if item.summary}<p class="editorial-description">{item.summary}</p>{/if}
   {#if secondary && item.details_label}<ActionRow
-      title={item.details_label}
-      action={secondary}
-      {thirdPartyLabel}
-      {interfaceName}
-      className="editorial-details"
-    />{/if}
+    title={item.details_label}
+    action={secondary}
+    {thirdPartyLabel}
+    {interfaceName}
+    className="editorial-details"
+  />{/if}
   {#if item.tags.length}<ul class="editorial-tags">
-      {#each item.tags as tag}<li>{tag}</li>{/each}
-    </ul>{/if}
+    {#each item.tags as tag}<li>{tag}</li>{/each}
+  </ul>{/if}
   {#if metadata.length}<dl class="editorial-metadata">
-      {#each metadata as [key, value]}<div>
-          <dt>{ui[key] || key}</dt>
-          <dd>{metadataValue(value)}</dd>
-        </div>{/each}
-    </dl>{/if}
+    {#each metadata as [
+      key,
+      value
+    ]}<div>
+      <dt>{ui[key] || key}</dt>
+      <dd>{metadataValue(value)}</dd>
+    </div>{/each}
+  </dl>{/if}
 </article>

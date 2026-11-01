@@ -1,5 +1,19 @@
 <script lang="ts">
+  import BuildMetadata from './BuildMetadata.svelte';
+  import NowActivity from './NowActivity.svelte';
+  import '../assets/css/reset.css';
+  import '../assets/css/main.css';
+  import '../assets/css/editorial.css';
+  import '../assets/css/listing.css';
+  import '../assets/css/bios.css';
+  import { interfaceState } from './preferences.svelte.ts';
+  import { tooltip } from './tooltip.ts';
+  import Uptime from './Uptime.svelte';
+  import { reboot } from './reboot.ts';
+  import { progressiveScene } from './progressive-scene.ts';
+  import { suspensionRails } from './suspension-rails.ts';
   import Icon from './Icon.svelte';
+  import FederationStatus from './FederationStatus.svelte';
   import IconButton from './IconButton.svelte';
   import LinkView from './LinkView.svelte';
   import LinkList from './LinkList.svelte';
@@ -19,7 +33,13 @@
     PageRecord,
   } from './site-data.ts';
 
-  let { data }: { data: PageLoadData } = $props();
+  const state = interfaceState();
+
+  let {
+    data,
+  }: {
+    data: PageLoadData;
+  } = $props();
 
   let {
     config,
@@ -40,14 +60,15 @@
   let home = $derived(page.id === 'home');
 
   let nowActivities = $derived(
-    Object.entries(nowActivity).filter(
-      ([
-        key,
-        value,
-      ]) => {
-        return key !== 'updated' && typeof value === 'string' && value.trim();
-      },
-    ),
+    Object.entries(nowActivity)
+      .filter(
+        ([
+          key,
+          value,
+        ]): string | false => {
+          return key !== 'updated' && typeof value === 'string' && value.trim();
+        },
+      ),
   );
 
   let profile = $derived({
@@ -57,7 +78,7 @@
   });
 
   let navigationPages = $derived(
-    pages.filter((entry) => {
+    pages.filter((entry): boolean => {
       return (
         entry.type === 'home' ||
         entry.type === 'links-page' ||
@@ -66,14 +87,14 @@
     }),
   );
 
-  let lanternCount = $derived.by(() => {
+  let lanternCount = $derived.by((): number => {
     if (!home) {
       return 1;
     }
 
     return (
       1 +
-      pages.filter((entry) => {
+      pages.filter((entry): boolean => {
         return [
           'writing',
           'games',
@@ -94,20 +115,30 @@
   }
 
   function nowSectionLinks(entry: PageRecord): DisplayLinkRecord[] {
-    return now.sections.map((section) => {
-      return {
-        id: `now-${section.id}`,
-        title: section.title,
-        url: `${entry.url}#now-${section.id}`,
-        icon: 'clock',
-        language: locale,
-      };
-    });
+    return now.sections.map(
+      (
+        section,
+      ): {
+        id: string;
+        title: string;
+        url: string;
+        icon: string;
+        language: string;
+      } => {
+        return {
+          id: `now-${section.id}`,
+          title: section.title,
+          url: `${entry.url}#now-${section.id}`,
+          icon: 'clock',
+          language: locale,
+        };
+      },
+    );
   }
 </script>
 
 <a class="skip-link" href="#main-content">{localized.ui.skip_link}</a>
-<div class="world-scene" aria-hidden="true">
+<div class="world-scene" aria-hidden="true" {@attach progressiveScene}>
   <div class="world-landscape"></div>
   <div class="world-landscape-preview"></div>
   <div class="world-clouds"></div>
@@ -126,21 +157,15 @@
           <span>{profileInitials(profile.name)}</span>
         </div>
         {#if home}<h1 class="profile-name">{profile.name}</h1>{:else}<p
-            class="profile-name"
-          >
-            {profile.name}
-          </p>{/if}
+          class="profile-name"
+        >
+          {profile.name}
+        </p>{/if}
         <p class="profile-username">@{profile.username}</p>
         <p class="profile-bio">{profile.bio}</p>
         <p class="profile-uptime">
           <OrnamentLabel as="span" label={uiText('uptime_label')} />
-          <time
-            datetime={profile.birthDate}
-            data-uptime={profile.birthDate}
-            data-uptime-locale={locale}
-          >
-            {profile.birthDate}
-          </time>
+          <Uptime birthDate={profile.birthDate} {locale} />
         </p>
         <nav
           class="profile-navigation"
@@ -166,22 +191,22 @@
           aria-labelledby="profile-quick-access-title"
         >
           {#each quickLinks as item}<a
-              class="quick-contact-link"
-              href={destination(item).href}
-              target={destination(item).target}
-              rel={destination(item).rel}
-              title={item.title}
-              aria-label={item.title}
-            >
-              <span class="quick-contact-icon">
-                <Icon name={item.icon} optical />
-              </span>
-              <span class="quick-contact-label">{item.title}</span>
-            </a>{/each}
+            class="quick-contact-link"
+            href={destination(item).href}
+            target={destination(item).target}
+            rel={destination(item).rel}
+            title={item.title}
+            aria-label={item.title}
+          >
+            <span class="quick-contact-icon">
+              <Icon name={item.icon} optical />
+            </span>
+            <span class="quick-contact-label">{item.title}</span>
+          </a>{/each}
         </div>
       </div>
     </header>
-    <div class="suspended-content">
+    <div class="suspended-content" {@attach suspensionRails}>
       <SuspensionRails {lanternCount} />
       <main class="page-content" id="main-content">
         {#if home}
@@ -199,13 +224,13 @@
               <div class="about-context-grid">
                 <ul class="about-facts">
                   {#each localized.presentation.facts as fact}<li
-                      class="about-fact"
-                    >
-                      <span class="about-fact-icon">
-                        <Icon name={fact.icon} optical />
-                      </span>
-                      <span>{fact.text}</span>
-                    </li>{/each}
+                    class="about-fact"
+                  >
+                    <span class="about-fact-icon">
+                      <Icon name={fact.icon} optical />
+                    </span>
+                    <span>{fact.text}</span>
+                  </li>{/each}
                 </ul>
                 <section class="about-site">
                   <h3 class="about-site-title">
@@ -214,11 +239,11 @@
                   </h3>
                   <ul class="about-topics">
                     {#each localized.presentation.topics as topic}<li>
-                        <span class="about-topic-check">
-                          <Icon name="check" optical />
-                        </span>
-                        <span>{topic}</span>
-                      </li>{/each}
+                      <span class="about-topic-check">
+                        <Icon name="check" optical />
+                      </span>
+                      <span>{topic}</span>
+                    </li>{/each}
                   </ul>
                 </section>
               </div>
@@ -237,41 +262,38 @@
           >
             <div class="category-grid">
               {#each homeSections as section, index}<SectionCard
-                  page={section.page}
-                  items={section.links}
-                  editorial={section.editorial}
-                  {editorialUI}
-                  thirdPartyLabel={localized.ui.third_party}
-                  {locale}
-                  {destination}
-                  {index}
-                />{/each}
-            </div>
-          </section>
-          {#each pages.filter((entry) => {
-            return entry.id === 'now';
-          }) as entry}<section class="home-updates" data-home-update="now">
-              <SectionCard
-                page={entry}
-                items={nowSectionLinks(entry)}
-                editorial={[]}
+                page={section.page}
+                items={section.links}
+                editorial={section.editorial}
                 {editorialUI}
                 thirdPartyLabel={localized.ui.third_party}
                 {locale}
                 {destination}
-                update
+                {index}
+              />{/each}
+            </div>
+          </section>
+          {#each pages.filter((entry): boolean => {
+            return entry.id === 'now';
+          }) as entry}<section class="home-updates" data-home-update="now">
+            <SectionCard
+              page={entry}
+              items={nowSectionLinks(entry)}
+              editorial={[]}
+              {editorialUI}
+              thirdPartyLabel={localized.ui.third_party}
+              {locale}
+              {destination}
+              update
+            />
+            {#if nowActivities.length}<article class="now-activity">
+              <NowActivity
+                entries={nowActivities}
+                labels={editorialUI}
+                className=""
               />
-              {#if nowActivities.length}<article class="now-activity">
-                  <dl>
-                    {#each nowActivities as [key, value]}<div
-                        id="now-activity-{key}"
-                      >
-                        <dt>{editorialUI[key]}</dt>
-                        <dd>{value}</dd>
-                      </div>{/each}
-                  </dl>
-                </article>{/if}
-            </section>{/each}
+            </article>{/if}
+          </section>{/each}
         {:else if page.id === 'now'}
           <section class="presentation-group page-introduction">
             <header class="section-toolbar">
@@ -287,24 +309,20 @@
           <article class="presentation" aria-labelledby="now-title">
             <div class="presentation-focus">
               {#each now.sections as section}<section
-                  class="presentation-focus-item"
-                  id="now-{section.id}"
-                >
-                  <span class="presentation-focus-marker"></span>
-                  <div class="presentation-focus-copy">
-                    <h2>{section.title}</h2>
-                    <p>{section.description}</p>
-                  </div>
-                </section>{/each}
+                class="presentation-focus-item"
+                id="now-{section.id}"
+              >
+                <span class="presentation-focus-marker"></span>
+                <div class="presentation-focus-copy">
+                  <h2>{section.title}</h2>
+                  <p>{section.description}</p>
+                </div>
+              </section>{/each}
             </div>
-            {#if nowActivities.length}<dl class="now-activity">
-                {#each nowActivities as [key, value]}<div
-                    id="now-activity-{key}"
-                  >
-                    <dt>{editorialUI[key]}</dt>
-                    <dd>{value}</dd>
-                  </div>{/each}
-              </dl>{/if}
+            {#if nowActivities.length}<NowActivity
+              entries={nowActivities}
+              labels={editorialUI}
+            />{/if}
           </article>
         {:else}
           <section
@@ -382,8 +400,12 @@
           class="site-footer-button icon-control"
           type="button"
           data-search-open
+          onclick={(): void => {
+            state.dialog = 'search';
+          }}
           aria-label={editorialUI.search}
           data-tooltip
+          {@attach tooltip}
         >
           <IconButton name="target" />
         </button>
@@ -394,6 +416,7 @@
           rel="noopener noreferrer"
           aria-label={localized.ui.footer_repository}
           data-tooltip
+          {@attach tooltip}
         >
           <IconButton name="github" />
           <span class="control-tooltip" aria-hidden="true">
@@ -405,8 +428,12 @@
           type="button"
           aria-label={localized.ui.credits}
           data-tooltip
+          {@attach tooltip}
           data-dialog-open="credits-dialog"
           data-credits-open
+          onclick={(): void => {
+            state.dialog = 'credits';
+          }}
         >
           <IconButton name="scale-balanced" />
           <span class="control-tooltip" aria-hidden="true">
@@ -418,8 +445,12 @@
           type="button"
           aria-label={localized.ui.settings_label}
           data-tooltip
+          {@attach tooltip}
           data-dialog-open="settings-dialog"
           data-settings-open
+          onclick={(): void => {
+            state.dialog = 'settings';
+          }}
         >
           <IconButton name="gear" />
           <span class="control-tooltip" aria-hidden="true">
@@ -429,44 +460,33 @@
         <a
           class="site-footer-link icon-control"
           data-reboot
+          onclick={reboot}
           data-sveltekit-reload
           data-tooltip
+          {@attach tooltip}
           href={`${page.url}?lobby-boot=1`}
           aria-label={editorialUI.reboot}
         >
           <IconButton name="desktop" />
         </a>
       </nav>
-      <p class="site-footer-meta">
-        {#if build.commitLabel === localized.ui.local_commit}<span
-            class="site-footer-commit"
-          >
-            {build.versionLabel}
-            {build.commitLabel}
-          </span>{:else}<a
-            class="site-footer-commit"
-            href={build.commitURL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {build.versionLabel}
-            {build.commitLabel}
-          </a>{/if}
-        <span class="footer-meta-separator" aria-hidden="true">·</span>
-        <a
-          class="site-footer-build"
-          href={build.workflowURL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {build.buildLabel}
-        </a>
-      </p>
+      <BuildMetadata
+        {build}
+        localCommitLabel={requiredText(
+          localized.ui.local_commit,
+          'local commit label',
+        )}
+      />
       {#if localized.ui.translation_disclaimer}<p
-          class="translation-disclaimer"
-        >
-          {localized.ui.translation_disclaimer}
-        </p>{/if}
+        class="translation-disclaimer"
+      >
+        {localized.ui.translation_disclaimer}
+      </p>{/if}
+      <FederationStatus
+        sources={data.federationStatus}
+        labels={editorialUI}
+        {locale}
+      />
       <p class="brand-disclaimer">{localized.ui.brand_disclaimer}</p>
     </footer>
   </div>

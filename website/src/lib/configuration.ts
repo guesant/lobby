@@ -2,7 +2,7 @@ import type { LinkDocument, LinkRecord, SectionRecord } from './site-data.ts';
 
 type Publication = Pick<LinkRecord, 'enabled' | 'public' | 'private' | 'draft'>;
 
-type ConfiguredPage = {
+export type ConfiguredPage = {
   id: string;
   type: string;
   title: string;
@@ -13,7 +13,7 @@ type ConfiguredPage = {
   links?: LinkRecord[];
 };
 
-export function visible(entry: Publication): boolean {
+function visible(entry: Publication): boolean {
   return (
     entry.enabled !== false &&
     entry.public !== false &&
@@ -23,26 +23,28 @@ export function visible(entry: Publication): boolean {
 }
 
 export function visibleLinks(configuration: LinkDocument): LinkRecord[] {
-  return configuration.sections.filter(visible).flatMap((section) => {
-    return (section.links || []).filter(visible);
-  });
+  return configuration.sections
+    .filter(visible)
+    .flatMap((section): LinkRecord[] => {
+      return (section.links || []).filter(visible);
+    });
 }
 
 export function linksForSection(
   configuration: LinkDocument,
   section: SectionRecord,
 ): LinkRecord[] {
-  const definitions = configuration.sections.flatMap((entry) => {
+  const definitions = configuration.sections.flatMap((entry): LinkRecord[] => {
     return entry.links || [];
   });
 
-  const ids = (section.links || []).map((entry) => {
+  const ids = (section.links || []).map((entry): string => {
     return entry.id;
   });
 
   for (const id of section.link_refs || []) {
     if (
-      !definitions.some((entry) => {
+      !definitions.some((entry): boolean => {
         return entry.id === id;
       })
     ) {
@@ -62,8 +64,8 @@ export function linksForSection(
 
   const catalog = visibleLinks(configuration);
 
-  return ids.flatMap((id) => {
-    return catalog.filter((entry) => {
+  return ids.flatMap((id): LinkRecord[] => {
+    return catalog.filter((entry): boolean => {
       return entry.id === id;
     });
   });
@@ -85,37 +87,49 @@ function sectionPages(
   language: string,
   path: string,
 ): ConfiguredPage[] {
-  return configuration.navigation.sections.flatMap((id) => {
-    const section = configuration.sections.find((entry) => {
-      return entry.id === id;
-    });
+  return configuration.navigation.sections.flatMap(
+    (
+      id,
+    ): {
+      id: string;
+      type: string;
+      title: string;
+      description: string;
+      url: string;
+      icon: string;
+      links: LinkRecord[];
+    }[] => {
+      const section = configuration.sections.find((entry): boolean => {
+        return entry.id === id;
+      });
 
-    if (!section) {
-      throw new Error('Unknown navigation section');
-    }
+      if (!section) {
+        throw new Error('Unknown navigation section');
+      }
 
-    if (!visible(section)) {
-      return [];
-    }
+      if (!visible(section)) {
+        return [];
+      }
 
-    const label = section.labels[language];
+      const label = section.labels[language];
 
-    if (!label) {
-      throw new Error(`Missing section language: ${id}:${language}`);
-    }
+      if (!label) {
+        throw new Error(`Missing section language: ${id}:${language}`);
+      }
 
-    return [
-      {
-        id,
-        type: 'links-page',
-        title: label.title,
-        description: label.description || '',
-        url: `${path}${id}/`,
-        icon: section.icon || 'book',
-        links: linksForSection(configuration, section),
-      },
-    ];
-  });
+      return [
+        {
+          id,
+          type: 'links-page',
+          title: label.title,
+          description: label.description || '',
+          url: `${path}${id}/`,
+          icon: section.icon || 'book',
+          links: linksForSection(configuration, section),
+        },
+      ];
+    },
+  );
 }
 
 function linkedPages(
@@ -124,39 +138,50 @@ function linkedPages(
 ): ConfiguredPage[] {
   const links = visibleLinks(configuration);
 
-  return configuration.navigation.links.flatMap((id) => {
-    const entry = links.find((entry) => {
-      return entry.id === id;
-    });
+  return configuration.navigation.links.flatMap(
+    (
+      id,
+    ): {
+      id: string;
+      type: string;
+      title: string;
+      url: string;
+      icon: string;
+      fallback: boolean;
+    }[] => {
+      const entry = links.find((entry): boolean => {
+        return entry.id === id;
+      });
 
-    if (!entry) {
-      return [];
-    }
+      if (!entry) {
+        return [];
+      }
 
-    const label = entry.labels[language] || entry.labels.en;
+      const label = entry.labels[language] || entry.labels.en;
 
-    if (!label) {
-      throw new Error(`Missing link language: ${id}:${language}`);
-    }
+      if (!label) {
+        throw new Error(`Missing link language: ${id}:${language}`);
+      }
 
-    return [
-      {
-        id,
-        type: id,
-        title: label.title,
-        url: localizedURL(entry, language),
-        icon: entry.icon,
-        fallback: !configuration.now[language],
-      },
-    ];
-  });
+      return [
+        {
+          id,
+          type: id,
+          title: label.title,
+          url: localizedURL(entry, language),
+          icon: entry.icon,
+          fallback: !configuration.now[language],
+        },
+      ];
+    },
+  );
 }
 
 export function pagesFor(
   configuration: LinkDocument,
   language: string,
 ): ConfiguredPage[] {
-  const option = configuration.language_options.find((entry) => {
+  const option = configuration.language_options.find((entry): boolean => {
     return entry.id === language;
   });
 

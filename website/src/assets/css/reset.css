@@ -1,4 +1,6 @@
 :root {
+  --icon-sprite: url('../icons/pixel-compact.png');
+  --icon-sprite-hd: url('../icons/pixel.png');
   --grid-track: minmax(0, 1fr);
   --grid-columns-1: var(--grid-track);
   --grid-columns-2: repeat(2, var(--grid-track));

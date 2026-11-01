@@ -1,11 +1,64 @@
 <script lang="ts">
   import BiosScreen from '$lib/BiosScreen.svelte';
   import IconButton from '$lib/IconButton.svelte';
-  import MinecraftPage from '$lib/MinecraftPage.svelte';
-  import TerminalPage from '$lib/TerminalPage.svelte';
+  import type { Snippet } from 'svelte';
+  import { siteOrigin } from '$lib/site-origin.ts';
   import type { PageLoadData } from '$lib/site-data.ts';
+  import { goto } from '$app/navigation';
+  import { interfaceState, setPreference } from '$lib/preferences.svelte.ts';
+  import { dialogBackdrop, showDialog } from '$lib/dialog.ts';
+  import SearchDialog from '$lib/SearchDialog.svelte';
+  import { interfaceDestination } from '$lib/interface-navigation.ts';
 
-  let { data }: { data: PageLoadData } = $props();
+  const ogImageURL = `${siteOrigin}/images/og-image.png`;
+
+  const controls = interfaceState();
+
+  let settingsDialog = $state<HTMLDialogElement>();
+
+  let creditsDialog = $state<HTMLDialogElement>();
+
+  $effect((): void => {
+    showDialog(settingsDialog, controls.dialog === 'settings');
+    showDialog(creditsDialog, controls.dialog === 'credits');
+  });
+
+  async function changeInterface(event: Event): Promise<void> {
+    if (!(event.currentTarget instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const selected = event.currentTarget.value;
+
+    if (selected === data.interfaceName) {
+      return;
+    }
+
+    let path = data.standardPageURL;
+
+    if (selected === 'terminal') {
+      path = data.terminalPageURL;
+    }
+
+    const target = interfaceDestination(
+      new URL(window.location.href),
+      path,
+      selected === 'terminal',
+    );
+
+    controls.dialog = 'none';
+    await goto(target, {
+      keepFocus: true,
+    });
+  }
+
+  let {
+    data,
+    children,
+  }: {
+    data: PageLoadData;
+    children: Snippet;
+  } = $props();
 
   let terminal = $derived(data.interfaceName === 'terminal');
 
@@ -23,7 +76,7 @@
 
   let credits = $derived(data.credits.entries);
 
-  let title = $derived.by(() => {
+  let title = $derived.by((): string => {
     if (home) {
       return localized.seo.title;
     }
@@ -35,7 +88,7 @@
     return `${page.title} | ${config.profile.name}`;
   });
 
-  let description = $derived.by(() => {
+  let description = $derived.by((): string => {
     if (home) {
       return localized.seo.description;
     }
@@ -47,17 +100,27 @@
     return page.description || localized.seo.description;
   });
 
-  let canonical = $derived(`https://guesant.net${page.url}`);
+  let canonical = $derived(`${siteOrigin}${page.url}`);
 
-  let siteCanonical = $derived(`https://guesant.net/${locale}/`);
+  let siteCanonical = $derived(`${siteOrigin}/${locale}/`);
 
-  let defaultRoute = $derived(
-    languageRoutes.find((option) => {
-      return option.id === config.language_preference.default;
+  let alternateRoutes = $derived(
+    languageRoutes.filter((option): boolean => {
+      return option.available;
     }),
   );
 
-  const robots = $derived.by(() => {
+  let defaultRoute = $derived(
+    alternateRoutes.find((option): boolean => {
+      return option.id === config.language_preference.default;
+    }) ||
+      alternateRoutes.find((option): boolean => {
+        return option.id === 'en';
+      }) ||
+      alternateRoutes[0],
+  );
+
+  const robots = $derived.by((): 'noindex, follow' | 'index, follow' => {
     if (data.isLanguageEntry) {
       return 'noindex, follow';
     }
@@ -65,7 +128,7 @@
     return 'index, follow';
   });
 
-  const defaultLanguageURL = $derived.by(() => {
+  const defaultLanguageURL = $derived.by((): string => {
     if (terminal) {
       return defaultRoute?.terminalURL || standardHomeURL;
     }
@@ -93,13 +156,19 @@
     return localized.ui.theme_light || '';
   }
 
-  function pageIdentity(): Record<string, string | { '@id': string }> {
+  function pageIdentity(): Record<
+    string,
+    | string
+    | {
+      '@id': string;
+    }
+  > {
     if (home) {
       return {
         '@type': 'ProfilePage',
         '@id': `${canonical}#profile`,
         mainEntity: {
-          '@id': `${siteCanonical}#person`,
+          '@id': `${siteOrigin}/#person`,
         },
       };
     }
@@ -108,7 +177,7 @@
       '@type': 'WebPage',
       '@id': `${canonical}#page`,
       about: {
-        '@id': `${siteCanonical}#person`,
+        '@id': `${siteOrigin}/#person`,
       },
     };
   }
@@ -119,16 +188,16 @@
       '@graph': [
         {
           '@type': 'Person',
-          '@id': `${siteCanonical}#person`,
+          '@id': `${siteOrigin}/#person`,
           name: config.profile.name,
           alternateName: `@${config.profile.username}`,
-          url: siteCanonical,
-          image: 'https://guesant.net/images/og-image.png',
+          url: siteOrigin,
+          image: ogImageURL,
           sameAs: data.quickLinks
-            .filter((item) => {
+            .filter((item): boolean => {
               return config.profile.same_as_links.includes(item.id);
             })
-            .map((item) => {
+            .map((item): string => {
               return item.url;
             }),
         },
@@ -140,7 +209,7 @@
           description: localized.seo.description,
           inLanguage: localized.ui.html_lang,
           publisher: {
-            '@id': `${siteCanonical}#person`,
+            '@id': `${siteOrigin}/#person`,
           },
         },
         {
@@ -154,7 +223,8 @@
           },
         },
       ],
-    }).replaceAll('<', '\\u003c'),
+    })
+      .replaceAll('<', '\\u003c'),
   );
 
   let structuredDataMarkup = $derived(
@@ -186,18 +256,15 @@
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonical} />
-  <meta property="og:site_name" content={`${config.profile.name} | Links`} />
+  <meta property="og:site_name" content={`${config.profile.name} | Lobby`} />
   <meta property="og:locale" content={localized.ui.og_locale} />
-  {#each languageRoutes.filter((option) => {
+  {#each alternateRoutes.filter((option): boolean => {
     return option.id !== locale;
   }) as option}
     <meta property="og:locale:alternate" content={option.ogLocale} />
   {/each}
-  <meta property="og:image" content="https://guesant.net/images/og-image.png" />
-  <meta
-    property="og:image:secure_url"
-    content="https://guesant.net/images/og-image.png"
-  />
+  <meta property="og:image" content={ogImageURL} />
+  <meta property="og:image:secure_url" content={ogImageURL} />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -205,33 +272,33 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
-  <meta
-    name="twitter:image"
-    content="https://guesant.net/images/og-image.png"
-  />
+  <meta name="twitter:image" content={ogImageURL} />
   <meta name="twitter:image:alt" content={title} />
-  {#each languageRoutes as option}
+  {#each alternateRoutes as option}
     <link
       rel="alternate"
       hreflang={option.hreflang}
-      href={`https://guesant.net${languageURL(option)}`}
+      href={`${siteOrigin}${languageURL(option)}`}
     />
   {/each}
   <link
     rel="alternate"
     hreflang="x-default"
-    href={`https://guesant.net${defaultLanguageURL}`}
+    href={`${siteOrigin}${defaultLanguageURL}`}
   />
   {@html structuredDataMarkup}
 </svelte:head>
 
-{#if terminal}
-  <TerminalPage {data} />
-{:else}
-  <MinecraftPage {data} />
-{/if}
+{@render children()}
 
 <dialog
+  bind:this={settingsDialog}
+  onclick={dialogBackdrop}
+  onclose={(): void => {
+    if (!settingsDialog?.open && controls.dialog === 'settings') {
+      controls.dialog = 'none';
+    }
+  }}
   class="app-dialog settings-dialog"
   id="settings-dialog"
   aria-labelledby="settings-dialog-title"
@@ -254,6 +321,45 @@
       </form>
     </header>
     <div class="site-controls">
+      <div class="toggle-control sound-control">
+        <span class="toggle-label" id="sound-label">{editorialUI.sound}</span>
+        <div
+          class="toggle-group"
+          role="radiogroup"
+          aria-labelledby="sound-label"
+        >
+          <input
+            class="toggle-input"
+            type="radio"
+            name="sound"
+            id="sound-on"
+            value="on"
+            data-sound-option
+            checked={controls.sound === 'on'}
+            onchange={(event): void => {
+              setPreference(controls, 'sound', event.currentTarget.value);
+            }}
+          />
+          <label class="toggle-button" for="sound-on">
+            {editorialUI.sound_on}
+          </label>
+          <input
+            class="toggle-input"
+            type="radio"
+            name="sound"
+            id="sound-off"
+            value="off"
+            data-sound-option
+            checked={controls.sound === 'off'}
+            onchange={(event): void => {
+              setPreference(controls, 'sound', event.currentTarget.value);
+            }}
+          />
+          <label class="toggle-button" for="sound-off">
+            {editorialUI.sound_off}
+          </label>
+        </div>
+      </div>
       <div class="toggle-control interface-control">
         <span class="toggle-label" id="interface-label">
           {editorialUI.interface}
@@ -272,6 +378,9 @@
             data-interface-option
             data-interface-url={data.standardPageURL}
             checked={!terminal}
+            onchange={(event): void => {
+              void changeInterface(event);
+            }}
           />
           <label class="toggle-button" for="interface-minecraft">
             Minecraft
@@ -285,6 +394,9 @@
             data-interface-option
             data-interface-url={data.terminalPageURL}
             checked={terminal}
+            onchange={(event): void => {
+              void changeInterface(event);
+            }}
           />
           <label class="toggle-button" for="interface-terminal">Terminal</label>
         </div>
@@ -301,12 +413,12 @@
             data-language-switcher
           >
             {#each languageRoutes as option}<option
-                value={languageURL(option)}
-                data-language={option.id}
-                selected={option.id === locale}
-              >
-                {option.label}
-              </option>{/each}
+              value={languageURL(option)}
+              data-language={option.id}
+              selected={option.id === locale}
+            >
+              {option.label}
+            </option>{/each}
           </select>
           <span class="language-select-icon">
             <IconButton name="chevron-right" />
@@ -322,15 +434,22 @@
           role="radiogroup"
           aria-labelledby="theme-label"
         >
-          {#each ['system', 'dark', 'light'] as theme}<input
-              class="toggle-input"
-              type="radio"
-              name="theme"
-              id="theme-{theme}"
-              value={theme}
-              data-theme-option
-              checked={theme === config.theme.appearance}
-            />
+          {#each [
+            'system',
+            'dark',
+            'light'
+          ] as theme}<input
+            class="toggle-input"
+            type="radio"
+            name="theme"
+            id="theme-{theme}"
+            value={theme}
+            data-theme-option
+            checked={theme === controls.theme}
+            onchange={(event): void => {
+              setPreference(controls, 'theme', event.currentTarget.value);
+            }}
+          />
             <label class="toggle-button" for="theme-{theme}">
               {themeLabel(theme)}
             </label>{/each}
@@ -352,7 +471,10 @@
             id="motion-on"
             value="on"
             data-motion-option
-            checked={config.theme.animations_enabled !== false}
+            checked={controls.motion === 'on'}
+            onchange={(event): void => {
+              setPreference(controls, 'motion', event.currentTarget.value);
+            }}
           />
           <label class="toggle-button" for="motion-on">
             {localized.ui.animations_enabled}
@@ -364,7 +486,10 @@
             id="motion-off"
             value="off"
             data-motion-option
-            checked={config.theme.animations_enabled === false}
+            checked={controls.motion === 'off'}
+            onchange={(event): void => {
+              setPreference(controls, 'motion', event.currentTarget.value);
+            }}
           />
           <label class="toggle-button" for="motion-off">
             {localized.ui.animations_disabled}
@@ -376,59 +501,18 @@
 </dialog>
 
 {#key `${locale}:${terminal}`}
-  <dialog
-    class="app-dialog search-dialog"
-    id="search-dialog"
-    aria-labelledby="search-title"
-    data-search-index={`/search/${locale}-${data.interfaceName}.json`}
-    data-search-empty={editorialUI.search_empty}
-    data-search-start={editorialUI.search_start}
-    data-search-loading={editorialUI.search_loading}
-    data-search-source={editorialUI.source}
-    data-search-language={editorialUI.language}
-    data-search-unavailable={editorialUI.search_unavailable}
-    data-search-partial={editorialUI.list_partial}
-  >
-    <div class="app-dialog-content">
-      <header class="app-dialog-header">
-        <h2 id="search-title">{editorialUI.search}</h2>
-        <form method="dialog">
-          <button
-            type="submit"
-            class="dialog-close"
-            aria-label={localized.ui.settings_close}
-          >
-            <IconButton name="xmark" />
-          </button>
-        </form>
-      </header>
-      <label for="search-query" class="visually-hidden">
-        {editorialUI.search}
-      </label>
-      <input
-        id="search-query"
-        type="search"
-        placeholder={editorialUI.search_placeholder}
-        autocomplete="off"
-      />
-      <p id="search-status" role="status" aria-live="polite">
-        {editorialUI.search_start}
-      </p>
-      <button
-        type="button"
-        class="ui-button search-retry"
-        data-search-retry
-        hidden
-      >
-        {editorialUI.search_retry}
-      </button>
-      <div id="search-results"></div>
-    </div>
-  </dialog>
+  <SearchDialog {data} />
 {/key}
 
 <dialog
   class="app-dialog credits-dialog"
+  bind:this={creditsDialog}
+  onclick={dialogBackdrop}
+  onclose={(): void => {
+    if (!creditsDialog?.open && controls.dialog === 'credits') {
+      controls.dialog = 'none';
+    }
+  }}
   id="credits-dialog"
   data-credits-dialog
   aria-labelledby="credits-dialog-title"
@@ -455,43 +539,43 @@
     </header>
     <div class="credits-list">
       {#each credits as credit}<section
-          class="credit-entry"
-          aria-labelledby="credit-{credit.id}-title"
+        class="credit-entry"
+        aria-labelledby="credit-{credit.id}-title"
+      >
+        <h3 id="credit-{credit.id}-title">{credit.name}</h3>
+        <dl class="credit-entry-meta">
+          <div>
+            <dt>{localized.ui.credits_authors}</dt>
+            <dd>{credit.authors}</dd>
+          </div>
+          <div>
+            <dt>{localized.ui.credits_license}</dt>
+            <dd>
+              <a
+                class="credit-license-link"
+                href={data.credits.licenses[credit.license]?.url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {data.credits.licenses[credit.license]?.name ||
+                  credit.license}
+              </a>
+            </dd>
+          </div>
+        </dl>
+        <details class="credit-license">
+          <summary>{localized.ui.credits_license_text}</summary>
+          <pre>{data.credits.licenses[credit.license]?.text || ''}</pre>
+        </details>
+        <a
+          class="credit-official-link"
+          href={credit.official_url}
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          <h3 id="credit-{credit.id}-title">{credit.name}</h3>
-          <dl class="credit-entry-meta">
-            <div>
-              <dt>{localized.ui.credits_authors}</dt>
-              <dd>{credit.authors}</dd>
-            </div>
-            <div>
-              <dt>{localized.ui.credits_license}</dt>
-              <dd>
-                <a
-                  class="credit-license-link"
-                  href={data.credits.licenses[credit.license]?.url || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {data.credits.licenses[credit.license]?.name ||
-                    credit.license}
-                </a>
-              </dd>
-            </div>
-          </dl>
-          <details class="credit-license">
-            <summary>{localized.ui.credits_license_text}</summary>
-            <pre>{data.credits.licenses[credit.license]?.text || ''}</pre>
-          </details>
-          <a
-            class="credit-official-link"
-            href={credit.official_url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {localized.ui.credits_official_url}
-          </a>
-        </section>{/each}
+          {localized.ui.credits_official_url}
+        </a>
+      </section>{/each}
     </div>
   </div>
 </dialog>

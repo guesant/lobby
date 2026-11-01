@@ -1,0 +1,25 @@
+name: Build workspace image
+description: Load a pinned Docker workspace with a shared BuildKit cache
+inputs:
+  target:
+    description: Docker build target
+    required: true
+  tag:
+    description: Local image tag
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Configure Buildx
+      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+    - name: Build and load workspace
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      with:
+        context: .
+        file: .config/container/Dockerfile
+        target: ${{ inputs.target }}
+        tags: ${{ inputs.tag }}
+        load: true
+        push: false
+        cache-from: type=gha,scope=${{ inputs.target }}
+        cache-to: type=gha,mode=max,scope=${{ inputs.target }}

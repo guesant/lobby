@@ -41,7 +41,10 @@
   data-category={page.id}
   data-ornament={index % 3}
   data-rail-anchor={enabledAttribute(
-    update || ['writing', 'games'].includes(page.id),
+    update || [
+      'writing',
+      'games'
+    ].includes(page.id),
   )}
   aria-labelledby="category-{page.id}-title"
 >
@@ -53,35 +56,35 @@
       <h2 class="category-title" id="category-{page.id}-title">{page.title}</h2>
     </div>
     {#if page.description}<div class="category-copy">
-        <p class="category-description">{page.description}</p>
-      </div>{/if}
+      <p class="category-description">{page.description}</p>
+    </div>{/if}
   </div>
   <div class="category-links">
     {#if items.length}<LinkList
-        {items}
-        ui={editorialUI}
-        {thirdPartyLabel}
-        {destination}
-        sectionID={page.id}
-        preview
-      />{/if}
+      {items}
+      ui={editorialUI}
+      {thirdPartyLabel}
+      {destination}
+      sectionID={page.id}
+      preview
+    />{/if}
     {#if !update}<EditorialList
-        items={editorial}
-        ui={editorialUI}
-        {thirdPartyLabel}
-        sectionID={page.id}
-        {locale}
-        interfaceName="minecraft"
-        {destination}
-        emptyAction={emptyActionFor({
-          home: true,
-          pageURL: page.url,
-          homeURL: '',
-          sectionID: page.id,
-          linksCount: items.length,
-          ui: editorialUI,
-        })}
-        empty={!items.length}
-      />{/if}
+      items={editorial}
+      ui={editorialUI}
+      {thirdPartyLabel}
+      sectionID={page.id}
+      {locale}
+      interfaceName="minecraft"
+      {destination}
+      emptyAction={emptyActionFor({
+        home: true,
+        pageURL: page.url,
+        homeURL: '',
+        sectionID: page.id,
+        linksCount: items.length,
+        ui: editorialUI,
+      })}
+      empty={!items.length}
+    />{/if}
   </div>
 </article>

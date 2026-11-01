@@ -1,0 +1,11 @@
+[project]
+name = "lobby-python-tooling"
+version = "1.0.0"
+requires-python = ">=3.11,<3.12"
+dependencies = ["yamllint==1.38.0"]
+
+[dependency-groups]
+audit = ["semgrep==1.183.0"]
+
+[tool.uv]
+override-dependencies = ["mcp==1.30.0"]
