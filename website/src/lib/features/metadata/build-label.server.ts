@@ -1,5 +1,5 @@
 import type { SiteData } from '../content/content.types.ts';
-import { localizedText } from '../content/localized-text.model.ts';
+import { requiredText } from '../content/required-text.model.ts';
 
 type BuildLabelContext = {
   locale: string;
@@ -10,8 +10,16 @@ type BuildLabelContext = {
 
 export function buildLabel(context: BuildLabelContext): string {
   if (context.runID) {
-    return `${localizedText(context.localized, context.locale, 'footer_workflow')} #${context.runNumber}`;
+    const workflowLabel = requiredText(
+      context.localized['footer_workflow'],
+      `links.locales.${context.locale}.ui.footer_workflow`,
+    );
+
+    return `${workflowLabel} #${context.runNumber}`;
   }
 
-  return localizedText(context.localized, context.locale, 'local_build');
+  return requiredText(
+    context.localized['local_build'],
+    `links.locales.${context.locale}.ui.local_build`,
+  );
 }
