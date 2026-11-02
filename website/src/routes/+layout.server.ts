@@ -1,12 +1,11 @@
-import { getSiteData } from '$lib/site-data.server.ts';
-import { errorLocales } from '$lib/not-found.ts';
-import type { ErrorLocale } from '$lib/not-found.ts';
-import type { LayoutServerLoad } from './$types';
+import { getSiteData } from '#lib/features/content/content.server.ts';
+import type { ErrorLocale } from '#lib/features/navigation/not-found.model.ts';
+import { errorLocales } from '#lib/features/navigation/not-found.model.ts';
 
-export const load: LayoutServerLoad = async (): Promise<{
+export async function load(): Promise<{
   errorPresentation: ErrorLocale[];
-}> => {
+}> {
   return {
     errorPresentation: errorLocales(await getSiteData()),
   };
-};
+}

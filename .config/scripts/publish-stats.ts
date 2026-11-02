@@ -1,16 +1,29 @@
-import { parse } from 'yaml';
-import { spawnSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { validateStatistics } from '../../website/src/lib/content-validation.ts';
+import { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
 import {
   validateRepository,
   validateSha,
   writeCiOutputs,
 } from './ci-policy.ts';
+import { spawnSync } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { parse } from 'yaml';
 
 const statisticsPath = 'website/src/data/statistics.yaml';
+
+const commitArguments = [
+  '-c',
+  'user.name=github-actions[bot]',
+  '-c',
+  'user.email=41898282+github-actions[bot]@users.noreply.github.com',
+  'commit',
+  '--only',
+  '-m',
+  'chore(stats): refresh public statistics',
+  '--',
+  statisticsPath,
+];
 
 function git(args: string[]): string {
   const result = spawnSync(
@@ -25,7 +38,7 @@ function git(args: string[]): string {
     },
   );
 
-  if (result.error || result.status !== 0) {
+  if (result.error ?? result.status !== 0) {
     throw new Error('Statistics git command failed');
   }
 
@@ -36,23 +49,31 @@ async function validateFile(): Promise<void> {
   validateStatistics(parse(await readFile(statisticsPath, 'utf8')));
 }
 
-export async function publishStatistics({
-  token,
-  repository,
-  ref,
-  runGit = git,
-  validate = validateFile,
-}: {
+type PublicationOptions = {
   token?: string | undefined;
   repository?: unknown;
   ref?: string | undefined;
   runGit?: typeof git;
   validate?: () => Promise<void>;
-}): Promise<{
+};
+
+type PublicationResult = {
   changed: boolean;
   sha: string;
-}> {
-  validateRepository(repository);
+};
+
+export async function publishStatistics(
+  input: PublicationOptions,
+): Promise<PublicationResult> {
+  const {
+    token,
+    repository,
+    ref,
+    runGit = git,
+    validate = validateFile,
+  } = input;
+
+  const repositoryName = validateRepository(repository);
 
   if (!token || ref !== 'refs/heads/main') {
     throw new Error(
@@ -84,17 +105,38 @@ export async function publishStatistics({
 
   await validate();
 
+  return {
+    changed: true,
+    sha: commitStatistics(
+      runGit,
+      {
+        token,
+        repository: repositoryName,
+      },
+      source,
+    ),
+  };
+}
+
+function commitStatistics(
+  runGit: typeof git,
+  authentication: {
+    token: string;
+    repository: string;
+  },
+  source: string,
+): string {
   const credentials = [
     '-c',
     'credential.helper=',
     '-c',
     `http.https://github.com/.extraheader=AUTHORIZATION: basic ${Buffer.from(
-      `x-access-token:${token}`,
+      `x-access-token:${authentication.token}`,
     )
       .toString('base64')}`,
   ];
 
-  const remote = `https://github.com/${repository}.git`;
+  const remote = `https://github.com/${authentication.repository}.git`;
 
   const currentMain = runGit([
     ...credentials,
@@ -110,18 +152,7 @@ export async function publishStatistics({
     );
   }
 
-  runGit([
-    '-c',
-    'user.name=github-actions[bot]',
-    '-c',
-    'user.email=41898282+github-actions[bot]@users.noreply.github.com',
-    'commit',
-    '--only',
-    '-m',
-    'chore(stats): refresh public statistics',
-    '--',
-    statisticsPath,
-  ]);
+  runGit(commitArguments);
   runGit([
     ...credentials,
     'push',
@@ -129,22 +160,19 @@ export async function publishStatistics({
     'HEAD:refs/heads/main',
   ]);
 
-  return {
-    changed: true,
-    sha: validateSha(
-      runGit([
-        'rev-parse',
-        'HEAD',
-      ]),
-    ),
-  };
+  return validateSha(
+    runGit([
+      'rev-parse',
+      'HEAD',
+    ]),
+  );
 }
 
 async function main(): Promise<void> {
   const result = await publishStatistics({
-    token: process.env.GITHUB_STATS_TOKEN,
-    repository: process.env.GITHUB_REPOSITORY,
-    ref: process.env.GITHUB_REF,
+    token: process.env['GITHUB_STATS_TOKEN'],
+    repository: process.env['GITHUB_REPOSITORY'],
+    ref: process.env['GITHUB_REF'],
   });
 
   let summary =

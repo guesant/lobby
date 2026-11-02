@@ -1,14 +1,13 @@
-import type { Page } from 'puppeteer-core';
 import { dialogIsOpen, inputIsChecked } from './browser-dom.ts';
-import type { Browser } from 'puppeteer-core';
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {
-  responsiveWidths,
-  useBrowserLanguages,
   applyAppearance,
   createBrowserAudit,
+  responsiveWidths,
+  useBrowserLanguages,
 } from './browser-presentation.ts';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import type { Browser, Page } from 'puppeteer-core';
 
 export default async function checkCompactControls(
   browser: Browser,
@@ -30,7 +29,13 @@ export default async function checkCompactControls(
         '',
         'career/',
       ] as const) {
-        await inspectCompactPage(language, suffix, baseURL, page, checks);
+        await inspectCompactPage({
+          language,
+          suffix,
+          baseURL,
+          page,
+          checks,
+        });
       }
     }
 
@@ -42,142 +47,7 @@ export default async function checkCompactControls(
       320,
       1024,
     ] as const) {
-      await page.setViewport({
-        width,
-        height: 900,
-      });
-
-      for (const selector of [
-        'label[for=link-view-compact]',
-        'label[for=link-view-detailed]',
-        '.site-footer-repository',
-        '[data-credits-open]',
-        '[data-settings-open]',
-      ] as const) {
-        await page.hover(selector);
-
-        const tooltip = `${selector} .control-tooltip`;
-
-        assert.equal(
-          await page.$eval(tooltip, (element): string => {
-            return getComputedStyle(element).visibility;
-          }),
-          'visible',
-        );
-
-        const rect = await page.$eval(
-          tooltip,
-          (
-            element,
-          ): {
-            left: number;
-            right: number;
-          } => {
-            const r = element.getBoundingClientRect();
-
-            return {
-              left: r.left,
-              right: r.right,
-            };
-          },
-        );
-
-        assert(
-          rect.left >= 0 && rect.right <= width,
-          `${selector} tooltip at ${width}`,
-        );
-        await page.hover(tooltip);
-        assert.equal(
-          await page.$eval(tooltip, (element): string => {
-            return getComputedStyle(element).visibility;
-          }),
-          'visible',
-        );
-        await page.keyboard.press('Escape');
-        assert.equal(
-          await page.$eval(tooltip, (element): string => {
-            return getComputedStyle(element).visibility;
-          }),
-          'hidden',
-        );
-        await page.mouse.move(0, 0);
-
-        const resolveFocus = (): string => {
-          if (selector.startsWith('label')) {
-            if (selector.includes('detailed')) {
-              return '#link-view-detailed';
-            }
-
-            return '#link-view-compact';
-          }
-
-          return selector;
-        };
-
-        const focus = resolveFocus();
-
-        await page.focus(focus);
-        await page.keyboard.press('Tab');
-        await page.keyboard.down('Shift');
-        await page.keyboard.press('Tab');
-        await page.keyboard.up('Shift');
-
-        if (!selector.startsWith('label')) {
-          assert.equal(
-            await page.$eval(tooltip, (element): string => {
-              return getComputedStyle(element).visibility;
-            }),
-            'visible',
-          );
-        }
-      }
-
-      await page.click('[data-credits-open]');
-      assert.equal(await page.$eval('#credits-dialog', dialogIsOpen), true);
-      await page.keyboard.press('Escape');
-      await page.click('[data-settings-open]');
-      assert.equal(await page.$eval('#settings-dialog', dialogIsOpen), true);
-      await page.keyboard.press('Escape');
-      await page.focus('#link-view-compact');
-      await page.keyboard.press('ArrowRight');
-      assert.equal(
-        await page.$eval(
-          'label[for=link-view-detailed] .control-tooltip',
-          (element): string => {
-            return getComputedStyle(element).visibility;
-          },
-        ),
-        'visible',
-        `Detailed view tooltip must reopen on keyboard focus at ${width}`,
-      );
-      assert.equal(
-        await page.$eval('#link-view-detailed', inputIsChecked),
-        true,
-      );
-      await page.keyboard.press('ArrowLeft');
-      assert.equal(
-        await page.$eval('#link-view-compact', inputIsChecked),
-        true,
-      );
-      await page.evaluate((): void => {
-        document.documentElement.dataset.theme = 'dark';
-      });
-      await page.mouse.move(0, 0);
-      await page.$eval('body', (element): void => {
-        element.tabIndex = -1;
-        element.focus();
-      });
-
-      for (const selector of [
-        '.link-view-control',
-        '.site-footer',
-      ] as const) {
-        const element = await page.$(selector);
-
-        await element!.screenshot({
-          path: `${reportDirectory}/compact-${selector.slice(1)}-${width}.png`,
-        });
-      }
+      await inspectControlViewport(width);
     }
 
     fs.writeFileSync(
@@ -200,20 +70,165 @@ export default async function checkCompactControls(
   } finally {
     await context.close();
   }
+
+  async function inspectControlViewport(width: number): Promise<void> {
+    await page.setViewport({
+      width,
+      height: 900,
+    });
+
+    for (const selector of [
+      'label[for=link-view-compact]',
+      'label[for=link-view-detailed]',
+      '.site-footer-repository',
+      '[data-credits-open]',
+      '[data-settings-open]',
+    ] as const) {
+      await page.hover(selector);
+
+      const tooltip = `${selector} .control-tooltip`;
+
+      assert.equal(
+        await page.$eval(tooltip, (element): string => {
+          return getComputedStyle(element).visibility;
+        }),
+        'visible',
+      );
+
+      const rect = await page.$eval(
+        tooltip,
+        (
+          element,
+        ): {
+          left: number;
+          right: number;
+        } => {
+          const r = element.getBoundingClientRect();
+
+          return {
+            left: r.left,
+            right: r.right,
+          };
+        },
+      );
+
+      assert(
+        rect.left >= 0 && rect.right <= width,
+        `${selector} tooltip at ${String(width)}`,
+      );
+      await page.hover(tooltip);
+      assert.equal(
+        await page.$eval(tooltip, (element): string => {
+          return getComputedStyle(element).visibility;
+        }),
+        'visible',
+      );
+      await page.keyboard.press('Escape');
+      assert.equal(
+        await page.$eval(tooltip, (element): string => {
+          return getComputedStyle(element).visibility;
+        }),
+        'hidden',
+      );
+      await page.mouse.move(0, 0);
+
+      function resolveFocus(): string {
+        if (selector.startsWith('label')) {
+          if (selector.includes('detailed')) {
+            return '#link-view-detailed';
+          }
+
+          return '#link-view-compact';
+        }
+
+        return selector;
+      }
+
+      const focus = resolveFocus();
+
+      await page.focus(focus);
+      await page.keyboard.press('Tab');
+      await page.keyboard.down('Shift');
+      await page.keyboard.press('Tab');
+      await page.keyboard.up('Shift');
+
+      if (!selector.startsWith('label')) {
+        assert.equal(
+          await page.$eval(tooltip, (element): string => {
+            return getComputedStyle(element).visibility;
+          }),
+          'visible',
+        );
+      }
+    }
+
+    await page.click('[data-credits-open]');
+    assert.equal(await page.$eval('#credits-dialog', dialogIsOpen), true);
+    await page.keyboard.press('Escape');
+    await page.click('[data-settings-open]');
+    assert.equal(await page.$eval('#settings-dialog', dialogIsOpen), true);
+    await page.keyboard.press('Escape');
+    await page.focus('#link-view-compact');
+    await page.keyboard.press('ArrowRight');
+    assert.equal(
+      await page.$eval(
+        'label[for=link-view-detailed] .control-tooltip',
+        (element): string => {
+          return getComputedStyle(element).visibility;
+        },
+      ),
+      'visible',
+      `Detailed view tooltip must reopen on keyboard focus at ${String(width)}`,
+    );
+    assert.equal(await page.$eval('#link-view-detailed', inputIsChecked), true);
+    await page.keyboard.press('ArrowLeft');
+    assert.equal(await page.$eval('#link-view-compact', inputIsChecked), true);
+    await page.evaluate((): void => {
+      document.documentElement.dataset['theme'] = 'dark';
+    });
+    await page.mouse.move(0, 0);
+    await page.$eval('body', (element): void => {
+      element.tabIndex = -1;
+      element.focus();
+    });
+
+    for (const selector of [
+      '.link-view-control',
+      '.site-footer',
+    ] as const) {
+      const element = await page.$(selector);
+
+      if (element === null) {
+        throw new Error('Missing required element');
+      }
+
+      await element.screenshot({
+        path: `${reportDirectory}/compact-${selector.slice(1)}-${String(width)}.png`,
+      });
+    }
+  }
 }
 
-async function inspectCompactPage(
+async function inspectCompactPage(input: {
   language: {
     id: string;
     path: string;
     label: string;
     hreflang: string;
-  },
-  suffix: string,
-  baseURL: string,
-  page: Page,
-  checks: Record<string, unknown>[],
-): Promise<void> {
+  };
+  suffix: string;
+  baseURL: string;
+  page: Page;
+  checks: Record<string, unknown>[];
+}): Promise<void> {
+  const {
+    language,
+    suffix,
+    baseURL,
+    page,
+    checks
+  } = input;
+
   const url = new URL(`${language.path}${suffix}`.replace(/^\//, ''), baseURL)
     .href;
 
@@ -228,7 +243,7 @@ async function inspectCompactPage(
     await applyAppearance(page, theme);
 
     for (const width of responsiveWidths) {
-      await inspectCompactViewport(
+      await inspectCompactViewport({
         page,
         width,
         url,
@@ -236,7 +251,7 @@ async function inspectCompactPage(
         checks,
         language,
         suffix,
-      );
+      });
     }
   }
 
@@ -276,20 +291,30 @@ async function inspectCompactPage(
   });
 }
 
-async function inspectCompactViewport(
-  page: Page,
-  width: number,
-  url: string,
-  theme: string,
-  checks: Record<string, unknown>[],
+async function inspectCompactViewport(input: {
+  page: Page;
+  width: number;
+  url: string;
+  theme: string;
+  checks: Record<string, unknown>[];
   language: {
     id: string;
     path: string;
     label: string;
     hreflang: string;
-  },
-  suffix: string,
-): Promise<void> {
+  };
+  suffix: string;
+}): Promise<void> {
+  const {
+    page,
+    width,
+    url,
+    theme,
+    checks,
+    language,
+    suffix
+  } = input;
+
   await page.setViewport({
     width,
     height: 900,
@@ -309,29 +334,44 @@ async function inspectCompactViewport(
       overflow: boolean;
       compactHeight: boolean;
     } => {
-      const footer = document
-        .querySelector<HTMLElement>('.site-footer')!
-        .getBoundingClientRect();
+      const siteFooter = window.lobbyAssertions.element(
+        document,
+        '.site-footer',
+      );
 
-      const group = document
-        .querySelector<HTMLElement>('.site-footer-content')!
-        .getBoundingClientRect();
+      const footer = siteFooter.getBoundingClientRect();
+
+      const siteFooterContent = window.lobbyAssertions.element(
+        document,
+        '.site-footer-content',
+      );
+
+      const group = siteFooterContent.getBoundingClientRect();
 
       const buttons = [
         ...document.querySelectorAll<HTMLElement>('.site-footer-content > *'),
       ];
 
-      const toolbar = document
-        .querySelector<HTMLElement>('.link-view-toolbar')!
-        .getBoundingClientRect();
-
-      const options = document
-        .querySelector<HTMLElement>('.link-view-options')!
-        .getBoundingClientRect();
-
-      const toolbarStyle = getComputedStyle(
-        document.querySelector<HTMLElement>('.link-view-toolbar')!,
+      const linkViewToolbar = window.lobbyAssertions.element(
+        document,
+        '.link-view-toolbar',
       );
+
+      const toolbar = linkViewToolbar.getBoundingClientRect();
+
+      const linkViewOptions = window.lobbyAssertions.element(
+        document,
+        '.link-view-options',
+      );
+
+      const options = linkViewOptions.getBoundingClientRect();
+
+      const linkViewToolbarValue = window.lobbyAssertions.element(
+        document,
+        '.link-view-toolbar',
+      );
+
+      const toolbarStyle = getComputedStyle(linkViewToolbarValue);
 
       const controls = [
         ...document.querySelectorAll<HTMLElement>('.icon-control'),
@@ -345,17 +385,35 @@ async function inspectCompactViewport(
             ),
         ) * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-      const resolveSymmetricPadding = (): boolean => {
+      function resolveSymmetricPadding(): boolean {
         if (
           document.querySelector<HTMLElement>(
             '.page-content > .link-view-control',
-          )!
+          )
         ) {
           return parseFloat(toolbarStyle.paddingLeft) > 0;
         }
 
         return parseFloat(toolbarStyle.paddingLeft) === 0;
-      };
+      }
+
+      function inspectIconOnlyEntry(control: HTMLElement): boolean {
+        return [
+          ...control.childNodes,
+        ]
+          .filter((node): boolean => {
+            return node.nodeType === Node.TEXT_NODE;
+          })
+          .every((node): boolean => {
+            const textContentValue = node.textContent;
+
+            if (textContentValue === null) {
+              throw new Error('Missing required textContentValue');
+            }
+
+            return !textContentValue.trim();
+          });
+      }
 
       return {
         count: buttons.length,
@@ -380,30 +438,20 @@ async function inspectCompactViewport(
             Math.abs(control.offsetHeight - size) < 1
           );
         }),
-        iconOnly: controls.every((control): boolean => {
-          return [
-            ...control.childNodes,
-          ]
-            .filter((node): boolean => {
-              return node.nodeType === Node.TEXT_NODE;
-            })
-            .every((node): boolean => {
-              return !node!.textContent!.trim();
-            });
-        }),
+        iconOnly: controls.every(inspectIconOnlyEntry),
         metadataSeparate:
           !document.querySelector<HTMLAnchorElement>(
             '.site-footer-content .site-footer-commit,.site-footer-content .site-footer-build',
-          )! &&
+          ) &&
           Boolean(
             document.querySelector<HTMLElement>(
               '.site-footer-meta .site-footer-commit',
-            )!,
+            ),
           ) &&
           Boolean(
             document.querySelector<HTMLAnchorElement>(
               '.site-footer-meta a.site-footer-build',
-            )!,
+            ),
           ),
         named:
           buttons.every((button): boolean => {
@@ -414,11 +462,12 @@ async function inspectCompactViewport(
               '.link-view-options label',
             ),
           ].every((label): boolean => {
-            return Boolean(
-              label
-                .querySelector<HTMLElement>('.visually-hidden')!
-                .textContent.trim(),
+            const visuallyHidden = window.lobbyAssertions.element(
+              label,
+              '.visually-hidden',
             );
+
+            return Boolean(visuallyHidden.textContent.trim());
           }),
         overflow: document.documentElement.scrollWidth > innerWidth,
         compactHeight: toolbar.height < size * 1.5,
@@ -427,7 +476,11 @@ async function inspectCompactViewport(
   );
 
   assert.equal(actual.count, 5);
-  assert.equal(actual.overflow, false, `${url} ${theme} ${width} overflow`);
+  assert.equal(
+    actual.overflow,
+    false,
+    `${url} ${theme} ${String(width)} overflow`,
+  );
 
   for (const [
     key,
@@ -439,7 +492,7 @@ async function inspectCompactViewport(
         'overflow',
       ].includes(key)
     ) {
-      assert.equal(value, true, `${url} ${theme} ${width} ${key}`);
+      assert.equal(value, true, `${url} ${theme} ${String(width)} ${key}`);
     }
   }
 

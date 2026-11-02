@@ -9,4 +9,4 @@ rule:
   all:
     - kind: comment
     - not:
-        regex: '^#\s*(?:!|shellcheck\s+disable=)'
+        regex: '^#\s*(?:!|shellcheck\s+disable=|IMPORTANT:|SPDX-License-Identifier:|Copyright)'

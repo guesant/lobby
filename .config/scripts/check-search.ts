@@ -1,11 +1,13 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { createSearchController } from '../../website/src/lib/features/search/search.controller.ts';
 import {
-  searchItems,
   filterSearchItems,
+  initialSearchState,
   isSearchItem,
   type SearchItem,
-} from '../../website/src/lib/search.ts';
+  searchItems,
+} from '../../website/src/lib/features/search/search.model.ts';
+import assert from 'node:assert/strict';
+import test from 'node:test';
 
 const entries: SearchItem[] = [
   {
@@ -39,6 +41,43 @@ const entries: SearchItem[] = [
     type: 'post',
   },
 ];
+
+void test('search state is isolated and cancelled requests cannot publish late results', async (): Promise<void> => {
+  const first = initialSearchState();
+
+  const second = initialSearchState();
+
+  let finish: ((items: SearchItem[]) => void) | undefined;
+
+  let signal: AbortSignal | undefined;
+
+  const controller = createSearchController(first, {
+    indexURL(): string {
+      return '/search/test.json';
+    },
+    closeDialog(): void {
+      return;
+    },
+    readIndex(_url, requestSignal): Promise<SearchItem[]> {
+      signal = requestSignal;
+
+      return new Promise((resolve): void => {
+        finish = resolve;
+      });
+    },
+  });
+
+  const pending = controller.load();
+
+  controller.destroy();
+  assert.equal(signal?.aborted, true);
+  assert.ok(finish);
+  finish(entries);
+  await pending;
+  assert.equal(first.phase, 'loading');
+  assert.equal(first.index.length, 0);
+  assert.equal(second.phase, 'idle');
+});
 
 void test('search retains every match beyond the previous one hundred item limit', (): void => {
   const first = entries[0];

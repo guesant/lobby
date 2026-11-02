@@ -9,6 +9,22 @@ snapshots:
         start: 0
         end: 26
   ? |
+    // @ts-ignore
+    const value = external()
+  : labels:
+      - source: // @ts-ignore
+        style: primary
+        start: 0
+        end: 13
+  ? |
+    // @ts-nocheck
+    export const value = 1
+  : labels:
+      - source: // @ts-nocheck
+        style: primary
+        start: 0
+        end: 14
+  ? |
     // normalize the value before rendering
     const value = 1
   : labels:

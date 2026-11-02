@@ -1,6 +1,7 @@
-import { dialogIsOpen } from './browser-dom.ts';
-import type { Browser } from 'puppeteer-core';
+import { dialogIsOpen, searchIsReady } from './browser-dom.ts';
+import { createAuditPage } from './browser-fixture.ts';
 import assert from 'node:assert/strict';
+import type { Browser } from 'puppeteer-core';
 
 async function blockedStorage(
   browser: Browser,
@@ -9,7 +10,7 @@ async function blockedStorage(
   const context = await browser.createBrowserContext();
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await page.setCacheEnabled(false);
     await page.evaluateOnNewDocument((): void => {
@@ -53,8 +54,12 @@ async function blockedStorage(
         '/fr/career/',
         '/es/career/',
       ] as const) {
-        select!.value = path;
-        select!.dispatchEvent(
+        if (select === null) {
+          throw new Error('Missing required select');
+        }
+
+        select.value = path;
+        select.dispatchEvent(
           new Event('change', {
             bubbles: true,
           }),
@@ -79,7 +84,7 @@ async function searchAndHistory(
   const context = await browser.createBrowserContext();
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await page.setCacheEnabled(false);
 
@@ -99,12 +104,7 @@ async function searchAndHistory(
       waitUntil: 'networkidle0',
     });
     await page.click('[data-search-open]');
-    await page.waitForFunction((): boolean => {
-      return (
-        document.querySelector('#search-results')!.getAttribute('aria-busy') ===
-        'false'
-      );
-    });
+    await page.waitForFunction(searchIsReady);
     await page.keyboard.press('Escape');
     await page.click('[data-settings-open]');
     await page.focus('[data-language-switcher]');
@@ -130,12 +130,7 @@ async function searchAndHistory(
 
     await page.click('[data-search-open]');
     await loaded;
-    await page.waitForFunction((): boolean => {
-      return (
-        document.querySelector('#search-results')!.getAttribute('aria-busy') ===
-        'false'
-      );
-    });
+    await page.waitForFunction(searchIsReady);
     assert.deepEqual(indexes, [
       '/search/pt-br-minecraft.json',
       '/search/en-minecraft.json',
@@ -157,7 +152,7 @@ async function nativeFallback(
   const context = await browser.createBrowserContext();
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await page.setCacheEnabled(false);
 

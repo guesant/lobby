@@ -1,50 +1,56 @@
 import assert from 'node:assert/strict';
 import type { Browser, Page, Target } from 'puppeteer-core';
 
+type BrowserError = {
+  url: string;
+  message: string;
+  stack: string | undefined;
+};
+
+function browserError(page: Page, error: unknown): BrowserError {
+  if (error instanceof Error) {
+    return {
+      url: page.url(),
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return {
+    url: page.url(),
+    message: String(error),
+    stack: undefined,
+  };
+}
+
 export default async function withBrowserErrors(
   browser: Browser,
   task: () => Promise<void>,
 ): Promise<void> {
-  const errors: Array<{
-    url: string;
-    message: string;
-    stack: string | undefined;
-  }> = [];
+  const errors: BrowserError[] = [];
 
   const observed = new Map<Page, (error: unknown) => void>();
 
-  const observe = async (target: Target): Promise<void> => {
-    const page = await target.page();
+  async function observe(target: Target): Promise<void> {
+    const candidate = await target.page();
 
-    if (!page) {
+    if (!candidate) {
       return;
     }
 
-    const listener = (error: unknown): void => {
-      if (!(error instanceof Error)) {
-        errors.push({
-          url: page.url(),
-          message: String(error),
-          stack: undefined,
-        });
+    const page = candidate;
 
-        return;
-      }
-
-      errors.push({
-        url: page.url(),
-        message: error.message,
-        stack: error.stack,
-      });
-    };
+    function listener(error: unknown): void {
+      errors.push(browserError(page, error));
+    }
 
     observed.set(page, listener);
     page.on('pageerror', listener);
-  };
+  }
 
-  const observer = (target: Target): void => {
+  function observer(target: Target): void {
     void observe(target);
-  };
+  }
 
   browser.on('targetcreated', observer);
 
@@ -57,6 +63,9 @@ export default async function withBrowserErrors(
         ...errors,
       ],
       'Browser scenario failed',
+      {
+        cause: error,
+      },
     );
   } finally {
     browser.off('targetcreated', observer);

@@ -1,3 +1,12 @@
+import { record } from '../../website/src/lib/features/content/validation.model.ts';
+import { loadFeed } from './federation-cache.ts';
+import { validateFeed } from './federation-validation.ts';
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import test from 'node:test';
+
 type TestFeed = {
   version: number;
   source: string;
@@ -6,24 +15,16 @@ type TestFeed = {
 
 type Feed = ReturnType<typeof validateFeed>;
 
-import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import test from 'node:test';
-import { loadFeed, validateFeed } from './federation.ts';
-import { record } from '../../website/src/lib/validation-primitives.ts';
-
-async function remoteFeed(value: TestFeed): Promise<{
+function remoteFeed(value: TestFeed): Promise<{
   ok: true;
   text(): Promise<string>;
 }> {
-  return {
+  return Promise.resolve({
     ok: true,
-    text: async (): Promise<string> => {
-      return JSON.stringify(value);
+    text: (): Promise<string> => {
+      return Promise.resolve(JSON.stringify(value));
     },
-  };
+  });
 }
 
 const source = {
@@ -43,26 +44,28 @@ void test('cache reuse and local sources never renew a remote success timestamp'
       now: (): Date => {
         return new Date(timestamp);
       },
-      fetcher: async (): Promise<{
+      fetcher: (): Promise<{
         ok: boolean;
         text(): Promise<string>;
       }> => {
-        return {
+        return Promise.resolve({
           ok: true,
-          text: async (): Promise<string> => {
-            return JSON.stringify(feed());
+          text: (): Promise<string> => {
+            return Promise.resolve(JSON.stringify(feed()));
           },
-        };
+        });
       },
     });
     await loadFeed(source, {
       cacheDirectory: directory,
-      warn: (): void => {},
+      warn: (): void => {
+        return;
+      },
       now: (): Date => {
         return new Date('2026-10-31T03:00:00.000Z');
       },
-      fetcher: async (): Promise<never> => {
-        throw new Error('offline');
+      fetcher: (): Promise<never> => {
+        return Promise.reject(new Error('offline'));
       },
     });
 
@@ -93,9 +96,11 @@ void test('cache reuse and local sources never renew a remote success timestamp'
     await assert.rejects(
       loadFeed(source, {
         cacheDirectory: directory,
-        warn: (): void => {},
-        fetcher: async (): Promise<never> => {
-          throw new Error('offline');
+        warn: (): void => {
+          return;
+        },
+        fetcher: (): Promise<never> => {
+          return Promise.reject(new Error('offline'));
         },
       }),
       /No valid feed or cache/,
@@ -123,17 +128,17 @@ const entry = {
   },
 };
 
-const feed = (
+function feed(
   items: Record<string, unknown>[] = [
     entry,
   ],
-): TestFeed => {
+): TestFeed {
   return {
     version: 1,
     source: 'blog',
     items,
   };
-};
+}
 
 void test('federation keeps only public allowlisted fields', (): void => {
   const result = validateFeed(
@@ -152,8 +157,22 @@ void test('federation keeps only public allowlisted fields', (): void => {
 
   assert(!JSON.stringify(result)
     .includes('hidden'));
-  assert.equal(result.items[0]!.source, 'blog');
-  assert.equal(result.items[0]!.metadata.date, '2026-01-01');
+
+  const requiredValue = result.items[0];
+
+  if (requiredValue === undefined) {
+    throw new Error('Missing required requiredValue');
+  }
+
+  assert.equal(requiredValue.source, 'blog');
+
+  const requiredValueValue = result.items[0];
+
+  if (requiredValueValue === undefined) {
+    throw new Error('Missing required requiredValueValue');
+  }
+
+  assert.equal(requiredValueValue.metadata['date'], '2026-01-01');
   assert.deepEqual(validateFeed(feed([]), source).items, []);
 });
 void test('resume projects retain only safe declared public platform URLs', (): void => {
@@ -179,10 +198,14 @@ void test('resume projects retain only safe declared public platform URLs', (): 
     ],
   };
 
-  const result = validateFeed(input, resume).items[0]!;
+  const result = validateFeed(input, resume).items[0];
+
+  if (result === undefined) {
+    throw new Error('Missing required result');
+  }
 
   assert.equal(result.url, project.url);
-  assert.equal(result.metadata.content_url, project.metadata.content_url);
+  assert.equal(result.metadata['content_url'], project.metadata.content_url);
 
   for (const url of [
     'javascript:alert(1)',
@@ -249,21 +272,31 @@ for (const [
   [
     'unsafe URL',
     (value): void => {
-      value.items[0]!.url = 'javascript:alert(1)';
+      const requiredValue = value.items[0];
+
+      if (requiredValue === undefined) {
+        throw new Error('Missing required requiredValue');
+      }
+
+      requiredValue['url'] = 'javascript:alert(1)';
     },
   ],
   [
     'private',
     (value): void => {
-      value.items[0]!.private = true;
+      const requiredValue = value.items[0];
+
+      if (requiredValue === undefined) {
+        throw new Error('Missing required requiredValue');
+      }
+
+      requiredValue['private'] = true;
     },
   ],
-] satisfies Array<
-  [
-    string,
-    (value: TestFeed) => void,
-  ]
->) {
+] satisfies [
+  string,
+  (value: TestFeed) => void,
+][]) {
   void test(`federation rejects ${name}`, (): void => {
     const value = structuredClone(feed());
 
@@ -296,8 +329,8 @@ void test('federation uses valid cache only for network failures', async (): Pro
 
     const result = await loadFeed(source, {
       ...options,
-      fetcher: async (): Promise<never> => {
-        throw new Error('Offline');
+      fetcher: (): Promise<never> => {
+        return Promise.reject(new Error('Offline'));
       },
     });
 
@@ -320,7 +353,7 @@ void test('federation uses valid cache only for network failures', async (): Pro
           await readFile(join(directory, 'blog.json'), 'utf8'),
         ) as unknown,
         'cached feed',
-      ).version,
+      )['version'],
       1,
     );
   } finally {
@@ -334,9 +367,9 @@ void test('federation fails without usable cache and supports local generated in
   const directory = await mkdtemp(join(tmpdir(), 'lobby-feed-'));
 
   try {
-    const fetcher = async (): Promise<never> => {
-      throw new Error('Offline');
-    };
+    function fetcher(): Promise<never> {
+      return Promise.reject(new Error('Offline'));
+    }
 
     await assert.rejects(
       loadFeed(source, {

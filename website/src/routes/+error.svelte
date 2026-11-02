@@ -1,6 +1,6 @@
 <script lang="ts">
+  import NotFound from '#lib/features/navigation/NotFound.svelte';
   import { page } from '$app/state';
-  import NotFound from '$lib/NotFound.svelte';
 </script>
 
-<NotFound locales={page.data.errorPresentation || []} status={page.status} />
+<NotFound locales={page.data.errorPresentation ?? []} status={page.status} />

@@ -1,13 +1,13 @@
 <script lang="ts">
-  import SitePage from '$lib/SitePage.svelte';
-  import TerminalPage from '$lib/TerminalPage.svelte';
   import type { PageData } from './$types';
+  import SitePage from '#lib/app/SitePage.svelte';
+  import TerminalPage from '#lib/interfaces/terminal/TerminalPage.svelte';
 
-  let {
+  const {
     data,
   }: {
     data: PageData;
   } = $props();
 </script>
 
-<SitePage {data}><TerminalPage {data} /></SitePage>
+<SitePage {data}><TerminalPage {...data} /></SitePage>

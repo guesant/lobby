@@ -1,47 +1,31 @@
-import { loadPageData } from '$lib/page-data.server.ts';
-import { getSiteData, routeEntries } from '$lib/site-data.server.ts';
-import type { PageLoadData } from '$lib/site-data.ts';
-import type { EntryGenerator, PageServerLoad } from './$types';
+import type { PageLoadData } from '../../lib/features/content/content.types.ts';
+import type { PageServerLoadEvent } from './$types';
+import { error } from '@sveltejs/kit';
+import { getSiteData } from '#lib/features/content/content.server.ts';
+import { loadPageData } from '#lib/features/content/page.controller.server.ts';
 
-export const prerender = true;
+export { minecraftEntries as entries } from '#lib/features/navigation/entries.server.ts';
 
-export const trailingSlash = 'always';
+export async function load(event: PageServerLoadEvent): Promise<PageLoadData> {
+  const params = event.params;
 
-export const entries: EntryGenerator = async (): Promise<
-  {
-    path: string;
-  }[]
-> => {
-  const data = await getSiteData();
-
-  return [
-    '',
-    ...routeEntries(data),
-  ]
-    .filter((path): boolean => {
-      return path.split('/')[1] !== 'terminal';
-    })
-    .map(
-      (
-        path,
-      ): {
-        path: string;
-      } => {
-        return {
-          path,
-        };
-      },
-    );
-};
-
-export const load: PageServerLoad = async ({
-  params,
-}): Promise<PageLoadData> => {
   if (params.path) {
-    return loadPageData(params.path);
+    const page = await loadPageData(params.path);
+
+    if (!page) {
+      error(404, 'Page not found');
+    }
+
+    return page;
   }
 
   const data = await getSiteData();
 
-  return loadPageData(data.links.language_preference.default, true);
-};
+  const page = await loadPageData(data.links.language_preference.default, true);
+
+  if (!page) {
+    error(404, 'Page not found');
+  }
+
+  return page;
+}

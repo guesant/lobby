@@ -256,7 +256,7 @@
     --ornament-stone-foot-end: url('/assets/generated/stone-foot-end.webp');
     --ornament-profile-lantern: url('/assets/generated/profile-lantern.webp');
     --ornament-rail-chain: url('/assets/generated/rail-chain.png');
-    --texture-aged-oak: url('../../static/assets/generated/aged-oak.webp');
+    --texture-aged-oak: url('/assets/generated/aged-oak.webp');
     --shadow-panel: var(--space-0) var(--panel-shadow-distance)
       var(--panel-shadow-blur) var(--color-bevel-shadow);
     --shadow-contact: var(--space-0) var(--pixel-border) var(--pixel-shadow)

@@ -1,16 +1,25 @@
+import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { localizedURL, pagesFor } from './configuration.ts';
+import type { LayoutRoute } from './layout-types.ts';
 import assert from 'node:assert/strict';
 import type { Page } from 'puppeteer-core';
-import type { LinkDocument } from '../../website/src/lib/site-data.ts';
-import type { LayoutRoute } from './layout-types.ts';
-import { pagesFor, localizedURL } from './configuration.ts';
 
-export async function verifyRouteMetadata(
-  page: Page,
-  route: LayoutRoute,
-  config: LinkDocument,
-  represented: Set<string>,
-  href: (path: string) => string,
-): Promise<ReturnType<typeof pagesFor>[number] | undefined> {
+export async function verifyRouteMetadata(input: {
+  page: Page;
+  route: LayoutRoute;
+  config: LinkDocument;
+  represented: Set<string>;
+  href: (path: string) => string;
+}): Promise<ReturnType<typeof pagesFor>[number] | undefined> {
+  const {
+    page,
+    route,
+    config,
+    represented,
+    href
+  } = input;
+
   const response = await page.goto(href(route.url), {
     waitUntil: 'networkidle2',
   });
@@ -39,32 +48,39 @@ export async function verifyRouteMetadata(
       const loaded = await Promise.all(
         weights.map((weight): Promise<FontFace[]> => {
           return document.fonts.load(
-            `${weight} 16px "Oxanium"`,
+            `${String(weight)} 16px "Oxanium"`,
             'Gabriel, música, aplicações, Ā, Ș',
           );
         }),
       );
 
+      const headerNavigationLinksA = document.querySelector<HTMLAnchorElement>(
+        '.header-navigation-links a',
+      );
+
+      if (headerNavigationLinksA === null) {
+        throw new Error('Missing required headerNavigationLinksA');
+      }
+
+      const h1 = window.lobbyAssertions.element(document, 'h1');
+
+      const h1Value = window.lobbyAssertions.element(document, 'h1');
+
+      function inspectLoadedEntry(faces: FontFace[]): boolean {
+        return (
+          faces.length > 0 &&
+          faces.every((face): boolean => {
+            return face.status === 'loaded';
+          })
+        );
+      }
+
       return {
         body: getComputedStyle(document.body).fontFamily,
-        control: getComputedStyle(
-          document.querySelector<HTMLAnchorElement>(
-            '.header-navigation-links a',
-          )!,
-        ).fontFamily,
-        heading: getComputedStyle(document.querySelector<HTMLElement>('h1')!)
-          .fontFamily,
-        pixelHeading: document
-          .querySelector<HTMLElement>('h1')!
-          .matches('.profile-name, .section-toolbar-title'),
-        loaded: loaded.every((faces): boolean => {
-          return (
-            faces.length > 0 &&
-            faces.every((face): boolean => {
-              return face.status === 'loaded';
-            })
-          );
-        }),
+        control: getComputedStyle(headerNavigationLinksA).fontFamily,
+        heading: getComputedStyle(h1).fontFamily,
+        pixelHeading: h1Value.matches('.profile-name, .section-toolbar-title'),
+        loaded: loaded.every(inspectLoadedEntry),
       };
     },
   );
@@ -72,13 +88,13 @@ export async function verifyRouteMetadata(
   assert.match(typography.body, /^"?Oxanium"?,/);
   assert.match(typography.control, /^"?Oxanium"?,/);
 
-  const headingFont = (): RegExp => {
+  function headingFont(): RegExp {
     if (typography.pixelHeading) {
       return /press start 2p/;
     }
 
     return /^"?Oxanium"?,/;
-  };
+  }
 
   assert.match(typography.heading, headingFont());
   assert(typography.loaded, `Oxanium failed to load on ${route.url}`);
@@ -108,13 +124,13 @@ export async function verifyRouteMetadata(
       },
     );
 
-  const expectedLinks = (route.links || [])
+  const expectedLinks = (route.links ?? [])
     .map((entry): string => {
       return href(localizedURL(entry, route.language));
     })
     .sort();
 
-  for (const entry of route.links || []) {
+  for (const entry of route.links ?? []) {
     represented.add(entry.id);
   }
 
@@ -250,7 +266,7 @@ export async function verifyRouteMetadata(
           );
 
         return {
-          href: href(translated?.url || language.path),
+          href: href(textOr(translated?.url, language.path)),
           selected: language.id === route.language,
         };
       },
@@ -300,11 +316,16 @@ export async function verifyRouteMetadata(
         } => {
           const headingID = panel.getAttribute('aria-labelledby');
 
-          const heading = document.getElementById(headingID || '');
+          const heading = document.getElementById(headingID ?? '');
 
           if (!heading) {
             throw new Error('Missing introduction heading');
           }
+
+          const aboutSiteTitle = window.lobbyAssertions.element(
+            panel,
+            '.about-site-title',
+          );
 
           return {
             title: heading.textContent.trim(),
@@ -317,16 +338,18 @@ export async function verifyRouteMetadata(
                 icon: string | undefined;
                 text: string;
               } => {
+                const dataPlatform = window.lobbyAssertions.element(
+                  fact,
+                  '[data-platform]',
+                );
+
                 return {
-                  icon: fact.querySelector<HTMLElement>('[data-platform]')!
-                    .dataset.platform,
+                  icon: dataPlatform.dataset['platform'],
                   text: fact.textContent.trim(),
                 };
               },
             ),
-            site_title: panel
-              .querySelector<HTMLElement>('.about-site-title')!
-              .textContent.trim(),
+            site_title: aboutSiteTitle.textContent.trim(),
             topics: [
               ...panel.querySelectorAll<HTMLElement>('.about-topics > li'),
             ].map((topic): string => {
@@ -339,7 +362,7 @@ export async function verifyRouteMetadata(
     );
   }
 
-  const expectedCanonical = `https://${config.site.first_party_domains[0]}${route.url}`;
+  const expectedCanonical = `https://${String(config.site.first_party_domains[0])}${route.url}`;
 
   assert.equal(
     await page.$eval('link[rel="canonical"]', (link): string => {

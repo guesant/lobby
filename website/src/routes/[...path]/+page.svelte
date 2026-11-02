@@ -1,9 +1,9 @@
 <script lang="ts">
-  import SitePage from '$lib/SitePage.svelte';
-  import MinecraftPage from '$lib/MinecraftPage.svelte';
   import type { PageData } from './$types';
+  import SitePage from '#lib/app/SitePage.svelte';
+  import MinecraftPage from '#lib/interfaces/minecraft/MinecraftPage.svelte';
 
-  let {
+  const {
     data,
   }: {
     data: PageData;
@@ -18,4 +18,4 @@
   {/if}
 </svelte:head>
 
-<SitePage {data}><MinecraftPage {data} /></SitePage>
+<SitePage {data}><MinecraftPage {...data} /></SitePage>

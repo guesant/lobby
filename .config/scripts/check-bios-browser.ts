@@ -1,9 +1,11 @@
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
 import { dialogIsOpen, waitForBoot } from './browser-dom.ts';
-import type { Page, Browser } from 'puppeteer-core';
+import { createAuditPage } from './browser-fixture.ts';
+import { readConfiguration } from './configuration.ts';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { readConfiguration } from './configuration.ts';
+import type { Browser, Page } from 'puppeteer-core';
 
 const viewports = [
   {
@@ -65,7 +67,7 @@ async function bootPresentation(
   theme: string,
 ): Promise<BootPresentation> {
   await page.evaluate((appearance): void => {
-    document.documentElement.dataset.theme = appearance;
+    document.documentElement.dataset['theme'] = appearance;
 
     const dialog = document.querySelector<HTMLDialogElement>('#bios-dialog');
 
@@ -73,20 +75,24 @@ async function bootPresentation(
       throw new Error('Missing BIOS dialog');
     }
 
-    if (!dialog!.open) {
-      dialog!.showModal();
+    if (!dialog.open) {
+      dialog.showModal();
     }
 
-    dialog!.focus({
+    dialog.focus({
       preventScroll: true,
     });
 
-    for (const line of dialog!.querySelectorAll<HTMLElement>('[hidden]')) {
+    for (const line of dialog.querySelectorAll<HTMLElement>('[hidden]')) {
       line.hidden = false;
     }
 
-    dialog!.querySelector<HTMLElement>('[data-bios-progress]')!.textContent =
-      '██████████';
+    const dataBiosProgress = window.lobbyAssertions.element(
+      dialog,
+      '[data-bios-progress]',
+    );
+
+    dataBiosProgress.textContent = '██████████';
   }, theme);
   await page.evaluate((): Promise<FontFaceSet> => {
     return document.fonts.ready;
@@ -95,7 +101,11 @@ async function bootPresentation(
   return page.evaluate((): BootPresentation => {
     const dialog = document.getElementById('bios-dialog');
 
-    const box = dialog!.getBoundingClientRect();
+    if (dialog === null) {
+      throw new Error('Missing required dialog');
+    }
+
+    const box = dialog.getBoundingClientRect();
 
     const selectors = [
       '#bios-dialog',
@@ -110,9 +120,9 @@ async function bootPresentation(
     ];
 
     const styles = selectors.map((selector): BootStyle => {
-      const style = getComputedStyle(
-        document.querySelector<HTMLElement>(selector)!,
-      );
+      const requiredValue = window.lobbyAssertions.element(document, selector);
+
+      const style = getComputedStyle(requiredValue);
 
       return {
         fontFamily: style.fontFamily,
@@ -127,6 +137,12 @@ async function bootPresentation(
         cursor: style.cursor,
       };
     });
+
+    const biosStatus = document.getElementById('bios-status');
+
+    if (biosStatus === null) {
+      throw new Error('Missing required biosStatus');
+    }
 
     return {
       styles,
@@ -148,19 +164,25 @@ async function bootPresentation(
           1,
           innerHeight - 2,
         ],
-      ].every(
-        ([
+      ].every((entry): boolean => {
+        const [
           x,
           y,
-        ]): boolean => {
-          return dialog!.contains(document.elementFromPoint(x!, y!));
-        },
-      ),
-      backdrop: getComputedStyle(dialog!, '::backdrop').backgroundColor,
-      hiddenStatus:
-        document!.getElementById('bios-status')!.getBoundingClientRect().width <
-        2,
-      horizontalOverflow: dialog!.scrollWidth > dialog!.clientWidth + 1,
+        ] = entry;
+
+        if (x === undefined) {
+          throw new Error('Missing required x');
+        }
+
+        if (y === undefined) {
+          throw new Error('Missing required y');
+        }
+
+        return dialog.contains(document.elementFromPoint(x, y));
+      }),
+      backdrop: getComputedStyle(dialog, '::backdrop').backgroundColor,
+      hiddenStatus: biosStatus.getBoundingClientRect().width < 2,
+      horizontalOverflow: dialog.scrollWidth > dialog.clientWidth + 1,
     };
   });
 }
@@ -219,13 +241,13 @@ async function rebootLifecycle(page: Page, url: string): Promise<void> {
     waitUntil: 'networkidle2',
   });
   await assertBootClosed(page);
-  await page.goto(`${url.split('#')[0]}&lobby-boot=1`, {
+  await page.goto(`${String(url.split('#')[0])}&lobby-boot=1`, {
     waitUntil: 'domcontentloaded',
   });
   await waitForBoot(page, true);
   await page.click('[data-bios-skip]');
   await assertBootClosed(page);
-  await page.goto(`${url.split('#')[0]}&lobby-boot=1`, {
+  await page.goto(`${String(url.split('#')[0])}&lobby-boot=1`, {
     waitUntil: 'domcontentloaded',
   });
   await waitForBoot(page, true);
@@ -268,7 +290,7 @@ function biosRoutes(baseURL: string): {
         } => {
           return {
             language: language.id,
-            interfaceName: prefix.replace('/', '') || 'minecraft',
+            interfaceName: textOr(prefix.replace('/', ''), 'minecraft'),
             url: new URL(`${language.path.slice(1)}${prefix}career/`, baseURL)
               .href,
           };
@@ -278,12 +300,19 @@ function biosRoutes(baseURL: string): {
   );
 }
 
-async function inspectPresentations(
-  page: Page,
-  route: BiosRoute,
-  directory: string,
-  fingerprints: Map<string, BootStyle[]>,
-): Promise<number> {
+async function inspectPresentations(input: {
+  page: Page;
+  route: BiosRoute;
+  directory: string;
+  fingerprints: Map<string, BootStyle[]>;
+}): Promise<number> {
+  const {
+    page,
+    route,
+    directory,
+    fingerprints
+  } = input;
+
   await page.goto(route.url, {
     waitUntil: 'networkidle2',
   });
@@ -299,7 +328,7 @@ async function inspectPresentations(
 
       assertPresentation(actual);
 
-      const key = `${route.language}-${viewport.width}`;
+      const key = `${route.language}-${String(viewport.width)}`;
 
       if (fingerprints.has(key)) {
         assert.deepEqual(
@@ -321,7 +350,7 @@ async function inspectPresentations(
         await page.screenshot({
           path: resolve(
             directory,
-            `${route.interfaceName}-${theme}-${viewport.width}.png`,
+            `${route.interfaceName}-${theme}-${String(viewport.width)}.png`,
           ),
         });
       }
@@ -349,15 +378,15 @@ export default async function checkBiosBrowser(
   });
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     for (const route of biosRoutes(baseURL)) {
-      presentations += await inspectPresentations(
+      presentations += await inspectPresentations({
         page,
         route,
         directory,
         fingerprints,
-      );
+      });
     }
 
     for (const prefix of [
@@ -381,7 +410,7 @@ export default async function checkBiosBrowser(
           value: 'reduce',
         },
       ]);
-      await page.goto(`${url.split('#')[0]}&lobby-boot=1`, {
+      await page.goto(`${String(url.split('#')[0])}&lobby-boot=1`, {
         waitUntil: 'networkidle2',
       });
       await assertBootClosed(page);
@@ -406,7 +435,7 @@ export default async function checkBiosBrowser(
       ),
     );
     console.log(
-      `BIOS: ${presentations} fullscreen presentations, independent styles and Reboot lifecycle passed.`,
+      `BIOS: ${String(presentations)} fullscreen presentations, independent styles and Reboot lifecycle passed.`,
     );
   } finally {
     await context.close();

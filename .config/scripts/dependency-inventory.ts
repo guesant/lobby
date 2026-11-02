@@ -1,15 +1,16 @@
-import { readFile, readdir } from 'node:fs/promises';
-import { parse } from 'yaml';
 import {
   record,
   requiredText,
-} from '../../website/src/lib/validation-primitives.ts';
+} from '../../website/src/lib/features/content/validation.model.ts';
+import { readdir, readFile } from 'node:fs/promises';
+import { parse } from 'yaml';
 
 export type ManagedDependency = {
   file: string;
   manager: string;
   name: string;
   version: string;
+  digest?: string;
 };
 
 async function workspaceDependencies(
@@ -23,21 +24,21 @@ async function workspaceDependencies(
   );
 
   return Object.entries(
-    record(workspace.overrides || {}, 'pnpm overrides'),
+    record(workspace['overrides'] ?? {}, 'pnpm overrides'),
   )
-    .map(
-      ([
+    .map((entry): ManagedDependency => {
+      const [
         name,
         version,
-      ]): ManagedDependency => {
-        return {
-          file: path,
-          manager: 'npm',
-          name,
-          version: requiredText(version, `override ${name}`),
-        };
-      },
-    );
+      ] = entry;
+
+      return {
+        file: path,
+        manager: 'npm',
+        name,
+        version: requiredText(version, `override ${name}`),
+      };
+    });
 }
 
 async function packageDependencies(): Promise<ManagedDependency[]> {
@@ -63,7 +64,7 @@ async function packageDependencies(): Promise<ManagedDependency[]> {
         name,
         value,
       ] of Object.entries(
-          record(manifest[section] || {}, `${file} ${section}`),
+          record(manifest[section] ?? {}, `${file} ${section}`),
         )) {
         dependencies.push({
           file,
@@ -78,8 +79,33 @@ async function packageDependencies(): Promise<ManagedDependency[]> {
       file,
       manager: 'npm',
       name: 'pnpm',
-      version: requiredText(manifest.packageManager, `${file} package manager`),
+      version: requiredText(
+        manifest['packageManager'],
+        `${file} package manager`,
+      ),
     });
+  }
+
+  return dependencies;
+}
+
+function debianDependencies(
+  docker: string,
+  dockerfile: string,
+): ManagedDependency[] {
+  const dependencies: ManagedDependency[] = [];
+
+  for (const install of docker.matchAll(/apt-get install\s+([^&]+)/g)) {
+    for (const match of (install[1] ?? '').matchAll(
+      /(?:^|\s)([a-z][a-z0-9+.-]*)=([^\s\\]+)/g,
+    )) {
+      dependencies.push({
+        file: dockerfile,
+        manager: 'dockerfile',
+        name: requiredText(match[1], 'Debian package'),
+        version: requiredText(match[2], 'Debian version'),
+      });
+    }
   }
 
   return dependencies;
@@ -99,7 +125,7 @@ async function containerDependencies(): Promise<ManagedDependency[]> {
       continue;
     }
 
-    const parts = image.match(/^(.+):([^@]+)@(sha256:[a-f0-9]{64})$/);
+    const parts = /^(.+):([^@]+)@(sha256:[a-f0-9]{64})$/.exec(image);
 
     if (!parts) {
       throw new Error(`Unpinned Docker image: ${image}`);
@@ -113,25 +139,17 @@ async function containerDependencies(): Promise<ManagedDependency[]> {
     });
   }
 
-  for (const install of docker.matchAll(/apt-get install\s+([^&]+)/g)) {
-    for (const match of (install[1] || '').matchAll(
-      /(?:^|\s)([a-z][a-z0-9+.-]*)=([^\s\\]+)/g,
-    )) {
-      dependencies.push({
-        file: dockerfile,
-        manager: 'dockerfile',
-        name: requiredText(match[1], 'Debian package'),
-        version: requiredText(match[2], 'Debian version'),
-      });
-    }
-  }
+  dependencies.push(...debianDependencies(docker, dockerfile));
 
-  for (const match of docker.matchAll(/corepack@([\d.]+)/g)) {
+  for (const match of docker.matchAll(
+    /ARG COREPACK_VERSION=(v[\d.]+)\s+ARG COREPACK_SHA256=([a-f0-9]{64})/g,
+  )) {
     dependencies.push({
       file: dockerfile,
       manager: 'regex',
-      name: 'corepack',
+      name: 'nodejs/corepack',
       version: requiredText(match[1], 'Corepack version'),
+      digest: requiredText(match[2], 'Corepack SHA-256'),
     });
   }
 
@@ -171,7 +189,7 @@ async function actionDependencies(): Promise<ManagedDependency[]> {
       const version = requiredText(match[2], 'action revision');
 
       if (!/^[a-f0-9]{40}$/.test(version)) {
-        throw new Error(`Unpinned action: ${file}: ${match[1]}`);
+        throw new Error(`Unpinned action: ${file}: ${String(match[1])}`);
       }
 
       dependencies.push({
@@ -186,7 +204,7 @@ async function actionDependencies(): Promise<ManagedDependency[]> {
     }
 
     for (const match of source.matchAll(
-      /\b(node):([\d.]+-bookworm-slim)@(sha256:[a-f0-9]{64})/g,
+      /\b(node):([\d.]+-bookworm(?:-slim)?)@(sha256:[a-f0-9]{64})/g,
     )) {
       dependencies.push({
         file,

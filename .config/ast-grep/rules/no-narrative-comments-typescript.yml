@@ -11,7 +11,9 @@ rule:
     - not:
         regex: >-
           (?x) ^ ( ///\s*<reference\s+types=.*> | //\s* | /\*+\s* )
-          ( eslint-(disable|enable)(-line|-next-line)? | @ts-(expect-error|ignore|nocheck)
+          ( eslint-(disable|enable)(-line|-next-line)? | @ts-expect-error
           | prettier-ignore | istanbul\s+ignore | c8\s+ignore | v8\s+ignore
-          | jscpd:ignore-(start|end) | nosemgrep | semgrep: )
+          | jscpd:ignore-(start|end) | nosemgrep | semgrep:
+          | IMPORTANT: | SPDX-License-Identifier: | Copyright )
           ( \b | : | \s | \*/ )
+          | (?s)^/\*\*.*@(param|returns|throws|remarks|example|typedef|type)\b

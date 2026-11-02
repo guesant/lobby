@@ -1,12 +1,27 @@
 id: no-narrative-comments-typescript
 valid:
   - |
+    // IMPORTANT: IDs are stable public identifiers.
+    export const id = 'public'
+  - |
+    /** @returns The validated public identifier. */
+    export function identifier(): string { return 'public' }
+  - |
+    // SPDX-License-Identifier: MIT
+    export const id = 'licensed'
+  - |
     // eslint-disable-next-line no-console -- rule is intentionally exercised
     const value = 'https://example.com/a//b'
   - |
     /* prettier-ignore */
     const value = 1
 invalid:
+  - |
+    // @ts-ignore
+    const value = external()
+  - |
+    // @ts-nocheck
+    export const value = 1
   - |
     // normalize the value before rendering
     const value = 1

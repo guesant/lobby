@@ -1,5 +1,5 @@
-import * as sveltePlugin from 'prettier-plugin-svelte';
 import * as multilineArraysPlugin from 'prettier-plugin-multiline-arrays';
+import * as sveltePlugin from 'prettier-plugin-svelte';
 
 export default {
   plugins: [

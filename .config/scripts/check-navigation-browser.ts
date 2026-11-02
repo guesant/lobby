@@ -1,29 +1,34 @@
-import type { Page, Browser } from 'puppeteer-core';
+import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.model.ts';
 import { createBrowserAudit } from './browser-presentation.ts';
+import { pagesFor } from './configuration.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { pagesFor } from './configuration.ts';
-import type { ConfiguredPage } from '../../website/src/lib/configuration.ts';
+import type { Browser, Page } from 'puppeteer-core';
 
-async function inspectLists(
-  page: Page,
-  expected: ConfiguredPage[],
-  currentID: string,
-  baseURL: string,
-): Promise<void> {
-  const normalize = (
-    entry: ConfiguredPage,
-  ): {
+async function inspectLists(input: {
+  page: Page;
+  expected: ConfiguredPage[];
+  currentID: string;
+  baseURL: string;
+}): Promise<void> {
+  const {
+    page,
+    expected,
+    currentID,
+    baseURL
+  } = input;
+
+  function normalize(entry: ConfiguredPage): {
     title: string;
     href: string;
     current: boolean;
-  } => {
+  } {
     return {
       title: entry.title,
       href: new URL(entry.url, baseURL).href,
       current: entry.id === currentID,
     };
-  };
+  }
 
   for (const selector of [
     '.header-navigation-links a',
@@ -84,17 +89,23 @@ async function inspectGeometry(page: Page): Promise<void> {
       linksFit: boolean;
       textOnly: boolean;
     } => {
-      const header = document
-        .querySelector<HTMLElement>('.profile')!
-        .getBoundingClientRect();
+      const profile = window.lobbyAssertions.element(document, '.profile');
 
-      const navigation = document
-        .querySelector<HTMLElement>('.profile-navigation')!
-        .getBoundingClientRect();
+      const header = profile.getBoundingClientRect();
 
-      const quick = document
-        .querySelector<HTMLElement>('.quick-contacts')!
-        .getBoundingClientRect();
+      const profileNavigation = window.lobbyAssertions.element(
+        document,
+        '.profile-navigation',
+      );
+
+      const navigation = profileNavigation.getBoundingClientRect();
+
+      const quickContacts = window.lobbyAssertions.element(
+        document,
+        '.quick-contacts',
+      );
+
+      const quick = quickContacts.getBoundingClientRect();
 
       const links = [
         ...document.querySelectorAll<HTMLAnchorElement>('.navigation-links a'),
@@ -155,13 +166,13 @@ async function inspectKeyboardNavigation(
         throw new Error('Expected HTMLElement: link');
       }
 
-      return link.dataset.navigationPage;
+      return link.dataset['navigationPage'];
     }),
     'career',
   );
   await page.keyboard.press('Enter');
   await page.waitForFunction((): boolean => {
-    return document.documentElement.dataset.page === 'career';
+    return document.documentElement.dataset['page'] === 'career';
   });
   assert.equal(
     await page.evaluate((): boolean => {
@@ -185,12 +196,19 @@ async function inspectKeyboardNavigation(
   await page.setJavaScriptEnabled(true);
 }
 
-async function checkNavigationBrowser(
-  browser: Browser,
-  baseURL: string,
-  reportDirectory: string,
-  pageIDs: string[] = [],
-): Promise<void> {
+async function checkNavigationBrowser(input: {
+  browser: Browser;
+  baseURL: string;
+  reportDirectory: string;
+  pageIDs?: string[];
+}): Promise<void> {
+  const {
+    browser,
+    baseURL,
+    reportDirectory,
+    pageIDs = []
+  } = input;
+
   const {
     config,
     context,
@@ -224,20 +242,7 @@ async function checkNavigationBrowser(
       });
 
       for (const route of routes) {
-        await page.goto(new URL(route.url, baseURL).href, {
-          waitUntil: 'networkidle0',
-        });
-        await page.evaluate((): Promise<FontFaceSet> => {
-          return document.fonts.ready;
-        });
-        await inspectLists(page, expected, route.id, baseURL);
-
-        for (const theme of [
-          'dark',
-          'light',
-        ] as const) {
-          await inspectNavigationAppearance(page, theme, checks, route);
-        }
+        await inspectRouteCase(route, expected);
       }
     }
 
@@ -285,18 +290,62 @@ async function checkNavigationBrowser(
   } finally {
     await context.close();
   }
+
+  async function inspectRouteCase(
+    route: ConfiguredPage,
+    expected: ConfiguredPage[],
+  ): Promise<void> {
+    await page.goto(new URL(route.url, baseURL).href, {
+      waitUntil: 'networkidle0',
+    });
+    await page.evaluate((): Promise<FontFaceSet> => {
+      return document.fonts.ready;
+    });
+    await inspectLists({
+      page,
+      expected,
+      currentID: route.id,
+      baseURL,
+    });
+
+    for (const theme of [
+      'dark',
+      'light',
+    ] as const) {
+      await inspectThemeCase(theme, route);
+    }
+  }
+
+  async function inspectThemeCase(
+    theme: string,
+    route: ConfiguredPage,
+  ): Promise<void> {
+    await inspectNavigationAppearance({
+      page,
+      theme,
+      checks,
+      route,
+    });
+  }
 }
 
 export default checkNavigationBrowser;
 
-async function inspectNavigationAppearance(
-  page: Page,
-  theme: string,
-  checks: Record<string, unknown>[],
-  route: ConfiguredPage,
-): Promise<void> {
+async function inspectNavigationAppearance(input: {
+  page: Page;
+  theme: string;
+  checks: Record<string, unknown>[];
+  route: ConfiguredPage;
+}): Promise<void> {
+  const {
+    page,
+    theme,
+    checks,
+    route
+  } = input;
+
   await page.evaluate((theme): void => {
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset['theme'] = theme;
   }, theme);
 
   for (const width of [

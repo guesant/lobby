@@ -1,19 +1,19 @@
-import type { Page } from 'puppeteer-core';
-import type { CategoryPreviews, PreviewRecord } from './layout-helpers.ts';
-import type { LayoutRoute } from './layout-types.ts';
-import { installLayoutHelpers } from './layout-helpers.ts';
-import { measureGeometry } from './layout-geometry.ts';
-import { measureIconography } from './layout-iconography.ts';
-import { measureContent } from './layout-content.ts';
-import assert from 'node:assert/strict';
-import type { validateStatistics } from '../../website/src/lib/content-validation.ts';
+import type { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
 import { waitForLandscape } from './check-progressive-scene.ts';
 import type { readConfiguration } from './configuration.ts';
 import {
+  type ConfiguredPage,
   localizedURL,
   pagesFor,
-  type ConfiguredPage,
 } from './configuration.ts';
+import { measureContent } from './layout-content.ts';
+import { measureGeometry } from './layout-geometry.ts';
+import type { CategoryPreviews, PreviewRecord } from './layout-helpers.ts';
+import { installLayoutHelpers } from './layout-helpers.ts';
+import { measureIconography } from './layout-iconography.ts';
+import type { LayoutRoute } from './layout-types.ts';
+import assert from 'node:assert/strict';
+import type { ElementHandle, Page } from 'puppeteer-core';
 
 export type LayoutContext = {
   config: ReturnType<typeof readConfiguration>;
@@ -33,7 +33,7 @@ export async function inspectStatistics(
     snapshots
   } = context;
 
-  for (const entry of route.links || []) {
+  for (const entry of route.links ?? []) {
     if (!entry.stats) {
       continue;
     }
@@ -43,7 +43,7 @@ export async function inspectStatistics(
     assert.ok(snapshot, `Missing statistics snapshot: ${entry.id}`);
 
     assert(
-      snapshot?.profile_url === entry.url &&
+      snapshot.profile_url === entry.url &&
         snapshot.provider === entry.stats.provider,
     );
 
@@ -62,13 +62,25 @@ export async function inspectStatistics(
             label: string;
             value: string;
           } => {
+            const dt = window.lobbyAssertions.element(statistic, 'dt');
+
+            const dd = window.lobbyAssertions.element(statistic, 'dd');
+
+            const firstChildValue = dd.firstChild;
+
+            if (firstChildValue === null) {
+              throw new Error('Missing required firstChildValue');
+            }
+
+            const textContentValue = firstChildValue.textContent;
+
+            if (textContentValue === null) {
+              throw new Error('Missing required textContentValue');
+            }
+
             return {
-              label: statistic
-                .querySelector<HTMLElement>('dt')!
-                .textContent.trim(),
-              value: statistic!
-                .querySelector<HTMLElement>('dd')!
-                .firstChild!.textContent!.trim(),
+              label: dt.textContent.trim(),
+              value: textContentValue.trim(),
             };
           },
         );
@@ -84,8 +96,14 @@ export async function inspectStatistics(
           label: string | undefined;
           value: string;
         } => {
+          const requiredValue = config.statistics.metrics[metric];
+
+          if (requiredValue === undefined) {
+            throw new Error('Missing required requiredValue');
+          }
+
           return {
-            label: config!.statistics.metrics[metric]!.labels[route.language],
+            label: requiredValue.labels[route.language],
             value: String(snapshot.metrics[metric]),
           };
         },
@@ -94,135 +112,107 @@ export async function inspectStatistics(
   }
 }
 
-export async function inspectHomeCategories(
-  route: LayoutRoute,
-  page: Page,
-  nowPage: ConfiguredPage | undefined,
-  context: LayoutContext,
-): Promise<void> {
+export async function inspectHomeCategories(input: {
+  route: LayoutRoute;
+  page: Page;
+  nowPage: ConfiguredPage | undefined;
+  context: LayoutContext;
+}): Promise<void> {
+  const {
+    route,
+    page,
+    nowPage,
+    context
+  } = input;
+
   const {
     config,
     href
   } = context;
 
-  if (route.id === 'home') {
-    const categories = await page.$$eval(
-      '.home-categories [data-category]',
-      (cards): CategoryPreviews[] => {
-        return window.lobbyLayout.categories(cards);
-      },
-    );
+  if (route.id !== 'home') {
+    return;
+  }
 
-    const expectedCategories = pagesFor(config, route.language)
-      .filter((entry): boolean => {
-        return entry.type === 'links-page';
-      })
-      .map((entry): CategoryPreviews => {
-        assert(entry.links, 'A category must expose its complete links');
+  const categories = await page.$$eval(
+    '.home-categories [data-category]',
+    (cards): CategoryPreviews[] => {
+      return window.lobbyLayout.categories(cards);
+    },
+  );
+
+  const expectedCategories = pagesFor(config, route.language)
+    .filter((entry): boolean => {
+      return entry.type === 'links-page';
+    })
+    .map((entry): CategoryPreviews => {
+      assert(entry.links, 'A category must expose its complete links');
+
+      return {
+        id: entry.id,
+        previews: entry.links.map((link): PreviewRecord => {
+          return {
+            id: link.id,
+            href: href(localizedURL(link, route.language)),
+          };
+        }),
+      };
+    });
+
+  assert.deepEqual(categories, expectedCategories);
+  assert.deepEqual(
+    await page.$$eval(
+      '[data-home-update="now"] [data-preview-id]',
+      (links): PreviewRecord[] => {
+        return window.lobbyLayout.previewLinks(links);
+      },
+    ),
+    (config.now[route.language] ?? config.now['en'])?.sections.map(
+      (
+        section,
+      ): {
+        id: string;
+        href: string;
+      } => {
+        if (nowPage === undefined) {
+          throw new Error('Missing required nowPage');
+        }
 
         return {
-          id: entry.id,
-          previews: entry.links.map((link): PreviewRecord => {
-            return {
-              id: link.id,
-              href: href(localizedURL(link, route.language)),
-            };
-          }),
+          id: `now-${section.id}`,
+          href: `${href(nowPage.url)}#now-${section.id}`,
         };
+      },
+    ),
+  );
+
+  const requiredValue = config.language_options[0];
+
+  if (requiredValue === undefined) {
+    throw new Error('Missing required requiredValue');
+  }
+
+  if (route.language === requiredValue.id) {
+    await page.evaluate((): void => {
+      window.linkClicks = [];
+      document.addEventListener('click', (event): void => {
+        if (!(event.target instanceof Element)) {
+          return;
+        }
+
+        const anchor = event.target.closest('a');
+
+        if (!anchor) {
+          return;
+        }
+
+        event.preventDefault();
+        window.linkClicks.push(anchor.href);
       });
+    });
 
-    assert.deepEqual(categories, expectedCategories);
-    assert.deepEqual(
-      await page.$$eval(
-        '[data-home-update="now"] [data-preview-id]',
-        (links): PreviewRecord[] => {
-          return window.lobbyLayout.previewLinks(links);
-        },
-      ),
-      (config.now[route.language] || config.now.en)!.sections.map(
-        (
-          section,
-        ): {
-          id: string;
-          href: string;
-        } => {
-          return {
-            id: `now-${section.id}`,
-            href: `${href(nowPage!.url)}#now-${section.id}`,
-          };
-        },
-      ),
-    );
-
-    if (route.language === config!.language_options[0]!.id) {
-      await page.evaluate((): void => {
-        window.linkClicks = [];
-        document.addEventListener('click', (event): void => {
-          if (!(event.target instanceof Element)) {
-            return;
-          }
-
-          const anchor = event.target.closest('a');
-
-          if (!anchor) {
-            return;
-          }
-
-          event.preventDefault();
-          window.linkClicks.push(anchor.href);
-        });
-      });
-
-      for (const anchor of await page.$$('.category-preview-link')) {
-        const expected = await anchor.evaluate((link): string => {
-          if (!(link instanceof HTMLAnchorElement)) {
-            throw new Error('Expected HTMLAnchorElement: link');
-          }
-
-          return link.href;
-        });
-
-        await anchor.click();
-        assert.equal(
-          await page.evaluate((): string | undefined => {
-            return window.linkClicks.at(-1);
-          }),
-          expected,
-        );
-      }
-
-      for (const card of await page.$$('.category-card')) {
-        await card.evaluate((element): void => {
-          return element.scrollIntoView({
-            block: 'center',
-            behavior: 'instant',
-          });
-        });
-
-        const previousClickCount = await page.evaluate((): number => {
-          return window.linkClicks.length;
-        });
-
-        const rect = await card.boundingBox();
-
-        await page.mouse.click(rect!.x + 12, rect!.y + 12);
-        assert.equal(
-          await page.evaluate((): number => {
-            return window.linkClicks.length;
-          }),
-          previousClickCount,
-        );
-      }
-
-      await page.focus('.category-preview-link');
-      assert.equal(
-        await page.$eval(':focus', (link): boolean => {
-          return link.classList.contains('category-preview-link');
-        }),
-        true,
-      );
-
-      const expected = await page.$eval(':focus', (link): string => {
+    for (const anchor of await page.$$('.category-preview-link')) {
+      const expected = await anchor.evaluate((link): string => {
         if (!(link instanceof HTMLAnchorElement)) {
           throw new Error('Expected HTMLAnchorElement: link');
         }
@@ -230,27 +220,90 @@ export async function inspectHomeCategories(
         return link.href;
       });
 
-      await page.keyboard.press('Enter');
+      await anchor.click();
       assert.equal(
         await page.evaluate((): string | undefined => {
           return window.linkClicks.at(-1);
         }),
         expected,
       );
-      await page.reload({
-        waitUntil: 'networkidle2',
-      });
     }
+
+    for (const card of await page.$$('.category-card')) {
+      await inspectCardCase(card);
+    }
+
+    await page.focus('.category-preview-link');
+    assert.equal(
+      await page.$eval(':focus', (link): boolean => {
+        return link.classList.contains('category-preview-link');
+      }),
+      true,
+    );
+
+    const expected = await page.$eval(':focus', (link): string => {
+      if (!(link instanceof HTMLAnchorElement)) {
+        throw new Error('Expected HTMLAnchorElement: link');
+      }
+
+      return link.href;
+    });
+
+    await page.keyboard.press('Enter');
+    assert.equal(
+      await page.evaluate((): string | undefined => {
+        return window.linkClicks.at(-1);
+      }),
+      expected,
+    );
+    await page.reload({
+      waitUntil: 'networkidle2',
+    });
+  }
+
+  async function inspectCardCase(card: ElementHandle): Promise<void> {
+    await card.evaluate((element): void => {
+      element.scrollIntoView({
+        block: 'center',
+        behavior: 'instant',
+      });
+    });
+
+    const previousClickCount = await page.evaluate((): number => {
+      return window.linkClicks.length;
+    });
+
+    const rect = await card.boundingBox();
+
+    if (rect === null) {
+      throw new Error('Missing required rect');
+    }
+
+    await page.mouse.click(rect.x + 12, rect.y + 12);
+    assert.equal(
+      await page.evaluate((): number => {
+        return window.linkClicks.length;
+      }),
+      previousClickCount,
+    );
   }
 }
 
-export async function inspectLayoutViewport(
-  page: Page,
-  width: number,
-  route: LayoutRoute,
-  theme: string,
-  context: LayoutContext,
-): Promise<void> {
+export async function inspectLayoutViewport(input: {
+  page: Page;
+  width: number;
+  route: LayoutRoute;
+  theme: string;
+  context: LayoutContext;
+}): Promise<void> {
+  const {
+    page,
+    width,
+    route,
+    theme,
+    context
+  } = input;
+
   const {
     config,
     checks,
@@ -271,7 +324,11 @@ export async function inspectLayoutViewport(
     ...(await page.evaluate(measureContent)),
   };
 
-  assert.equal(layout.overflow, false, `${route.url} overflow at ${width}`);
+  assert.equal(
+    layout.overflow,
+    false,
+    `${route.url} overflow at ${String(width)}`,
+  );
 
   for (const key of [
     'cardsAligned',
@@ -311,9 +368,9 @@ export async function inspectLayoutViewport(
     'isolatedPreferences',
   ] as const) {
     assert.equal(
-      Boolean(layout[key]),
+      layout[key],
       true,
-      `${route.url} ${key} at ${width}/${theme}`,
+      `${route.url} ${key} at ${String(width)}/${theme}`,
     );
   }
 
@@ -338,7 +395,7 @@ export async function inspectLayoutViewport(
   });
 
   if (
-    route.language === config!.language_options[0]!.id &&
+    route.language === config.language_options[0]?.id &&
     [
       390,
       1440,
@@ -352,7 +409,7 @@ export async function inspectLayoutViewport(
       scrollTo(0, 0);
     });
     await page.screenshot({
-      path: `${reportDirectory}/${route.id}-${theme}-${width}.png`,
+      path: `${reportDirectory}/${route.id}-${theme}-${String(width)}.png`,
       fullPage: true,
     });
   }

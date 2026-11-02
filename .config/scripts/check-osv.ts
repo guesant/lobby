@@ -1,13 +1,13 @@
-import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { dependencySBOMs } from './security-inputs.ts';
-import { resolve } from 'node:path';
 import {
   array,
   record,
   requiredText,
   strings,
-} from '../../website/src/lib/validation-primitives.ts';
+} from '../../website/src/lib/features/content/validation.model.ts';
+import { dependencySBOMs } from './security-inputs.ts';
+import { spawn } from 'node:child_process';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 type Advisory = {
   name: string;
@@ -27,31 +27,34 @@ function unratedSeverity(
   group: Record<string, unknown>,
   entry: Record<string, unknown>,
 ): string {
-  const ids = strings(group.ids, 'OSV advisory identifiers');
+  const ids = strings(group['ids'], 'OSV advisory identifiers');
 
   let rating = -1;
 
-  for (const raw of array(entry.vulnerabilities || [], 'OSV vulnerabilities')) {
+  for (const raw of array(
+    entry['vulnerabilities'] ?? [],
+    'OSV vulnerabilities',
+  )) {
     const vulnerability = record(raw, 'OSV vulnerability');
 
     if (
-      typeof vulnerability.id !== 'string' ||
-      !ids.includes(vulnerability.id)
+      typeof vulnerability['id'] !== 'string' ||
+      !ids.includes(vulnerability['id'])
     ) {
       continue;
     }
 
     const level = record(
-      vulnerability.database_specific,
+      vulnerability['database_specific'],
       'OSV database rating',
-    ).severity;
+    )['severity'];
 
     const position = levels.findIndex((candidate): boolean => {
       return candidate === level;
     });
 
     if (position < 0) {
-      throw new Error(`Missing OSV severity: ${vulnerability.id}`);
+      throw new Error(`Missing OSV severity: ${vulnerability['id']}`);
     }
 
     rating = Math.max(rating, position);
@@ -70,7 +73,7 @@ function advisorySeverity(
   group: Record<string, unknown>,
   entry: Record<string, unknown>,
 ): string | number {
-  const value = group.max_severity;
+  const value = group['max_severity'];
 
   if (value === '') {
     return unratedSeverity(group, entry);
@@ -100,35 +103,42 @@ function blocking(advisory: Advisory): boolean {
 export function reportedAdvisories(value: unknown): Advisory[] {
   const report = record(value, 'OSV report');
 
-  return array(report.results, 'OSV results')
-    .flatMap((value): Advisory[] => {
-      const result = record(value, 'OSV result');
+  return array(report['results'], 'OSV results')
+    .flatMap(
+      (value): Advisory[] => {
+        const result = record(value, 'OSV result');
 
-      return array(result.packages, 'OSV packages')
-        .flatMap(
-          (value): Advisory[] => {
-            const entry = record(value, 'OSV package entry');
+        function packageAdvisories(value: unknown): Advisory[] {
+          const entry = record(value, 'OSV package entry');
 
-            const dependency = record(entry.package, 'OSV package identity');
+          const dependency = record(entry['package'], 'OSV package identity');
 
-            return array(entry.groups || [], 'OSV advisory groups')
-              .map(
-                (value): Advisory => {
-                  const group = record(value, 'OSV advisory group');
+          return array(entry['groups'] ?? [], 'OSV advisory groups')
+            .map(
+              (value): Advisory => {
+                const group = record(value, 'OSV advisory group');
 
-                  const severity = advisorySeverity(group, entry);
+                const severity = advisorySeverity(group, entry);
 
-                  return {
-                    name: requiredText(dependency.name, 'OSV package name'),
-                    version: requiredText(dependency.version, 'OSV package version'),
-                    ids: strings(group.ids, 'OSV advisory identifiers'),
-                    severity,
-                  };
-                },
-              );
-          },
-        );
-    });
+                return {
+                  name: requiredText(dependency['name'], 'OSV package name'),
+                  version: requiredText(
+                    dependency['version'],
+                    'OSV package version',
+                  ),
+                  ids: strings(group['ids'], 'OSV advisory identifiers'),
+                  severity,
+                };
+              },
+            );
+        }
+
+        return array(result['packages'], 'OSV packages')
+          .flatMap(
+            packageAdvisories,
+          );
+      },
+    );
 }
 
 export function blockingAdvisories(report: unknown): Advisory[] {
@@ -140,11 +150,11 @@ export function assertSourceCoverage(value: unknown, expected: string[]): void {
   const report = record(value, 'OSV report');
 
   const paths = new Set(
-    array(report.results, 'OSV results')
+    array(report['results'], 'OSV results')
       .map((raw): string => {
-        const source = record(record(raw, 'OSV result').source, 'OSV source');
+        const source = record(record(raw, 'OSV result')['source'], 'OSV source');
 
-        return resolve(requiredText(source.path, 'OSV source path'));
+        return resolve(requiredText(source['path'], 'OSV source path'));
       }),
   );
 
@@ -153,6 +163,32 @@ export function assertSourceCoverage(value: unknown, expected: string[]): void {
       throw new Error(`OSV omitted a native SBOM: ${path}`);
     }
   }
+}
+
+function scannerArguments(paths: string[]): string[] {
+  const files = [
+    '.config/pnpm-lock.yaml',
+    'website/pnpm-lock.yaml',
+    '.config/audit/pnpm-lock.yaml',
+    '.config/python/uv.lock',
+    ...paths,
+  ];
+
+  return [
+    'scan',
+    'source',
+    '--experimental-plugins',
+    'sbom',
+    ...files.flatMap((path): string[] => {
+      return [
+        '--lockfile',
+        path,
+      ];
+    }),
+    '--all-packages',
+    '--format',
+    'json',
+  ];
 }
 
 async function runScanner(): Promise<{
@@ -169,39 +205,13 @@ async function runScanner(): Promise<{
   }>((resolve, reject): void => {
     const output: Buffer[] = [];
 
-    const scanner = spawn(
-      'osv-scanner',
-      [
-        'scan',
-        'source',
-        '--experimental-plugins',
-        'sbom',
-        '--lockfile',
-        '.config/pnpm-lock.yaml',
-        '--lockfile',
-        'website/pnpm-lock.yaml',
-        '--lockfile',
-        '.config/audit/pnpm-lock.yaml',
-        '--lockfile',
-        '.config/python/uv.lock',
-        ...paths.flatMap((path): string[] => {
-          return [
-            '--lockfile',
-            path,
-          ];
-        }),
-        '--all-packages',
-        '--format',
-        'json',
+    const scanner = spawn('osv-scanner', scannerArguments(paths), {
+      stdio: [
+        'ignore',
+        'pipe',
+        'inherit',
       ],
-      {
-        stdio: [
-          'ignore',
-          'pipe',
-          'inherit',
-        ],
-      },
-    );
+    });
 
     scanner.stdout.on('data', (chunk: Buffer): void => {
       output.push(chunk);
@@ -209,7 +219,7 @@ async function runScanner(): Promise<{
     scanner.on('error', reject);
     scanner.on('close', (code, signal): void => {
       if (code === null) {
-        reject(new Error(`osv-scanner terminated: ${signal}`));
+        reject(new Error(`osv-scanner terminated: ${String(signal)}`));
 
         return;
       }
@@ -228,7 +238,7 @@ async function main(): Promise<void> {
   const result = await runScanner();
 
   if (result.code !== 0 && result.code !== 1) {
-    throw new Error(`osv-scanner failed: ${result.code}`);
+    throw new Error(`osv-scanner failed: ${String(result.code)}`);
   }
 
   const report: unknown = JSON.parse(result.output);
@@ -242,12 +252,16 @@ async function main(): Promise<void> {
 
   const findings = blockingAdvisories(report);
 
+  reportAdvisories(report, findings);
+}
+
+function reportAdvisories(report: unknown, findings: Advisory[]): void {
   for (const advisory of reportedAdvisories(report)) {
     if (!blocking(advisory)) {
       console.warn(
         `OSV below HIGH threshold: ${advisory.name}@${advisory.version} ${advisory.ids.join(
           ', ',
-        )} (${advisory.severity})`,
+        )} (${String(advisory.severity)})`,
       );
     }
   }
@@ -259,7 +273,7 @@ async function main(): Promise<void> {
       console.error(
         `${advisory.name}@${advisory.version} ${advisory.ids.join(
           ', ',
-        )} (${advisory.severity})`,
+        )} (${String(advisory.severity)})`,
       );
     }
 

@@ -1,28 +1,38 @@
+import { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { activateElement } from './browser-dom.ts';
+import { createAuditPage } from './browser-fixture.ts';
+import { checkProgressiveScene } from './check-progressive-scene.ts';
+import { pagesFor, readConfiguration, visibleLinks } from './configuration.ts';
+import { measureMaterialContrast } from './layout-contrast.ts';
+import { verifyDialogs } from './layout-dialogs.ts';
+import { verifyRouteMetadata } from './layout-metadata.ts';
 import {
   inspectHomeCategories,
   inspectLayoutViewport,
   inspectStatistics,
   type LayoutContext,
 } from './layout-pages.ts';
-import type { Page } from 'puppeteer-core';
-import { activateElement } from './browser-dom.ts';
-import { measureMaterialContrast } from './layout-contrast.ts';
-import { verifyRouteMetadata } from './layout-metadata.ts';
-import { verifyDialogs } from './layout-dialogs.ts';
 import type { LayoutRoute } from './layout-types.ts';
-import puppeteer from 'puppeteer-core';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { resolve } from 'node:path';
+import type { Page } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 import { parse } from 'yaml';
-import { validateStatistics } from '../../website/src/lib/content-validation.ts';
-import { checkProgressiveScene } from './check-progressive-scene.ts';
-import { readConfiguration, visibleLinks, pagesFor } from './configuration.ts';
 
 const config = readConfiguration(
-  process.env.QA_LINKS_CONFIG ||
+  textOr(
+    process.env['QA_LINKS_CONFIG'],
     resolve(import.meta.dirname, '../../website/src/data/links.yaml'),
+  ),
 );
+
+const primaryLanguage = config.language_options[0];
+
+assert.ok(primaryLanguage, 'at least one localized language is configured');
+
+const primaryLanguageID = primaryLanguage.id;
 
 const snapshots = validateStatistics(
   parse(
@@ -33,19 +43,26 @@ const snapshots = validateStatistics(
   ) as unknown,
 );
 
-const reportDirectory = process.env.QA_REPORT_DIR || resolve('.local/reports');
-
-const base = new URL(
-  (process.env.QA_BASE_URL || 'http://127.0.0.1:4173').replace(/\/$/, '') + '/',
+const reportDirectory = textOr(
+  process.env['QA_REPORT_DIR'],
+  resolve('.local/reports'),
 );
 
-const href = (path: string): string => {
+const base = new URL(
+  textOr(process.env['QA_BASE_URL'], 'http://127.0.0.1:4173')
+    .replace(
+      /\/$/,
+      '',
+    ) + '/',
+);
+
+function href(path: string): string {
   if (/^(https?:|mailto:|tel:)/.test(path)) {
     return new URL(path).href;
   }
 
   return new URL(path.replace(/^\/+/, ''), base).href;
-};
+}
 
 const widths = [
   320,
@@ -55,9 +72,11 @@ const widths = [
   1440,
 ];
 
-const routes = config.language_options.flatMap(({
-  id
-}): LayoutRoute[] => {
+const routes = config.language_options.flatMap((input): LayoutRoute[] => {
+  const {
+    id
+  } = input;
+
   return pagesFor(config, id)
     .filter((page): boolean => {
       return !page.fallback;
@@ -94,7 +113,7 @@ const layoutContext: LayoutContext = {
     ],
   });
 
-  const page = await browser.newPage();
+  const page = await createAuditPage(browser);
 
   const errors: string[] = [];
 
@@ -104,7 +123,7 @@ const layoutContext: LayoutContext = {
   page.on('response', (response): void => {
     if (response.url()
       .startsWith(base.origin) && response.status() >= 400) {
-      errors.push(`${response.status()} ${response.url()}`);
+      errors.push(`${String(response.status())} ${response.url()}`);
     }
   });
 
@@ -140,9 +159,12 @@ const layoutContext: LayoutContext = {
           await page.$eval('.world-landscape', (landscape): boolean => {
             const root = document.documentElement;
 
-            const preview = getComputedStyle(
-              document.querySelector<HTMLElement>('.world-landscape-preview')!,
+            const worldLandscapePreview = window.lobbyAssertions.element(
+              document,
+              '.world-landscape-preview',
             );
+
+            const preview = getComputedStyle(worldLandscapePreview);
 
             return (
               !root.hasAttribute('data-js-enabled') &&
@@ -175,8 +197,12 @@ const layoutContext: LayoutContext = {
           },
         );
 
+      if (destination === undefined) {
+        throw new Error('Missing required destination');
+      }
+
       await page.focus(
-        `.header-navigation-links a[href="${new URL(href(destination!.url)).pathname}"]`,
+        `.header-navigation-links a[href="${new URL(href(destination.url)).pathname}"]`,
       );
       assert.equal(
         await page.$eval(':focus', (element): string => {
@@ -190,7 +216,7 @@ const layoutContext: LayoutContext = {
         }),
         page.keyboard.press('Enter'),
       ]);
-      assert.equal(page.url(), href(destination!.url));
+      assert.equal(page.url(), href(destination.url));
       checks.push({
         path: route.url,
         navigationWithoutJavaScript: true,
@@ -206,24 +232,17 @@ const layoutContext: LayoutContext = {
         'networks',
         'personal',
       ] as const) {
-        for (const suffix of [
-          '/',
-          '',
-        ] as const) {
-          const response = await fetch(href(`${language.path}${id}${suffix}`), {
-            redirect: 'manual',
-          });
-
-          assert.equal(
-            response.status,
-            404,
-            `${language.path}${id}${suffix} must return 404`,
-          );
-        }
+        await inspectIdCase(language, id);
       }
     }
 
-    await page.goto(href(config!.language_options[0]!.path), {
+    const requiredValue = config.language_options[0];
+
+    if (requiredValue === undefined) {
+      throw new Error('Missing required requiredValue');
+    }
+
+    await page.goto(href(requiredValue.path), {
       waitUntil: 'networkidle2',
     });
     await page.click('[data-settings-open]');
@@ -233,7 +252,7 @@ const layoutContext: LayoutContext = {
     });
     assert.equal(
       await page.$eval('html', (root): string | undefined => {
-        return root.dataset.motion;
+        return root.dataset['motion'];
       }),
       'off',
     );
@@ -247,7 +266,7 @@ const layoutContext: LayoutContext = {
     await page.$eval('#motion-on', activateElement);
     assert.equal(
       await page.$eval('html', (root): string | undefined => {
-        return root.dataset.motion;
+        return root.dataset['motion'];
       }),
       'off',
     );
@@ -267,7 +286,11 @@ const layoutContext: LayoutContext = {
     assert.deepEqual(errors, []);
     await (
       await import('./check-navigation-browser.ts')
-    ).default(browser, base.href, reportDirectory);
+    ).default({
+      browser,
+      baseURL: base.href,
+      reportDirectory,
+    });
     await (
       await import('./check-language-browser.ts')
     ).default(browser, base.href);
@@ -276,7 +299,11 @@ const layoutContext: LayoutContext = {
     ).default(browser, base.href, reportDirectory);
     await (
       await import('./check-component-parity.ts')
-    ).default(browser, base.href, reportDirectory);
+    ).default({
+      browser,
+      baseURL: base.href,
+      reportDirectory,
+    });
     await (
       await import('./check-link-view-browser.ts')
     ).default(browser, base.href, reportDirectory);
@@ -317,8 +344,46 @@ const layoutContext: LayoutContext = {
   } finally {
     await browser.close();
   }
+
+  async function inspectIdCase(
+    language: {
+      id: string;
+      path: string;
+      label: string;
+      hreflang: string;
+    },
+    id: string,
+  ): Promise<void> {
+    for (const suffix of [
+      '/',
+      '',
+    ] as const) {
+      await inspectSuffixCase(language, id, suffix);
+    }
+  }
+
+  async function inspectSuffixCase(
+    language: {
+      id: string;
+      path: string;
+      label: string;
+      hreflang: string;
+    },
+    id: string,
+    suffix: string,
+  ): Promise<void> {
+    const response = await fetch(href(`${language.path}${id}${suffix}`), {
+      redirect: 'manual',
+    });
+
+    assert.equal(
+      response.status,
+      404,
+      `${language.path}${id}${suffix} must return 404`,
+    );
+  }
 })()
-  .catch((error): void => {
+  .catch((error: unknown): void => {
     console.error(error);
     process.exitCode = 1;
   });
@@ -328,51 +393,32 @@ async function inspectLayoutRoute(
   route: LayoutRoute,
   represented: Set<string>,
 ): Promise<void> {
-  const nowPage = await verifyRouteMetadata(
+  const nowPage = await verifyRouteMetadata({
     page,
     route,
     config,
     represented,
     href,
-  );
+  });
 
   for (const theme of [
     'dark',
     'light',
   ] as const) {
-    await page.click('[data-settings-open]');
-    await page.$eval(`#theme-${theme}`, activateElement);
-    await page.click('#settings-dialog [data-dialog-close]');
-
-    if (
-      route.id === 'home' &&
-      route.language === config!.language_options[0]!.id
-    ) {
-      const materialContrast = await page.evaluate(measureMaterialContrast);
-
-      assert(
-        materialContrast.panel >= 4.5 && materialContrast.wood >= 4.5,
-        JSON.stringify(materialContrast),
-      );
-      checks.push({
-        path: route.url,
-        theme,
-        materialContrast,
-        passed: true,
-      });
-    }
-
-    for (const width of widths) {
-      await inspectLayoutViewport(page, width, route, theme, layoutContext);
-    }
+    await inspectRouteAppearance(theme);
   }
 
-  await inspectHomeCategories(route, page, nowPage, layoutContext);
+  await inspectHomeCategories({
+    route,
+    page,
+    nowPage,
+    context: layoutContext,
+  });
 
   await inspectStatistics(route, page, layoutContext);
 
   if (
-    route.language === config!.language_options[0]!.id &&
+    route.language === primaryLanguageID &&
     [
       'home',
       ...config.navigation.sections,
@@ -397,7 +443,7 @@ async function inspectLayoutRoute(
             selector: string;
             text: string;
           }[] => {
-            const element = document.querySelector<HTMLElement>(selector)!;
+            const element = document.querySelector<HTMLElement>(selector);
 
             if (!element) {
               return [];
@@ -442,7 +488,12 @@ async function inspectLayoutRoute(
         selector,
         text
       } of original) {
-        document.querySelector<HTMLElement>(selector)!.textContent = text;
+        const requiredValue = window.lobbyAssertions.element(
+          document,
+          selector,
+        );
+
+        requiredValue.textContent = text;
       }
     }, original);
     await page.evaluate((): string => {
@@ -476,12 +527,12 @@ async function inspectLayoutRoute(
       assert.equal(
         enlarged.overflow,
         false,
-        `${route.url} text enlarged at ${width}`,
+        `${route.url} text enlarged at ${String(width)}`,
       );
       assert.equal(
         enlarged.contentFits,
         true,
-        `${route.url} enlarged content fit at ${width}`,
+        `${route.url} enlarged content fit at ${String(width)}`,
       );
       checks.push({
         path: route.url,
@@ -503,4 +554,35 @@ async function inspectLayoutRoute(
       layout: 'passed',
     }),
   );
+
+  async function inspectRouteAppearance(theme: string): Promise<void> {
+    await page.click('[data-settings-open]');
+    await page.$eval(`#theme-${theme}`, activateElement);
+    await page.click('#settings-dialog [data-dialog-close]');
+
+    if (route.id === 'home' && route.language === primaryLanguageID) {
+      const materialContrast = await page.evaluate(measureMaterialContrast);
+
+      assert(
+        materialContrast.panel >= 4.5 && materialContrast.wood >= 4.5,
+        JSON.stringify(materialContrast),
+      );
+      checks.push({
+        path: route.url,
+        theme,
+        materialContrast,
+        passed: true,
+      });
+    }
+
+    for (const width of widths) {
+      await inspectLayoutViewport({
+        page,
+        width,
+        route,
+        theme,
+        context: layoutContext,
+      });
+    }
+  }
 }

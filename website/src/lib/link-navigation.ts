@@ -1,20 +1,14 @@
+import { siteOrigin } from './features/navigation/origin.model.ts';
+
 export type LinkNavigation = {
   external: boolean;
   target: '_blank' | '_self';
   rel?: string;
 };
 
-function currentOrigin(): string {
-  if (typeof window === 'undefined') {
-    return 'https://guesant.net';
-  }
-
-  return window.location.origin;
-}
-
 export function linkNavigation(
   href: string,
-  origin: string = currentOrigin(),
+  origin: string = siteOrigin,
 ): LinkNavigation {
   const url: URL = new URL(href, origin);
 

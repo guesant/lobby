@@ -1,7 +1,8 @@
-import puppeteer from 'puppeteer-core';
-import type { Page } from 'puppeteer-core';
-import { readFile } from 'node:fs/promises';
+import { createAuditPage } from './browser-fixture.ts';
 import { installRasterHelpers } from './raster-helpers.ts';
+import { readFile } from 'node:fs/promises';
+import type { Page } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 
 const signature = Buffer.from([
   137,
@@ -28,7 +29,7 @@ export async function loadPNG(
     png.readUInt32BE(16) !== width ||
     png.readUInt32BE(20) !== height
   ) {
-    throw new Error(`${path} must be a ${width}x${height} PNG`);
+    throw new Error(`${path} must be a ${String(width)}x${String(height)} PNG`);
   }
 
   return png.toString('base64');
@@ -47,7 +48,7 @@ export async function withRasterPage(
   });
 
   try {
-    const page = await browser.newPage();
+    const page = await createAuditPage(browser);
 
     await page.evaluate(installRasterHelpers);
     await task(page);

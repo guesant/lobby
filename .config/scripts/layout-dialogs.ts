@@ -1,15 +1,20 @@
 import assert from 'node:assert/strict';
-import type { Page } from 'puppeteer-core';
+import type { ElementHandle, Page } from 'puppeteer-core';
+
+async function interactiveControl(page: Page): Promise<ElementHandle | null> {
+  return (
+    (await page.$('.link-button')) ??
+    (await page.$('.header-navigation-links a'))
+  );
+}
 
 export async function verifyDialogs(page: Page, path: string): Promise<void> {
-  const control =
-    (await page.$('.link-button')) ||
-    (await page.$('.header-navigation-links a'));
+  const control = await interactiveControl(page);
 
   assert(control);
 
   await control.evaluate((element): void => {
-    return element.scrollIntoView({
+    element.scrollIntoView({
       block: 'center',
       behavior: 'instant',
     });
@@ -152,15 +157,20 @@ export async function verifyDialogs(page: Page, path: string): Promise<void> {
       height: number;
       scrolls: boolean;
     } => {
+      const creditsDialogContent = dialog.querySelector<HTMLDialogElement>(
+        '.credits-dialog-content',
+      );
+
+      if (creditsDialogContent === null) {
+        throw new Error('Missing required creditsDialogContent');
+      }
+
       return {
         open: dialog.open,
         top: dialog.getBoundingClientRect().top,
         bottom: dialog.getBoundingClientRect().bottom,
         height: innerHeight,
-        scrolls:
-          getComputedStyle(
-            dialog.querySelector<HTMLDialogElement>('.credits-dialog-content')!,
-          ).overflowY === 'auto',
+        scrolls: getComputedStyle(creditsDialogContent).overflowY === 'auto',
       };
     },
   );

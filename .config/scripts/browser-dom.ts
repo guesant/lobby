@@ -1,5 +1,13 @@
 import type { Page } from 'puppeteer-core';
 
+export function searchIsReady(): boolean {
+  return (
+    window.lobbyAssertions
+      .element(document, '#search-results')
+      .getAttribute('aria-busy') === 'false'
+  );
+}
+
 export async function waitForBoot(page: Page, open: boolean): Promise<void> {
   await page.waitForFunction(
     (expected): boolean => {
@@ -48,11 +56,11 @@ export function anchorURLs(elements: Element[]): string[] {
   });
 }
 
-export function animationFrames(frames: number = 2): Promise<void> {
+export function animationFrames(frames = 2): Promise<void> {
   return new Promise((accept): void => {
     let remaining = frames;
 
-    const advance = (): void => {
+    function advance(): void {
       remaining -= 1;
 
       if (remaining <= 0) {
@@ -62,7 +70,7 @@ export function animationFrames(frames: number = 2): Promise<void> {
       }
 
       requestAnimationFrame(advance);
-    };
+    }
 
     requestAnimationFrame(advance);
   });

@@ -1,11 +1,9 @@
 import { runCommand } from './process.ts';
 
-const commands: Array<
-  [
-    string,
-    string[],
-  ]
-> = [
+const commands: [
+  string,
+  string[],
+][] = [
   [
     'node',
     [

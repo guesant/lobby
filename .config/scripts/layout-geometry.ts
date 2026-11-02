@@ -1,5 +1,5 @@
-import type { LayoutSnapshot } from './layout-types.ts';
 import './layout-helpers.ts';
+import type { LayoutSnapshot } from './layout-types.ts';
 
 export function measureGeometry(): Pick<
   LayoutSnapshot,
@@ -20,32 +20,46 @@ export function measureGeometry(): Pick<
 > {
   return {
     regionsAligned: ((): boolean => {
-      const shell = document
-        .querySelector<HTMLElement>('.site-shell')!
-        .getBoundingClientRect();
+      const siteShell = window.lobbyAssertions.element(document, '.site-shell');
 
-      const navigation = document
-        .querySelector<HTMLElement>('.profile-navigation')!
-        .getBoundingClientRect();
+      const shell = siteShell.getBoundingClientRect();
 
-      const content = document
-        .querySelector<HTMLElement>('.page-content')!
-        .getBoundingClientRect();
+      const profileNavigation = window.lobbyAssertions.element(
+        document,
+        '.profile-navigation',
+      );
 
-      const footer = document
-        .querySelector<HTMLElement>('.site-footer')!
-        .getBoundingClientRect();
+      const navigation = profileNavigation.getBoundingClientRect();
 
-      const profile = document
-        .querySelector<HTMLElement>('.profile')!
-        .getBoundingClientRect();
+      const pageContent = window.lobbyAssertions.element(
+        document,
+        '.page-content',
+      );
 
-      const quickContacts = document
-        .querySelector<HTMLElement>('.quick-contacts')!
-        .getBoundingClientRect();
+      const content = pageContent.getBoundingClientRect();
 
-      const suspended =
-        document.querySelector<HTMLElement>('.suspended-content')!;
+      const siteFooter = window.lobbyAssertions.element(
+        document,
+        '.site-footer',
+      );
+
+      const footer = siteFooter.getBoundingClientRect();
+
+      const profileValue = window.lobbyAssertions.element(document, '.profile');
+
+      const profile = profileValue.getBoundingClientRect();
+
+      const quickContactsValue = window.lobbyAssertions.element(
+        document,
+        '.quick-contacts',
+      );
+
+      const quickContacts = quickContactsValue.getBoundingClientRect();
+
+      const suspended = window.lobbyAssertions.element(
+        document,
+        '.suspended-content',
+      );
 
       const suspendedStyle = getComputedStyle(suspended);
 
@@ -75,18 +89,30 @@ export function measureGeometry(): Pick<
           );
         });
 
+      function headerStackAligned(): boolean {
+        return (
+          profile.top <= quickContacts.top &&
+          profile.bottom >= quickContacts.bottom &&
+          navigation.bottom <= quickContacts.top &&
+          profile.bottom >= navigation.bottom &&
+          quickContacts.bottom <= content.top
+        );
+      }
+
+      function horizontalBoundsAligned(): boolean {
+        return (
+          navigation.left >= profile.left &&
+          navigation.right <= profile.right &&
+          Math.abs(footer.width - profile.width) < 1 &&
+          quickContacts.left >= profile.left &&
+          quickContacts.right <= profile.right
+        );
+      }
+
       return (
         aligned &&
-        profile.top <= quickContacts.top &&
-        profile.bottom >= quickContacts.bottom &&
-        navigation.bottom <= quickContacts.top &&
-        profile.bottom >= navigation.bottom &&
-        quickContacts.bottom <= content.top &&
-        navigation.left >= profile.left &&
-        navigation.right <= profile.right &&
-        Math.abs(footer.width - profile.width) < 1 &&
-        quickContacts.left >= profile.left &&
-        quickContacts.right <= profile.right &&
+        headerStackAligned() &&
+        horizontalBoundsAligned() &&
         Math.abs(
           navigation.left +
             navigation.width / 2 -
@@ -102,17 +128,20 @@ export function measureGeometry(): Pick<
     })(),
     overflow: document.documentElement.scrollWidth > innerWidth,
     mainContentGeometry: ((): boolean => {
-      const main = document.querySelector<HTMLElement>('#main-content')!;
+      const main = window.lobbyAssertions.element(document, '#main-content');
 
-      const shell = document.querySelector<HTMLElement>('.site-shell')!;
+      const shell = window.lobbyAssertions.element(document, '.site-shell');
 
       const rect = main.getBoundingClientRect();
 
       const shellRect = shell.getBoundingClientRect();
 
-      const suspendedStyle = getComputedStyle(
-        document.querySelector<HTMLElement>('.suspended-content')!,
+      const suspendedContent = window.lobbyAssertions.element(
+        document,
+        '.suspended-content',
       );
+
+      const suspendedStyle = getComputedStyle(suspendedContent);
 
       const availableWidth =
         shellRect.width -
@@ -136,24 +165,23 @@ export function measureGeometry(): Pick<
         ...row.querySelectorAll<HTMLElement>('.statistics'),
       ];
 
-      return (
-        innerWidth < 896 ||
-        statistics.every((entry): boolean => {
-          return statistics.every((other): boolean => {
-            const rect = entry.getBoundingClientRect();
+      function sameStatisticsRow(entry: HTMLElement): boolean {
+        return statistics.every((other): boolean => {
+          const rect = entry.getBoundingClientRect();
 
-            const compared = other.getBoundingClientRect();
+          const compared = other.getBoundingClientRect();
 
-            return (
-              Math.abs(rect.top - compared.top) < 1 &&
-              Math.abs(rect.bottom - compared.bottom) < 1
-            );
-          });
-        })
-      );
+          return (
+            Math.abs(rect.top - compared.top) < 1 &&
+            Math.abs(rect.bottom - compared.bottom) < 1
+          );
+        });
+      }
+
+      return innerWidth < 896 || statistics.every(sameStatisticsRow);
     }),
     navigationCompact:
-      !document.querySelector<HTMLElement>('.profile-navigation details')! &&
+      !document.querySelector<HTMLElement>('.profile-navigation details') &&
       document.querySelector<HTMLElement>('.header-navigation-links') !== null,
     controlsFit: [
       ...document.querySelectorAll<HTMLElement>(
@@ -203,15 +231,26 @@ export function measureGeometry(): Pick<
         ...rail.querySelectorAll<HTMLImageElement>('.suspension-terminal'),
       ];
 
-      const body = rail
-        .querySelector<HTMLElement>('.suspension-body')!
-        .getBoundingClientRect();
+      const suspensionBody = window.lobbyAssertions.element(
+        rail,
+        '.suspension-body',
+      );
+
+      const body = suspensionBody.getBoundingClientRect();
 
       const chains = [
         ...rail.querySelectorAll<HTMLElement>('.suspension-chain'),
       ];
 
-      if (!chains[0] || !chains[1] || !terminals[0] || !terminals[1]) {
+      function hasPair<T>(values: T[]): values is [
+        T,
+        T,
+        ...T[],
+      ] {
+        return values[0] !== undefined && values[1] !== undefined;
+      }
+
+      if (!hasPair(chains) || !hasPair(terminals)) {
         return false;
       }
 
@@ -225,13 +264,13 @@ export function measureGeometry(): Pick<
 
       const lantern = rail.querySelector<HTMLElement>(
         '.suspension-lantern-middle',
-      )!;
+      );
 
       const lanternRect = lantern?.getBoundingClientRect();
 
-      const profile = document.querySelector<HTMLElement>('.profile')!;
+      const profile = window.lobbyAssertions.element(document, '.profile');
 
-      const footer = document.querySelector<HTMLElement>('.site-footer')!;
+      const footer = window.lobbyAssertions.element(document, '.site-footer');
 
       const headerRect = profile.getBoundingClientRect();
 
@@ -253,27 +292,27 @@ export function measureGeometry(): Pick<
 
       const center = frame.left + frame.width / 2;
 
-      const resolveHeaderJoint = (): number => {
+      function resolveHeaderJoint(): number {
         if (atStart) {
           return headerRect.left + headerBorder / 2;
         }
 
         return headerRect.right - headerBorder / 2;
-      };
+      }
 
       const headerJoint = resolveHeaderJoint();
 
-      const resolveFooterJoint = (): number => {
+      function resolveFooterJoint(): number {
         if (atStart) {
           return footerRect.left + footerBorder / 2;
         }
 
         return footerRect.right - footerBorder / 2;
-      };
+      }
 
       const footerJoint = resolveFooterJoint();
 
-      const couplingAligned = (): boolean => {
+      function couplingAligned(): boolean {
         return (
           Math.abs(
             frame.top + couplingSeat - (headerRect.bottom - headerBorder / 2),
@@ -288,13 +327,13 @@ export function measureGeometry(): Pick<
           footerJoint >= last.left &&
           footerJoint <= last.right
         );
-      };
+      }
 
       const upperTerminal = terminals[0];
 
       const lowerTerminal = terminals[1];
 
-      const terminalConnections = (): boolean => {
+      function terminalConnections(): boolean {
         return (
           terminals.length === 2 &&
           upperTerminal.src === lowerTerminal.src &&
@@ -306,9 +345,9 @@ export function measureGeometry(): Pick<
           Math.abs(body.bottom - last.top) < 1 &&
           Math.abs(last.bottom - frame.bottom) < 1
         );
-      };
+      }
 
-      const chainContinuity = (): boolean => {
+      function chainContinuity(): boolean {
         return (
           Math.abs(upper.top - body.top) < 1 &&
           Math.abs(upper.bottom - lower.top) < 1 &&
@@ -335,13 +374,15 @@ export function measureGeometry(): Pick<
             );
           })
         );
-      };
+      }
 
       return couplingAligned() && terminalConnections() && chainContinuity();
     }),
     railContentClearance: ((): boolean => {
-      const suspended =
-        document.querySelector<HTMLElement>('.suspended-content')!;
+      const suspended = window.lobbyAssertions.element(
+        document,
+        '.suspended-content',
+      );
 
       const style = getComputedStyle(suspended);
 
@@ -400,14 +441,14 @@ export function measureGeometry(): Pick<
         return false;
       }
 
-      const content =
-        document.querySelector<HTMLElement>('.suspended-content')!;
+      const content = window.lobbyAssertions.element(
+        document,
+        '.suspended-content',
+      );
 
       const gap = parseFloat(getComputedStyle(content).rowGap);
 
-      return [
-        ...content.querySelectorAll<HTMLElement>('.suspension-body'),
-      ].every((body): boolean => {
+      function inspectNestedEntry(body: HTMLElement): boolean {
         if (!body.getClientRects().length) {
           return true;
         }
@@ -444,7 +485,11 @@ export function measureGeometry(): Pick<
             );
           })
         );
-      });
+      }
+
+      return [
+        ...content.querySelectorAll<HTMLElement>('.suspension-body'),
+      ].every(inspectNestedEntry);
     })(),
     repeatingFrames: [
       ...document.querySelectorAll<HTMLDialogElement>(

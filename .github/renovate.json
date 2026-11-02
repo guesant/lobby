@@ -14,12 +14,19 @@
   "prHourlyLimit": 2,
   "dependencyDashboard": true,
   "rangeStrategy": "bump",
-  "lockFileMaintenance": { "enabled": true, "schedule": [
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
       "* 0-5 * * 1"
-    ] },
-  "vulnerabilityAlerts": { "enabled": true, "schedule": [
+    ]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": [
       "at any time"
-    ], "automerge": false },
+    ],
+    "automerge": false
+  },
   "ignorePaths": [
     "**/node_modules/**",
     ".local/**",
@@ -28,52 +35,79 @@
     ".config/ast-grep/tests/**"
   ],
   "packageRules": [
-    { "matchUpdateTypes": [
+    {
+      "matchUpdateTypes": [
         "major"
-      ], "groupName": null, "automerge": false },
-    { "matchManagers": [
+      ],
+      "groupName": null,
+      "automerge": false
+    },
+    {
+      "matchManagers": [
         "npm"
-      ], "matchUpdateTypes": [
+      ],
+      "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
         "digest"
-      ], "groupName": "javascript tooling and application" },
-    { "matchManagers": [
+      ],
+      "groupName": "javascript tooling and application"
+    },
+    {
+      "matchManagers": [
         "github-actions"
-      ], "matchUpdateTypes": [
+      ],
+      "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
         "digest"
-      ], "groupName": "github actions" },
-    { "matchDatasources": [
+      ],
+      "groupName": "github actions"
+    },
+    {
+      "matchDatasources": [
         "docker"
-      ], "matchUpdateTypes": [
+      ],
+      "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
         "digest"
-      ], "groupName": "container images" },
-    { "matchDatasources": [
+      ],
+      "groupName": "container images"
+    },
+    {
+      "matchDatasources": [
         "pypi"
-      ], "matchUpdateTypes": [
+      ],
+      "matchUpdateTypes": [
         "minor",
         "patch",
         "pin"
-      ], "groupName": "python tooling" },
-    { "matchDatasources": [
+      ],
+      "groupName": "python tooling"
+    },
+    {
+      "matchDatasources": [
         "deb"
-      ], "groupName": "debian packages", "registryUrls": [
+      ],
+      "groupName": "debian packages",
+      "registryUrls": [
         "https://deb.debian.org/debian?suite=bookworm&components=main&binaryArch=amd64",
         "https://deb.debian.org/debian-security?suite=bookworm-security&components=main&binaryArch=amd64"
-      ] },
-    { "matchFileNames": [
+      ]
+    },
+    {
+      "matchFileNames": [
         ".config/audit/**",
         ".config/python/**"
-      ], "addLabels": [
+      ],
+      "addLabels": [
         "manual-audit-required"
-      ] }
+      ]
+    }
   ],
   "customManagers": [
     {
@@ -82,9 +116,11 @@
         "/^\\.config/python/pyproject\\.toml$/"
       ],
       "matchStrings": [
-        "\"(?<depName>mcp)==(?<currentValue>[0-9.]+)\""
+        "\\[tool\\.uv\\][\\s\\S]*?override-dependencies\\s*=\\s*\\[[^\\]]*\\]",
+        "\"(?<depName>[a-z][a-z0-9-]*)==(?<currentValue>[^\"\\s]+)\""
       ],
-      "datasourceTemplate": "pypi"
+      "datasourceTemplate": "pypi",
+      "matchStringsStrategy": "recursive"
     },
     {
       "customType": "regex",
@@ -92,7 +128,7 @@
         "/^\\.github/workflows/.*\\.ya?ml$/"
       ],
       "matchStrings": [
-        "(?<depName>node):(?<currentValue>[0-9.]+-bookworm-slim)@(?<currentDigest>sha256:[a-f0-9]{64})"
+        "(?<depName>node):(?<currentValue>[0-9.]+-bookworm(?:-slim)?)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
     },
@@ -102,10 +138,10 @@
         "/^\\.config/container/Dockerfile$/"
       ],
       "matchStrings": [
-        "corepack@(?<currentValue>[0-9.]+)"
+        "ARG COREPACK_VERSION=(?<currentValue>v[0-9.]+)\\s+ARG COREPACK_SHA256=(?<currentDigest>[a-f0-9]{64})"
       ],
-      "depNameTemplate": "corepack",
-      "datasourceTemplate": "npm"
+      "depNameTemplate": "nodejs/corepack",
+      "datasourceTemplate": "github-release-attachments"
     }
   ]
 }

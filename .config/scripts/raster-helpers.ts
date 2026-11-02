@@ -1,14 +1,8 @@
-type RasterPixels = {
+export type RasterPixels = {
   width: number;
   height: number;
   data: Uint8ClampedArray;
 };
-
-declare global {
-  interface Window {
-    rasterPixels(png: string): Promise<RasterPixels>;
-  }
-}
 
 export function installRasterHelpers(): void {
   window.rasterPixels = async (png: string): Promise<RasterPixels> => {

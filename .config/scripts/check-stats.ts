@@ -1,14 +1,14 @@
+import type { LinkRecord } from '../../website/src/lib/features/content/content.types.ts';
+import { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
 import { required } from './asset-data.ts';
 import { readConfiguration } from './configuration.ts';
-import { validateStatistics } from '../../website/src/lib/content-validation.ts';
-import type { LinkRecord } from '../../website/src/lib/site-data.ts';
-import { parse, stringify } from 'yaml';
+import { updateStats } from './update-stats.ts';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { updateStats } from './update-stats.ts';
+import { parse, stringify } from 'yaml';
 
 const source = readConfiguration();
 
@@ -24,23 +24,21 @@ const leetcode = entries.find((entry): boolean => {
   return entry.stats?.provider === 'leetcode';
 });
 
-const username = (entry: LinkRecord): string => {
+function username(entry: LinkRecord): string {
   return required(
     new URL(required(entry.url)).pathname.split('/')
       .filter(Boolean)
       .at(-1),
   );
-};
+}
 
-const response = (data: unknown, status = 200): Response => {
+function response(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
   });
-};
+}
 
-const repository = (
-  id: number,
-): {
+function repository(id: number): {
   id: number;
   private: boolean;
   owner: {
@@ -48,7 +46,7 @@ const repository = (
   };
   stargazers_count: number;
   forks_count: number;
-} => {
+} {
   return {
     id,
     private: false,
@@ -58,9 +56,9 @@ const repository = (
     stargazers_count: 2,
     forks_count: 1,
   };
-};
+}
 
-const leetData = (): {
+function leetData(): {
   data: {
     matchedUser: {
       username: string | undefined;
@@ -79,7 +77,7 @@ const leetData = (): {
       count: number;
     }[];
   };
-} => {
+} {
   return {
     data: {
       matchedUser: {
@@ -128,27 +126,29 @@ const leetData = (): {
       ),
     },
   };
-};
+}
 
-const fetcher = async (url: string): Promise<Response> => {
-  if (String(url)
-    .startsWith('https://leetcode.com/')) {
-    return response(leetData());
+function fetcher(url: string): Promise<Response> {
+  if (url.startsWith('https://leetcode.com/')) {
+    return Promise.resolve(response(leetData()));
   }
 
-  if (String(url)
-    .includes('/repos?')) {
-    return response([
-      repository(1),
-    ]);
+  if (url.includes('/repos?')) {
+    return Promise.resolve(
+      response([
+        repository(1),
+      ]),
+    );
   }
 
-  return response({
-    login: username(required(github)),
-    followers: 4,
-    public_repos: 1,
-  });
-};
+  return Promise.resolve(
+    response({
+      login: username(required(github)),
+      followers: 4,
+      public_repos: 1,
+    }),
+  );
+}
 
 void test('atomic cache updates and failure retention', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'links-statistics-'));
@@ -187,14 +187,14 @@ void test('atomic cache updates and failure retention', async (): Promise<void> 
     );
 
     for (const failure of [
-      async (): Promise<Response> => {
-        return response({}, 429);
+      (): Promise<Response> => {
+        return Promise.resolve(response({}, 429));
       },
-      async (): Promise<never> => {
-        throw new Error('fixture-timeout');
+      (): Promise<never> => {
+        return Promise.reject(new Error('fixture-timeout'));
       },
-      async (): Promise<Response> => {
-        return new Response('invalid JSON');
+      (): Promise<Response> => {
+        return Promise.resolve(new Response('invalid JSON'));
       },
     ]) {
       const result = await updateStats({
@@ -213,8 +213,7 @@ void test('atomic cache updates and failure retention', async (): Promise<void> 
     await updateStats({
       ...options,
       fetcher: async (url): Promise<Response> => {
-        if (String(url)
-          .includes('leetcode.com')) {
+        if (url.includes('leetcode.com')) {
           return response({}, 503);
         }
 
@@ -253,8 +252,8 @@ void test('atomic cache updates and failure retention', async (): Promise<void> 
 
     const changedResults = await updateStats({
       ...options,
-      fetcher: async (): Promise<Response> => {
-        return response({}, 503);
+      fetcher: (): Promise<Response> => {
+        return Promise.resolve(response({}, 503));
       },
     });
 
@@ -282,8 +281,8 @@ void test('first failed collection does not fabricate a cache', async (): Promis
 
     const results = await updateStats({
       outputPath,
-      fetcher: async (): Promise<Response> => {
-        return response({}, 503);
+      fetcher: (): Promise<Response> => {
+        return Promise.resolve(response({}, 503));
       },
     });
 

@@ -1,6 +1,6 @@
+import { deploymentStatus, resolveRun } from './ci-policy.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveRun, deploymentStatus } from './ci-policy.ts';
 
 const sha = '1'.repeat(40);
 
@@ -43,22 +43,22 @@ void test('deployment fails closed and skips an obsolete main snapshot', async (
     sha,
     repository: 'guesant/lobby',
     token: 'test',
-    fetcher: async (): Promise<{
+    fetcher: (): Promise<{
       ok: boolean;
       status: number;
       json(): Promise<unknown>;
     }> => {
-      return {
+      return Promise.resolve({
         ok: true,
         status: 200,
-        json: async (): Promise<unknown> => {
-          return {
+        json: (): Promise<unknown> => {
+          return Promise.resolve({
             object: {
               sha: newer,
             },
-          };
+          });
         },
-      };
+      });
     },
   });
 
@@ -69,8 +69,8 @@ void test('deployment fails closed and skips an obsolete main snapshot', async (
       sha,
       repository: 'guesant/lobby',
       token: 'test',
-      fetcher: async (): Promise<never> => {
-        throw new Error('network failed');
+      fetcher: (): Promise<never> => {
+        return Promise.reject(new Error('network failed'));
       },
     }),
     /network failed/,

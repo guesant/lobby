@@ -1,49 +1,52 @@
-import { spawn } from 'node:child_process';
-import { setTimeout } from 'node:timers/promises';
+import { resolve } from 'node:path';
+import { preview, type PreviewServer } from 'vite';
+
+async function startStaticServer(
+  directory: string,
+  host = '127.0.0.1',
+): Promise<PreviewServer> {
+  return preview({
+    configFile: false,
+    appType: 'mpa',
+    logLevel: 'error',
+    build: {
+      outDir: resolve(directory),
+    },
+    preview: {
+      host,
+      port: 4173,
+      strictPort: true,
+    },
+  });
+}
+
+async function stopStaticServer(server: PreviewServer): Promise<void> {
+  return new Promise((accept, reject): void => {
+    server.httpServer.close((error): void => {
+      if (error) {
+        reject(error);
+
+        return;
+      }
+
+      accept();
+    });
+  });
+}
 
 export async function withStaticServer(
   task: () => Promise<void>,
-  directory: string = '.local/build/qa',
+  directory = '.local/build/qa',
 ): Promise<void> {
-  const server = spawn(
-    'serve',
-    [
-      '--no-clipboard',
-      '--no-etag',
-      '--listen',
-      'tcp://127.0.0.1:4173',
-      directory,
-    ],
-    {
-      stdio: [
-        'ignore',
-        'ignore',
-        'inherit',
-      ],
-    },
-  );
+  const server = await startStaticServer(directory);
 
   try {
-    for (let attempt = 0; ; attempt += 1) {
-      try {
-        const response = await fetch('http://127.0.0.1:4173/'); // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request
-
-        await response.arrayBuffer();
-
-        if (response.ok) {
-          break;
-        }
-      } catch {}
-
-      if (attempt >= 50) {
-        throw new Error('Preview server did not start');
-      }
-
-      await setTimeout(100);
-    }
-
     await task();
   } finally {
-    server.kill('SIGTERM');
+    await stopStaticServer(server);
   }
+}
+
+if (import.meta.main) {
+  await startStaticServer('.local/build/site', '0.0.0.0');
 }

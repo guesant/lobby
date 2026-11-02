@@ -1,11 +1,11 @@
-import { writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import {
   assertLighthouse,
-  runLighthouse,
   type LighthouseResult,
+  runLighthouse,
 } from './lighthouse-audit.ts';
 import { withStaticServer } from './static-server.ts';
+import { writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 function medianResult(results: LighthouseResult[]): LighthouseResult {
   const first = results[0];
@@ -70,7 +70,7 @@ await withStaticServer(async (): Promise<void> => {
           '.local/reports/lighthouse-baseline',
           formFactor,
           path.slice(1),
-          `run-${run}`,
+          `run-${String(run)}`,
         );
 
         results.push(

@@ -13,8 +13,15 @@ FROM node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703
 RUN apt-get update \
   && apt-get install --yes --no-install-recommends ca-certificates=20250419~deb12u2 curl=7.88.1-10+deb12u15 git=1:2.39.5-0+deb12u3 libstdc++6=12.2.0-14+deb12u1 optipng=0.7.7-2+b1 python3=3.11.2-1+b1 python3-venv=3.11.2-1+b1 \
   && rm --recursive --force /var/lib/apt/lists/*
-RUN npm install --global --ignore-scripts --no-fund --no-audit corepack@0.36.0 \
-  && corepack enable pnpm
+ARG COREPACK_VERSION=v0.36.0
+ARG COREPACK_SHA256=9128cfe26aee0c99f4fc68c15c6b8b12309a68be0de2c012cdfea2a463cb722f
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl --fail --silent --show-error --location "https://github.com/nodejs/corepack/releases/download/${COREPACK_VERSION}/corepack.tgz" --output /tmp/corepack.tgz \
+  && echo "${COREPACK_SHA256}  /tmp/corepack.tgz" | sha256sum --check --strict \
+  && mkdir --parents /opt/corepack \
+  && tar --extract --gzip --file /tmp/corepack.tgz --directory /opt/corepack --strip-components=1 \
+  && node /opt/corepack/dist/corepack.js enable pnpm --install-directory /usr/local/bin \
+  && rm /tmp/corepack.tgz
 COPY --from=just /just /usr/local/bin/just
 COPY --from=uv /uv /usr/local/bin/uv
 COPY --from=actionlint /usr/local/bin/actionlint /usr/local/bin/actionlint
@@ -24,6 +31,7 @@ COPY --from=gitleaks /usr/bin/gitleaks /usr/local/bin/gitleaks
 ENV LINKS_CONTAINER=1
 ENV TOOLING_PROFILE=fast
 ENV PNPM_HOME=/pnpm
+ENV PNPM_CONFIG_STORE_DIR=/pnpm/store
 ENV UV_PYTHON_DOWNLOADS=never
 ENV PATH="/workspace/.config/node_modules/.bin:/workspace/website/node_modules/.bin:/opt/python/.venv/bin:${PATH}"
 COPY .config/package.json .config/pnpm-lock.yaml .config/pnpm-workspace.yaml /opt/tooling/

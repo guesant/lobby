@@ -1,11 +1,13 @@
-import type { Page, Browser } from 'puppeteer-core';
-import assert from 'node:assert/strict';
-import { inspectControlReadiness } from './control-readiness.ts';
-import fs from 'node:fs/promises';
-import { withBrowser } from './browser-presentation.ts';
-import { resolve } from 'node:path';
+import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { createAuditPage } from './browser-fixture.ts';
+import { applyLinkPresentation, withBrowser } from './browser-presentation.ts';
 import { readConfiguration } from './configuration.ts';
-import type { LinkDocument } from '../../website/src/lib/site-data.ts';
+import { inspectControlReadiness } from './control-readiness.ts';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import { resolve } from 'node:path';
+import type { Browser, Page } from 'puppeteer-core';
 
 type BadgeExpectation = {
   label: string;
@@ -34,10 +36,9 @@ async function inspectComponents(
   minecraft: boolean,
 ): Promise<void> {
   const actual = await page.evaluate(
-    ({
-      expected,
-      minecraft,
-    }):
+    (
+      input,
+    ):
       | {
         badgesCorrect: boolean;
         ownershipCorrect: boolean;
@@ -79,6 +80,11 @@ async function inspectComponents(
         navigationText: boolean;
         independent?: never;
       } => {
+      const {
+        expected,
+        minecraft
+      } = input;
+
       const badges = [
         ...document.querySelectorAll<HTMLElement>(
           '.link-third-party-badge, .terminal-third-party-badge',
@@ -89,11 +95,11 @@ async function inspectComponents(
         ...document.querySelectorAll<HTMLElement>('.link-button'),
       ];
 
-      const own = (url: URL): boolean => {
+      function own(url: URL): boolean {
         return expected.domains.some((domain): boolean => {
           return url.hostname === domain || url.hostname.endsWith(`.${domain}`);
         });
-      };
+      }
 
       const badgesCorrect =
         badges.length > 0 &&
@@ -109,11 +115,11 @@ async function inspectComponents(
         const url = new URL(link.href);
 
         const thirdParty =
-          /^https?:/i.test(link.getAttribute('href') || '') && !own(url);
+          /^https?:/i.test(link.getAttribute('href') ?? '') && !own(url);
 
         return (
           Boolean(
-            link.querySelector<HTMLElement>('.link-third-party-badge')!,
+            link.querySelector<HTMLElement>('.link-third-party-badge'),
           ) === thirdParty
         );
       });
@@ -124,13 +130,16 @@ async function inspectComponents(
           ownershipCorrect,
           independent: !document.querySelector<HTMLElement>(
             '.site-frame,.quick-contact-link,.profile-avatar',
-          )!,
+          ),
         };
       }
 
-      const avatar = document
-        .querySelector<HTMLElement>('.profile-avatar')!
-        .textContent.trim();
+      const profileAvatar = window.lobbyAssertions.element(
+        document,
+        '.profile-avatar',
+      );
+
+      const avatar = profileAvatar.textContent.trim();
 
       const frames = [
         ...document.querySelectorAll<HTMLElement>('.quick-contact-link'),
@@ -147,9 +156,12 @@ async function inspectComponents(
         } => {
           const style = getComputedStyle(link);
 
-          const iconStyle = getComputedStyle(
-            link.querySelector<HTMLElement>('.quick-contact-icon')!,
+          const quickContactIcon = window.lobbyAssertions.element(
+            link,
+            '.quick-contact-icon',
           );
+
+          const iconStyle = getComputedStyle(quickContactIcon);
 
           return {
             source: style.borderImageSource,
@@ -180,10 +192,16 @@ async function inspectComponents(
           } => {
             const box = icon.getBoundingClientRect();
 
+            const parentElementValue = icon.parentElement;
+
+            if (parentElementValue === null) {
+              throw new Error('Missing required parentElementValue');
+            }
+
             return {
               width: box.width,
               height: box.height,
-              wrapped: icon!.parentElement!.matches(
+              wrapped: parentElementValue.matches(
                 '.button-icon, .quick-contact-icon',
               ),
             };
@@ -193,40 +211,66 @@ async function inspectComponents(
       const activeCheck = Boolean(
         document.querySelector<HTMLAnchorElement>(
           '.header-navigation-links a[aria-current="page"]',
-        )!,
+        ),
       );
 
-      const shortcuts = document.querySelector<HTMLElement>('.quick-contacts')!;
+      const shortcuts = window.lobbyAssertions.element(
+        document,
+        '.quick-contacts',
+      );
 
       const shortcutsBox = shortcuts.getBoundingClientRect();
 
-      const profileBox = document
-        .querySelector<HTMLElement>('.profile')!
-        .getBoundingClientRect();
+      const profile = window.lobbyAssertions.element(document, '.profile');
 
-      const uptimeBox = document
-        .querySelector<HTMLElement>('.profile-uptime')!
-        .getBoundingClientRect();
+      const profileBox = profile.getBoundingClientRect();
 
-      const navigation = document.querySelector<HTMLElement>(
+      const profileUptime = window.lobbyAssertions.element(
+        document,
+        '.profile-uptime',
+      );
+
+      const uptimeBox = profileUptime.getBoundingClientRect();
+
+      const navigation = window.lobbyAssertions.element(
+        document,
         '.profile-navigation',
-      )!;
+      );
 
       const ornaments = [
         ...document.querySelectorAll<HTMLElement>('.profile .ornament-label'),
       ];
 
-      return {
-        badgesCorrect,
-        ownershipCorrect,
-        avatar,
-        frames,
-        icons,
-        activeCheck,
-        profileShadow: getComputedStyle(
-          document.querySelector<HTMLElement>('.profile')!,
-        ).boxShadow,
-        sharedOrnaments:
+      const profileValue = window.lobbyAssertions.element(document, '.profile');
+
+      function headerNavigationIsSeparated(): boolean {
+        return (
+          !navigation.querySelector<HTMLElement>('.quick-contacts') &&
+          navigation.closest('.profile') !== null &&
+          navigation.getBoundingClientRect().top >= uptimeBox.bottom &&
+          !document.querySelector<HTMLElement>('.quick-access') &&
+          !navigation.querySelector<HTMLElement>('details, button, summary') &&
+          navigation.querySelectorAll<HTMLAnchorElement>('.navigation-links a')
+            .length ===
+            document.querySelectorAll<HTMLAnchorElement>(
+              '.footer-navigation-links a',
+            ).length
+        );
+      }
+
+      function shortcutsStayInsideHeader(): boolean {
+        return (
+          shortcuts.closest('.profile') !== null &&
+          shortcuts.children.length === 8 &&
+          shortcutsBox.top >= navigation.getBoundingClientRect().bottom &&
+          shortcutsBox.bottom <= profileBox.bottom &&
+          shortcutsBox.left >= profileBox.left &&
+          shortcutsBox.right <= profileBox.right
+        );
+      }
+
+      function headerOrnamentsMatch(): boolean {
+        return (
           ornaments.length === 3 &&
           ornaments.every((label): boolean => {
             const before = getComputedStyle(label, '::before');
@@ -240,26 +284,22 @@ async function inspectComponents(
             );
           }) &&
           document
-            .querySelector<HTMLElement>('#footer-navigation-title')!
-            .classList.contains('ornament-label-footer'),
-        shortcutsInHeader:
-          shortcuts.closest('.profile') !== null &&
-          shortcuts.children.length === 8 &&
-          shortcutsBox.top >= navigation.getBoundingClientRect().bottom &&
-          shortcutsBox.bottom <= profileBox.bottom &&
-          shortcutsBox.left >= profileBox.left &&
-          shortcutsBox.right <= profileBox.right,
-        navigationSeparated:
-          !navigation.querySelector<HTMLElement>('.quick-contacts')! &&
-          navigation.closest('.profile') !== null &&
-          navigation.getBoundingClientRect().top >= uptimeBox.bottom &&
-          !document.querySelector<HTMLElement>('.quick-access')! &&
-          !navigation.querySelector<HTMLElement>('details, button, summary')! &&
-          navigation.querySelectorAll<HTMLAnchorElement>('.navigation-links a')
-            .length ===
-            document.querySelectorAll<HTMLAnchorElement>(
-              '.footer-navigation-links a',
-            ).length,
+            .querySelector<HTMLElement>('#footer-navigation-title')
+            ?.classList.contains('ornament-label-footer') === true
+        );
+      }
+
+      return {
+        badgesCorrect,
+        ownershipCorrect,
+        avatar,
+        frames,
+        icons,
+        activeCheck,
+        profileShadow: getComputedStyle(profileValue).boxShadow,
+        sharedOrnaments: headerOrnamentsMatch(),
+        shortcutsInHeader: shortcutsStayInsideHeader(),
+        navigationSeparated: headerNavigationIsSeparated(),
         navigationAligned: [
           ...navigation.querySelectorAll<HTMLAnchorElement>('a'),
         ].every((link): boolean => {
@@ -348,19 +388,7 @@ async function setPresentation(
   theme: string,
   view: string,
 ): Promise<void> {
-  await page.evaluate(
-    ({
-      theme,
-      view
-    }): void => {
-      document.documentElement.dataset.theme = theme;
-      document.documentElement.dataset.linkView = view;
-    },
-    {
-      theme,
-      view,
-    },
-  );
+  await applyLinkPresentation(page, theme, view);
   await page.evaluate((): Promise<unknown> => {
     return new Promise((accept): void => {
       requestAnimationFrame((): void => {
@@ -398,24 +426,37 @@ async function captureComponents(
   });
 }
 
-async function inspectRoute(
-  page: Page,
-  baseURL: string,
-  route: ParityRoute,
-  expected: BadgeExpectation,
-  directory: string,
-  screenshots: boolean,
-): Promise<string[]> {
+async function inspectRoute(input: {
+  page: Page;
+  baseURL: string;
+  route: ParityRoute;
+  expected: BadgeExpectation;
+  directory: string;
+  screenshots: boolean;
+}): Promise<string[]> {
+  const {
+    page,
+    baseURL,
+    route,
+    expected,
+    directory,
+    screenshots
+  } = input;
+
   const response = await page.goto(new URL(route.path, baseURL).href, {
     waitUntil: 'networkidle0',
   });
 
-  assert.equal(response!.status(), 200, route.path);
+  if (response === null) {
+    throw new Error('Missing required response');
+  }
+
+  assert.equal(response.status(), 200, route.path);
   await page.evaluate((): Promise<FontFaceSet> => {
     return document.fonts.ready;
   });
 
-  const checks = [];
+  const checks: string[] = [];
 
   for (const width of widths) {
     await page.setViewport({
@@ -431,44 +472,59 @@ async function inspectRoute(
         'compact',
         'detailed',
       ] as const) {
-        await setPresentation(page, theme, view);
-        await inspectComponents(page, expected, route.minecraft);
-
-        const resolveName = (): 'minecraft' | 'terminal' => {
-          if (route.minecraft) {
-            return 'minecraft';
-          }
-
-          return 'terminal';
-        };
-
-        const name = `${route.language}-${resolveName()}-${route.id}-${width}-${theme}-${view}`;
-
-        if (screenshots && route.language === 'pt-br') {
-          await captureComponents(page, directory, name);
-        }
-
-        checks.push(name);
+        await inspectViewCase(theme, view, width);
       }
     }
   }
 
   return checks;
+
+  async function inspectViewCase(
+    theme: string,
+    view: string,
+    width: number,
+  ): Promise<void> {
+    await setPresentation(page, theme, view);
+    await inspectComponents(page, expected, route.minecraft);
+
+    function resolveName(): 'minecraft' | 'terminal' {
+      if (route.minecraft) {
+        return 'minecraft';
+      }
+
+      return 'terminal';
+    }
+
+    const name = `${route.language}-${resolveName()}-${route.id}-${String(width)}-${theme}-${view}`;
+
+    if (screenshots && route.language === 'pt-br') {
+      await captureComponents(page, directory, name);
+    }
+
+    checks.push(name);
+  }
 }
 
-async function inspectNavigation(
-  page: Page,
-  baseURL: string,
-  minecraft: boolean,
-  expected: BadgeExpectation,
-): Promise<void> {
-  const resolvePrefix = (): '' | 'terminal/' => {
+async function inspectNavigation(input: {
+  page: Page;
+  baseURL: string;
+  minecraft: boolean;
+  expected: BadgeExpectation;
+}): Promise<void> {
+  const {
+    page,
+    baseURL,
+    minecraft,
+    expected
+  } = input;
+
+  function resolvePrefix(): '' | 'terminal/' {
     if (minecraft) {
       return '';
     }
 
     return 'terminal/';
-  };
+  }
 
   const prefix = `pt-br/${resolvePrefix()}`;
 
@@ -479,21 +535,21 @@ async function inspectNavigation(
     window.componentParityNavigation = true;
   });
 
-  const resolveSelector = ():
+  function resolveSelector():
     | '.header-navigation-links a[data-navigation-page="career"]'
-    | '.terminal-navigation a[href$="/career/"]' => {
+    | '.terminal-navigation a[href$="/career/"]' {
     if (minecraft) {
       return '.header-navigation-links a[data-navigation-page="career"]';
     }
 
     return '.terminal-navigation a[href$="/career/"]';
-  };
+  }
 
   const selector = resolveSelector();
 
   await page.click(selector);
   await page.waitForFunction((): boolean => {
-    return document.documentElement.dataset.page === 'career';
+    return document.documentElement.dataset['page'] === 'career';
   });
   assert.equal(
     await page.evaluate((): boolean => {
@@ -519,81 +575,86 @@ function componentRoutes(config: LinkDocument): ParityRoute[] {
         domains: string[];
       };
     }[] => {
+      function interfaceRoutes(minecraft: boolean): {
+        path: string;
+        language: string;
+        minecraft: boolean;
+        id: string;
+        expected: {
+          label: string;
+          domains: string[];
+        };
+      }[] {
+        return [
+          'home',
+          'career',
+          'code',
+        ].map(
+          (
+            id,
+          ): {
+            path: string;
+            language: string;
+            minecraft: boolean;
+            id: string;
+            expected: {
+              label: string;
+              domains: string[];
+            };
+          } => {
+            function resolvePath(): '' | 'terminal/' {
+              if (minecraft) {
+                return '';
+              }
+
+              return 'terminal/';
+            }
+
+            function resolvePath1(): string {
+              if (id === 'home') {
+                return '';
+              }
+
+              return `${id}/`;
+            }
+
+            return {
+              path: `${language.path.slice(
+                1,
+              )}${resolvePath()}${resolvePath1()}`,
+              language: language.id,
+              minecraft,
+              id,
+              expected: {
+                label: config.locales[language.id]?.ui.third_party ?? '',
+                domains: config.site.first_party_domains,
+              },
+            };
+          },
+        );
+      }
+
       return [
         true,
         false,
-      ].flatMap(
-        (
-          minecraft,
-        ): {
-          path: string;
-          language: string;
-          minecraft: boolean;
-          id: string;
-          expected: {
-            label: string;
-            domains: string[];
-          };
-        }[] => {
-          return [
-            'home',
-            'career',
-            'code',
-          ].map(
-            (
-              id,
-            ): {
-              path: string;
-              language: string;
-              minecraft: boolean;
-              id: string;
-              expected: {
-                label: string;
-                domains: string[];
-              };
-            } => {
-              const resolvePath = (): '' | 'terminal/' => {
-                if (minecraft) {
-                  return '';
-                }
-
-                return 'terminal/';
-              };
-
-              const resolvePath1 = (): string => {
-                if (id === 'home') {
-                  return '';
-                }
-
-                return `${id}/`;
-              };
-
-              return {
-                path: `${language.path.slice(
-                  1,
-                )}${resolvePath()}${resolvePath1()}`,
-                language: language.id,
-                minecraft,
-                id,
-                expected: {
-                  label: config.locales[language.id]?.ui.third_party || '',
-                  domains: config.site.first_party_domains,
-                },
-              };
-            },
-          );
-        },
-      );
+      ].flatMap(interfaceRoutes);
     },
   );
 }
 
-async function checkComponentParity(
-  browser: Browser,
-  baseURL: string,
-  reportDirectory: string,
-  screenshots = false,
-): Promise<void> {
+async function checkComponentParity(input: {
+  browser: Browser;
+  baseURL: string;
+  reportDirectory: string;
+  screenshots?: boolean;
+}): Promise<void> {
+  const {
+    browser,
+    baseURL,
+    reportDirectory,
+    screenshots = false
+  } = input;
+
   const config = readConfiguration();
 
   const directory = resolve(reportDirectory, 'component-parity');
@@ -614,7 +675,7 @@ async function checkComponentParity(
       await inspectControlReadiness(context, baseURL, minecraft);
     }
 
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await page.setCacheEnabled(false);
     await page.emulateMediaFeatures([
@@ -626,14 +687,14 @@ async function checkComponentParity(
 
     for (const route of componentRoutes(config)) {
       checks.push(
-        ...(await inspectRoute(
+        ...(await inspectRoute({
           page,
           baseURL,
           route,
-          route.expected,
+          expected: route.expected,
           directory,
           screenshots,
-        )),
+        })),
       );
     }
 
@@ -641,9 +702,20 @@ async function checkComponentParity(
       true,
       false,
     ]) {
-      await inspectNavigation(page, baseURL, minecraft, {
-        label: config!.locales['pt-br']!.ui.third_party,
-        domains: config.site.first_party_domains,
+      const requiredValue = config.locales['pt-br'];
+
+      if (requiredValue === undefined) {
+        throw new Error('Missing required requiredValue');
+      }
+
+      await inspectNavigation({
+        page,
+        baseURL,
+        minecraft,
+        expected: {
+          label: requiredValue.ui.third_party,
+          domains: config.site.first_party_domains,
+        },
       });
     }
 
@@ -653,17 +725,20 @@ async function checkComponentParity(
       true,
       false,
     ]) {
-      const resolveValue = (): '' | 'terminal/' => {
+      function interfaceSegment(): '' | 'terminal/' {
         if (minecraft) {
           return '';
         }
 
         return 'terminal/';
-      };
+      }
 
-      await page.goto(new URL(`pt-br/${resolveValue()}career/`, baseURL).href, {
-        waitUntil: 'networkidle0',
-      });
+      await page.goto(
+        new URL(`pt-br/${interfaceSegment()}career/`, baseURL).href,
+        {
+          waitUntil: 'networkidle0',
+        },
+      );
       await inspectComponents(
         page,
         {
@@ -686,7 +761,7 @@ async function checkComponentParity(
       ),
     );
     console.log(
-      `Component parity: ${checks.length} presentations, SPA and no-JavaScript checks passed.`,
+      `Component parity: ${String(checks.length)} presentations, SPA and no-JavaScript checks passed.`,
     );
   } finally {
     await context.close();
@@ -697,14 +772,14 @@ export default checkComponentParity;
 
 if (import.meta.main) {
   withBrowser(async (browser: Browser): Promise<void> => {
-    await checkComponentParity(
+    await checkComponentParity({
       browser,
-      process.env.QA_BASE_URL || 'http://127.0.0.1:4173/',
-      process.env.QA_REPORT_DIR || '.local/reports',
-      process.argv.includes('--screenshots'),
-    );
+      baseURL: textOr(process.env['QA_BASE_URL'], 'http://127.0.0.1:4173/'),
+      reportDirectory: textOr(process.env['QA_REPORT_DIR'], '.local/reports'),
+      screenshots: process.argv.includes('--screenshots'),
+    });
   })
-    .catch((error): void => {
+    .catch((error: unknown): void => {
       console.error(error);
       process.exitCode = 1;
     });

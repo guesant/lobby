@@ -76,5 +76,5 @@
 
   background-image:
     linear-gradient(var(--error-wood-overlay), var(--error-wood-overlay)),
-    url('../../static/assets/generated/aged-oak.webp');
+    url('/assets/generated/aged-oak.webp');
 }

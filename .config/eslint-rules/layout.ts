@@ -33,17 +33,16 @@ function syntaxNode(value: unknown): value is SyntaxNode {
 function indentAt(source: string, offset: number): string {
   const start = source.lastIndexOf('\n', offset - 1) + 1;
 
-  return source.slice(start, offset)
-    .match(/^\s*/)?.[0] ?? '';
+  return /^\s*/.exec(source.slice(start, offset))?.[0] ?? '';
 }
 
 function closingDelimiter(
   value: SyntaxNode,
   source: Rule.RuleContext['sourceCode'],
 ): number {
-  if (syntaxNode(value.typeAnnotation)) {
+  if (syntaxNode(value['typeAnnotation'])) {
     const annotation = source.getTokenByRangeStart(
-      value.typeAnnotation.range[0],
+      value['typeAnnotation'].range[0],
     );
 
     if (annotation) {
@@ -70,7 +69,7 @@ function memberEdits(
 
     const child = children[index];
 
-    if (!previous || !child || previous.loc.end.line !== child.loc.start.line) {
+    if (!previous || previous.loc.end.line !== child?.loc.start.line) {
       continue;
     }
 
@@ -153,17 +152,17 @@ export const multilineStructures: Rule.RuleModule = {
     },
   },
   create(context: Rule.RuleContext): Rule.RuleListener {
-    const inspect = (value: unknown): void => {
+    function inspect(value: unknown): void {
       if (!syntaxNode(value)) {
         return;
       }
 
       const raw =
-        value.properties ??
-        value.members ??
-        value.body ??
-        value.elements ??
-        value.elementTypes;
+        value['properties'] ??
+        value['members'] ??
+        value['body'] ??
+        value['elements'] ??
+        value['elementTypes'];
 
       if (!Array.isArray(raw)) {
         return;
@@ -184,7 +183,7 @@ export const multilineStructures: Rule.RuleModule = {
           });
         },
       });
-    };
+    }
 
     return {
       ObjectExpression: inspect,

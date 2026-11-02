@@ -1,7 +1,7 @@
 /.local/
 /.cache/
 /website/.svelte-kit/
-/website/src/static/assets/generated/
+/website/static/assets/generated/
 /website/node_modules/
 /.config/node_modules/
 /.config/audit/node_modules/

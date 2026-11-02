@@ -1,13 +1,13 @@
+import { createPointerFeedback } from '../../website/src/lib/features/preferences/audio.controller.ts';
+import {
+  type PointerFeedback,
+  type PointerInput,
+  type SoundKind,
+  type SoundPlayer,
+  type SoundTiming,
+} from '../../website/src/lib/features/preferences/audio.types.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
-  createPointerFeedback,
-  type PointerInput,
-  type SoundPlayer,
-  type SoundKind,
-  type SoundTiming,
-  type PointerFeedback,
-} from '../../website/src/lib/pointer-sound.ts';
 
 type FeedbackHarness = {
   feedback: PointerFeedback;
@@ -20,7 +20,7 @@ type FeedbackHarness = {
   destroyed(): boolean;
 };
 
-function harness(enabled: boolean = true): FeedbackHarness {
+function harness(enabled = true): FeedbackHarness {
   let now = 0;
 
   let ready = true;
@@ -37,14 +37,18 @@ function harness(enabled: boolean = true): FeedbackHarness {
     prepare(): void {
       prepared += 1;
     },
-    resume(): void {},
+    resume(): void {
+      return;
+    },
     ready(): boolean {
       return ready;
     },
     play(kind): void {
       sounds.push(kind);
     },
-    stop(): void {},
+    stop(): void {
+      return;
+    },
     destroy(): void {
       destroyed = true;
     },

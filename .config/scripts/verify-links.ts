@@ -1,13 +1,13 @@
+import {
+  array,
+  record,
+  requiredText,
+} from '../../website/src/lib/features/content/validation.model.ts';
 import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
-import {
-  record,
-  array,
-  requiredText,
-} from '../../website/src/lib/validation-primitives.ts';
 
 type LinkFailure = {
   url: string;
@@ -24,36 +24,40 @@ type VerifiedLink = {
 
 type LinkRequester = (url: string, options: RequestInit) => Promise<Response>;
 
-export async function verifyTransientFailures(
-  value: unknown,
-  request: LinkRequester = fetch,
-): Promise<VerifiedLink[]> {
-  const report = record(value, 'link report');
-
-  const failures: LinkFailure[] = Object.values(
-    record(report.error_map || {}, 'link errors'),
+function reportFailures(report: Record<string, unknown>): LinkFailure[] {
+  return Object.values(
+    record(report['error_map'] ?? {}, 'link errors'),
   )
     .flatMap((entry): LinkFailure[] => {
       return array(entry, 'link failures')
         .map((value): LinkFailure => {
           const failure = record(value, 'link failure');
 
-          const code = record(failure.status, 'link failure status').code;
+          const code = record(failure['status'], 'link failure status')['code'];
 
           if (typeof code !== 'number') {
             throw new Error('Invalid link status');
           }
 
           return {
-            url: requiredText(failure.url, 'link failure URL'),
+            url: requiredText(failure['url'], 'link failure URL'),
             status: {
               code,
             },
           };
         });
     });
+}
 
-  if (!failures.length && !report.errors) {
+export async function verifyTransientFailures(
+  value: unknown,
+  request: LinkRequester = fetch,
+): Promise<VerifiedLink[]> {
+  const report = record(value, 'link report');
+
+  const failures = reportFailures(report);
+
+  if (!failures.length && !report['errors']) {
     return [];
   }
 
@@ -81,42 +85,51 @@ export async function verifyTransientFailures(
       return entry.url;
     }),
   )) {
-    if (!/^https?:\/\//i.test(url)) {
-      throw new Error('Invalid retry URL');
-    }
-
-    const response = await request(url, {
-      method: 'GET',
-      signal: AbortSignal.timeout(20000),
-      headers: {
-        'User-Agent': 'links-validation',
-      },
-    });
-
-    await response.body?.cancel();
-
-    if (!response.ok) {
-      throw new Error(`Link retry failed: HTTP ${response.status} ${url}`);
-    }
-
-    verified.push({
-      url,
-      status: response.status,
-      method: 'GET',
-    });
+    verified.push(await requestValidLink(url, request));
   }
 
   return verified;
 }
 
-async function main(): Promise<void> {
+async function requestValidLink(
+  url: string,
+  request: LinkRequester,
+): Promise<VerifiedLink> {
+  if (!/^https?:\/\//i.test(url)) {
+    throw new Error('Invalid retry URL');
+  }
+
+  const response = await request(url, {
+    method: 'GET',
+    signal: AbortSignal.timeout(20000),
+    headers: {
+      'User-Agent': 'links-validation',
+    },
+  });
+
+  await response.body?.cancel();
+
+  if (!response.ok) {
+    throw new Error(
+      `Link retry failed: HTTP ${String(response.status)} ${url}`,
+    );
+  }
+
+  return {
+    url,
+    status: response.status,
+    method: 'GET',
+  };
+}
+
+async function runLinkChecker(
+  reportPath: string,
+): Promise<ReturnType<typeof spawnSync>> {
   const cacheDirectory = resolve('.cache/lychee');
 
   const configPath = resolve('.config/lychee.toml');
 
   const publicPath = resolve('.local/build/site');
-
-  const reportPath = resolve('.local/reports/links.json');
 
   await mkdir(cacheDirectory, {
     recursive: true,
@@ -126,7 +139,7 @@ async function main(): Promise<void> {
   });
   await writeFile(reportPath, '');
 
-  const result = spawnSync(
+  return spawnSync(
     'lychee',
     [
       '--config',
@@ -144,13 +157,19 @@ async function main(): Promise<void> {
       stdio: 'inherit',
     },
   );
+}
+
+async function main(): Promise<void> {
+  const reportPath = resolve('.local/reports/links.json');
+
+  const result = await runLinkChecker(reportPath);
 
   if (result.error) {
     throw result.error;
   }
 
   if (result.status !== 0 && result.status !== 2) {
-    throw new Error(`Link checker failed: ${result.status}`);
+    throw new Error(`Link checker failed: ${String(result.status)}`);
   }
 
   const report = record(
@@ -159,9 +178,9 @@ async function main(): Promise<void> {
   );
 
   if (
-    typeof report.unique !== 'number' ||
-    !Number.isInteger(report.unique) ||
-    report.unique < 0
+    typeof report['unique'] !== 'number' ||
+    !Number.isInteger(report['unique']) ||
+    report['unique'] < 0
   ) {
     throw new Error('Invalid link report count');
   }
@@ -187,7 +206,7 @@ async function main(): Promise<void> {
   );
   console.log(
     JSON.stringify({
-      unique: report.unique,
+      unique: report['unique'],
       errors: 0,
       verified_retries: verified,
     }),

@@ -1,5 +1,5 @@
-import type { LayoutSnapshot } from './layout-types.ts';
 import './layout-helpers.ts';
+import type { LayoutSnapshot } from './layout-types.ts';
 
 export function measureIconography(): Pick<
   LayoutSnapshot,
@@ -31,13 +31,16 @@ export function measureIconography(): Pick<
       .every((icon): boolean => {
         const rect = icon.getBoundingClientRect();
 
-        const image = icon.querySelector<HTMLElement>('.site-icon')!;
+        const image = icon.querySelector<HTMLElement>('.site-icon');
 
         const glyph = image?.getBoundingClientRect();
 
+        if (!image || !glyph) {
+          return false;
+        }
+
         return (
           Math.abs(rect.width - rect.height) < 1 &&
-          image &&
           glyph.width <= rect.width &&
           glyph.height <= rect.height &&
           Math.abs(
@@ -60,9 +63,12 @@ export function measureIconography(): Pick<
             .getPropertyValue('--icon-optical-scale'),
         );
 
-        const transform = getComputedStyle(
-          icon.querySelector<HTMLElement>('.site-icon-face')!,
-        ).transform;
+        const siteIconFace = window.lobbyAssertions.element(
+          icon,
+          '.site-icon-face',
+        );
+
+        const transform = getComputedStyle(siteIconFace).transform;
 
         const matrix = new DOMMatrix(transform);
 
@@ -85,15 +91,15 @@ export function measureIconography(): Pick<
 
       const title = badge
         .closest('.action-row')
-        ?.querySelector<HTMLElement>('.link-title')!;
+        ?.querySelector<HTMLElement>('.link-title');
 
-      const resolveTitleSize = (): number => {
+      function resolveTitleSize(): number {
         if (title) {
           return parseFloat(getComputedStyle(title).fontSize);
         }
 
         return fontSize;
-      };
+      }
 
       const titleSize = resolveTitleSize();
 
@@ -118,12 +124,15 @@ export function measureIconography(): Pick<
     beveledIcons: [
       ...document.querySelectorAll<HTMLElement>('.site-icon'),
     ].every((icon): boolean => {
-      const face = icon.querySelector<HTMLElement>('.site-icon-face')!;
+      const face = icon.querySelector<HTMLElement>('.site-icon-face');
+
+      if (!face) {
+        return false;
+      }
 
       return (
-        icon.dataset.finish === 'beveled' &&
-        face &&
-        (getComputedStyle(icon).filter.match(/drop-shadow\(/g) || []).length ===
+        icon.dataset['finish'] === 'beveled' &&
+        (getComputedStyle(icon).filter.match(/drop-shadow\(/g) ?? []).length ===
           2 &&
         getComputedStyle(face).maskImage !== 'none' &&
         getComputedStyle(face, '::before').backgroundImage.startsWith(
@@ -134,17 +143,20 @@ export function measureIconography(): Pick<
     localIcons: [
       ...document.querySelectorAll<HTMLElement>('.site-icon'),
     ].every((icon): boolean => {
-      const style = getComputedStyle(
-        icon.querySelector<HTMLElement>('.site-icon-face')!,
+      const siteIconFace = window.lobbyAssertions.element(
+        icon,
+        '.site-icon-face',
       );
 
-      const resolveSource = (): string => {
+      const style = getComputedStyle(siteIconFace);
+
+      function resolveSource(): string {
         if (style.maskImage !== 'none') {
           return style.maskImage;
         }
 
         return style.backgroundImage;
-      };
+      }
 
       const source = resolveSource();
 
@@ -161,25 +173,25 @@ export function measureIconography(): Pick<
         throw new Error('Expected HTMLAnchorElement: link');
       }
 
-      const resolveValue1 = (): boolean => {
+      function externalIndicatorMatchesControl(): boolean {
         if (link.classList.contains('quick-contact-link')) {
-          return !link.querySelector<HTMLElement>('.external-link-icon')!;
+          return !link.querySelector<HTMLElement>('.external-link-icon');
         }
 
-        return Boolean(link.querySelector<HTMLElement>('.external-link-icon')!);
-      };
+        return Boolean(link.querySelector<HTMLElement>('.external-link-icon'));
+      }
 
       return (
         link.target === '_blank' &&
         link.relList.contains('noopener') &&
         link.relList.contains('noreferrer') &&
-        resolveValue1()
+        externalIndicatorMatchesControl()
       );
     }),
     footerDisclaimer:
       document.querySelectorAll<HTMLElement>('.brand-disclaimer').length ===
         1 &&
-      Boolean(document.querySelector<HTMLElement>('footer .brand-disclaimer')!),
+      Boolean(document.querySelector<HTMLElement>('footer .brand-disclaimer')),
     calendarUptime: [
       ...document.querySelectorAll<HTMLElement>('[data-uptime]'),
     ].every((element): boolean => {

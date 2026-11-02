@@ -1,9 +1,10 @@
 packages:
   - '.'
 overrides:
-  serve>compression: 1.8.2
   markdownlint>re2js: 2.8.7
+  micromark-extension-math>katex: 0.18.2
 allowBuilds:
   '@ast-grep/cli': true
+  esbuild: true
   sharp: true
   unrs-resolver: true

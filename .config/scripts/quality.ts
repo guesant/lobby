@@ -1,13 +1,31 @@
 import { runCommand as command } from './process.ts';
-import { readFile, readdir, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import type { Linter } from 'eslint';
 import { ESLint } from 'eslint';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import * as prettier from 'prettier';
 
 let layoutFormatter: ESLint | undefined;
 
+function formattingFix(message: Linter.LintMessage): boolean {
+  const rule = message.ruleId ?? '';
+
+  return (
+    rule.startsWith('@stylistic/') ||
+    rule.startsWith('simple-import-sort/') ||
+    [
+      'import-x/first',
+      'svelte/indent',
+      'lobby/multiline-structures',
+      'lobby/svelte-top-level-spacing',
+      'lobby/svelte-import-first',
+      'lobby/block-directive-newline',
+    ].includes(rule)
+  );
+}
+
 function knipWorkspaceArguments(): string[] {
-  if (process.env.TOOLING_PROFILE === 'audit') {
+  if (process.env['TOOLING_PROFILE'] === 'audit') {
     return [];
   }
 
@@ -71,10 +89,7 @@ export async function canonicalFormat(
 
   layoutFormatter ??= new ESLint({
     overrideConfigFile: resolve('website/eslint.config.js'),
-    fix: true,
-    fixTypes: [
-      'layout',
-    ],
+    fix: formattingFix,
   });
 
   let current = source;
@@ -91,13 +106,7 @@ export async function canonicalFormat(
       filePath,
     });
 
-    if (!result || result.fatalErrorCount) {
-      throw new Error(
-        `Cannot format ${filePath}: ${JSON.stringify(result?.messages)}`,
-      );
-    }
-
-    const output = result.output ?? formatted;
+    const output = formattingOutput(result, formatted, filePath);
 
     if (output === current) {
       return output;
@@ -107,6 +116,20 @@ export async function canonicalFormat(
   }
 
   throw new Error(`Canonical formatting did not converge: ${filePath}`);
+}
+
+function formattingOutput(
+  result: ESLint.LintResult | undefined,
+  formatted: string,
+  filePath: string,
+): string {
+  if (!result || result.fatalErrorCount) {
+    throw new Error(
+      `Cannot format ${filePath}: ${JSON.stringify(result?.messages)}`,
+    );
+  }
+
+  return result.output ?? formatted;
 }
 
 async function format(fix: boolean): Promise<void> {
@@ -157,6 +180,11 @@ async function main(): Promise<void> {
     throw new Error('Unknown quality operation');
   }
 
+  await lintCode();
+  await lintContracts();
+}
+
+async function lintCode(): Promise<void> {
   await command('eslint', [
     '--config',
     'website/eslint.config.js',
@@ -172,9 +200,14 @@ async function main(): Promise<void> {
       '--treat-config-hints-as-errors',
       ...knipWorkspaceArguments(),
     ],
-    {},
-    resolve('website'),
+    {
+      environment: {},
+      cwd: resolve('website'),
+    },
   );
+}
+
+async function lintContracts(): Promise<void> {
   await command('node', [
     '.config/scripts/repository-quality.ts',
   ]);

@@ -1,18 +1,18 @@
-import type {
-  LinkDocument,
-  LinkDestination,
-} from '../../website/src/lib/site-data.ts';
+import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
 import { required } from './asset-data.ts';
-import type { Page, CDPSession, Browser, ElementHandle } from 'puppeteer-core';
-import assert from 'node:assert/strict';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { readConfiguration } from './configuration.ts';
+import { createAuditPage } from './browser-fixture.ts';
 import {
+  applyLinkPresentation,
   responsiveWidths,
   useBrowserLanguages,
   withBrowser,
 } from './browser-presentation.ts';
+import { readConfiguration } from './configuration.ts';
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import type { Browser, CDPSession, ElementHandle, Page } from 'puppeteer-core';
 
 type RowSnapshot = {
   color: string;
@@ -41,7 +41,7 @@ const families = {
   fallback: '.editorial-related',
 };
 
-async function snapshot(row: ElementHandle<Element>): Promise<RowSnapshot> {
+async function snapshot(row: ElementHandle): Promise<RowSnapshot> {
   return row.evaluate((element): RowSnapshot => {
     const style = getComputedStyle(element);
 
@@ -64,12 +64,19 @@ async function snapshot(row: ElementHandle<Element>): Promise<RowSnapshot> {
   });
 }
 
-async function inspectStates(
-  page: Page,
-  session: CDPSession,
-  documentID: number,
-  selector: string,
-): Promise<RowStates | undefined> {
+async function inspectStates(input: {
+  page: Page;
+  session: CDPSession;
+  documentID: number;
+  selector: string;
+}): Promise<RowStates | undefined> {
+  const {
+    page,
+    session,
+    documentID,
+    selector
+  } = input;
+
   const row = await page.$(selector);
 
   if (!row) {
@@ -157,15 +164,18 @@ async function inspectPresentation(
   let count = 0;
 
   for (const selector of Object.values(families)) {
-    const states = await inspectStates(page, session, root.nodeId, selector);
+    const states = await inspectStates({
+      page,
+      session,
+      documentID: root.nodeId,
+      selector,
+    });
 
     if (!states) {
       continue;
     }
 
-    if (!reference) {
-      reference = states;
-    }
+    reference ??= states;
 
     for (const name of [
       'normal',
@@ -207,7 +217,7 @@ async function inspectStructure(page: Page): Promise<void> {
         ...document.querySelectorAll<HTMLElement>('.divided-list'),
       ];
 
-      const borders = lists.every((list): boolean => {
+      function inspectBordersEntry(list: HTMLElement): boolean {
         const style = getComputedStyle(list);
 
         return (
@@ -224,7 +234,9 @@ async function inspectStructure(page: Page): Promise<void> {
             );
           })
         );
-      });
+      }
+
+      const borders = lists.every(inspectBordersEntry);
 
       const rows = [
         ...document.querySelectorAll<HTMLAnchorElement>('.action-row'),
@@ -235,7 +247,7 @@ async function inspectStructure(page: Page): Promise<void> {
         nested: Boolean(
           document.querySelector<HTMLAnchorElement>(
             'a a, .editorial-description a, .editorial-metadata a',
-          )!,
+          ),
         ),
         markers: rows.every((row): boolean => {
           return (
@@ -246,7 +258,7 @@ async function inspectStructure(page: Page): Promise<void> {
         categoryActions: Boolean(
           document.querySelector<HTMLAnchorElement>(
             '.category-summary a, .terminal-directory-entry > header a',
-          )!,
+          ),
         ),
       };
     },
@@ -271,7 +283,11 @@ async function inspectClicks(page: Page): Promise<void> {
   for (const selector of selectors) {
     const row = await page.$(selector);
 
-    await row!.evaluate((element): void => {
+    if (row === null) {
+      throw new Error('Missing required row');
+    }
+
+    await row.evaluate((element): void => {
       if (!(element instanceof HTMLAnchorElement)) {
         throw new Error('Expected HTMLAnchorElement: element');
       }
@@ -287,7 +303,7 @@ async function inspectClicks(page: Page): Promise<void> {
       });
     });
 
-    const expected = await row!.evaluate((element): string => {
+    const expected = await row.evaluate((element): string => {
       if (!(element instanceof HTMLAnchorElement)) {
         throw new Error('Expected HTMLAnchorElement: element');
       }
@@ -295,9 +311,13 @@ async function inspectClicks(page: Page): Promise<void> {
       return element.href;
     });
 
-    const box = await row!.boundingBox();
+    const box = await row.boundingBox();
 
-    await page.mouse.click(box!.x + 2, box!.y + box!.height / 2);
+    if (box === null) {
+      throw new Error('Missing required box');
+    }
+
+    await page.mouse.click(box.x + 2, box.y + box.height / 2);
     await page.click(`${selector} .action-row-title`);
     await page.click(`${selector} .external-link-icon`);
     assert.deepEqual(
@@ -310,7 +330,7 @@ async function inspectClicks(page: Page): Promise<void> {
         expected,
       ],
     );
-    await row!.focus();
+    await row.focus();
     await page.keyboard.press('Enter');
     assert.equal(
       (
@@ -326,9 +346,15 @@ async function inspectClicks(page: Page): Promise<void> {
   await page.keyboard.press('Tab');
   assert.equal(
     await page.evaluate((): boolean => {
+      const activeElement = document.activeElement;
+
+      if (!activeElement) {
+        return false;
+      }
+
       return (
-        Boolean(document.activeElement?.matches('.action-row:focus-visible')) &&
-        getComputedStyle(document.activeElement!).outlineStyle === 'solid'
+        activeElement.matches('.action-row:focus-visible') &&
+        getComputedStyle(activeElement).outlineStyle === 'solid'
       );
     }),
     true,
@@ -362,45 +388,16 @@ async function inspectInformativeRecord(
   language: LinkDocument['language_options'][number],
 ): Promise<void> {
   const {
-    renderListingFixture
-  } = await import('./listing-fixtures.ts');
-
-  const {
-    resolveDestination
+    informativeRecordFixture
   } = await import(
-    '../../website/src/lib/site-data.ts'
+    '../../website/test/listing-fixtures.ts'
   );
 
-  const config = readConfiguration();
-
   const interfaceName = await page.$eval('html', (root): string | undefined => {
-    return root.dataset.interface;
+    return root.dataset['interface'];
   });
 
-  const html = await renderListingFixture('EditorialEntry.svelte', {
-    item: {
-      id: 'test-information',
-      type: 'uses',
-      source: 'lobby',
-      language: language.id,
-      title: 'Informational test fixture',
-      summary: 'Test-only description',
-      url: '',
-      tags: [],
-      metadata: {},
-    },
-    ui: {},
-    thirdPartyLabel: config.locales[language.id]!.ui.third_party,
-    locale: language.id,
-    interfaceName,
-    sectionID: 'uses',
-    headingLevel: 3,
-    destination: (
-      item: Parameters<typeof resolveDestination>[1],
-    ): LinkDestination => {
-      return resolveDestination(config.site, item);
-    },
-  });
+  const html = await informativeRecordFixture(language.id, interfaceName);
 
   await page.$eval(
     'main',
@@ -414,14 +411,14 @@ async function inspectInformativeRecord(
 
   assert.ok(element, 'Informational fixture must exist');
 
-  assert.equal(await element!.$('a'), null);
+  assert.equal(await element.$('a'), null);
   await page.mouse.move(0, 0);
 
   const initial = await snapshot(element);
 
-  await element!.hover();
+  await element.hover();
   assert.deepEqual(await snapshot(element), initial);
-  await element!.evaluate((node): void => {
+  await element.evaluate((node): void => {
     node.remove();
   });
 }
@@ -445,12 +442,19 @@ async function inspectPassiveCard(page: Page): Promise<void> {
   );
 }
 
-async function inspectFallbacks(
-  page: Page,
-  baseURL: string,
-  language: LinkDocument['language_options'][number],
-  terminal: boolean,
-): Promise<void> {
+async function inspectFallbacks(input: {
+  page: Page;
+  baseURL: string;
+  language: LinkDocument['language_options'][number];
+  terminal: boolean;
+}): Promise<void> {
+  const {
+    page,
+    baseURL,
+    language,
+    terminal
+  } = input;
+
   let prefix = language.path;
 
   if (terminal) {
@@ -494,14 +498,22 @@ async function inspectFallbacks(
   assert(await page.$('#links-writing'));
 }
 
-async function inspectRoute(
-  browser: Browser,
-  baseURL: string,
-  language: LinkDocument['language_options'][number],
-  terminal: boolean,
-  directory: string,
-): Promise<number> {
-  const page = await browser.newPage();
+async function inspectRoute(inputValue: {
+  browser: Browser;
+  baseURL: string;
+  language: LinkDocument['language_options'][number];
+  terminal: boolean;
+  directory: string;
+}): Promise<number> {
+  const {
+    browser,
+    baseURL,
+    language,
+    terminal,
+    directory
+  } = inputValue;
+
+  const page = await createAuditPage(browser);
 
   try {
     await useBrowserLanguages(page, [
@@ -538,26 +550,7 @@ async function inspectRoute(
         'light',
         'dark',
       ] as const) {
-        for (const view of [
-          'compact',
-          'detailed',
-        ] as const) {
-          await page.evaluate(
-            ({
-              theme,
-              view
-            }): void => {
-              document.documentElement.dataset.theme = theme;
-              document.documentElement.dataset.linkView = view;
-            },
-            {
-              theme,
-              view,
-            },
-          );
-          count += await inspectPresentation(page, session);
-          await inspectTextZoom(page);
-        }
+        count = await inspectThemeCase(count, theme, session);
       }
     }
 
@@ -565,9 +558,14 @@ async function inspectRoute(
     await inspectPassiveCard(page);
     await inspectInformativeRecord(page, language);
     await page.screenshot({
-      path: resolve(directory, `${language.id}-${terminal}-rows.png`),
+      path: resolve(directory, `${language.id}-${String(terminal)}-rows.png`),
     });
-    await inspectFallbacks(page, baseURL, language, terminal);
+    await inspectFallbacks({
+      page,
+      baseURL,
+      language,
+      terminal,
+    });
     await page.setJavaScriptEnabled(false);
     await page.goto(new URL(`${prefix}career/`, baseURL).href, {
       waitUntil: 'networkidle0',
@@ -578,6 +576,47 @@ async function inspectRoute(
     return count;
   } finally {
     await page.close();
+  }
+
+  async function inspectThemeCase(
+    count: number,
+    theme: string,
+    session: CDPSession,
+  ): Promise<number> {
+    for (const view of [
+      'compact',
+      'detailed',
+    ] as const) {
+      count = await inspectViewCase(theme, view, {
+        count,
+        session,
+      });
+    }
+
+    return count;
+  }
+
+  async function inspectViewCase(
+    theme: string,
+    view: string,
+    input: {
+      count: number;
+      session: CDPSession;
+    },
+  ): Promise<number> {
+    let {
+      count
+    } = input;
+
+    const {
+      session
+    } = input;
+
+    await applyLinkPresentation(page, theme, view);
+    count += await inspectPresentation(page, session);
+    await inspectTextZoom(page);
+
+    return count;
   }
 }
 
@@ -601,13 +640,13 @@ async function checkListingBrowser(
       false,
       true,
     ]) {
-      states += await inspectRoute(
+      states += await inspectRoute({
         browser,
         baseURL,
         language,
         terminal,
         directory,
-      );
+      });
     }
   }
 
@@ -619,7 +658,7 @@ async function checkListingBrowser(
     }),
   );
   console.log(
-    `Listing contract: ${states} row presentations with hover, focus, press, geometry, clicks and fallback checks passed.`,
+    `Listing contract: ${String(states)} row presentations with hover, focus, press, geometry, clicks and fallback checks passed.`,
   );
 }
 
@@ -629,11 +668,11 @@ if (import.meta.main) {
   withBrowser(async (browser: Browser): Promise<void> => {
     await checkListingBrowser(
       browser,
-      process.env.QA_BASE_URL || 'http://127.0.0.1:4173/',
-      process.env.QA_REPORT_DIR || '.local/reports',
+      textOr(process.env['QA_BASE_URL'], 'http://127.0.0.1:4173/'),
+      textOr(process.env['QA_REPORT_DIR'], '.local/reports'),
     );
   })
-    .catch((error): void => {
+    .catch((error: unknown): void => {
       console.error(error);
       process.exitCode = 1;
     });

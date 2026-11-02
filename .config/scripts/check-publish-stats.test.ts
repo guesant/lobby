@@ -1,12 +1,12 @@
-import { parse, stringify } from 'yaml';
+import { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
+import { publishStatistics } from './publish-stats.ts';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { publishStatistics } from './publish-stats.ts';
-import { validateStatistics } from '../../website/src/lib/content-validation.ts';
+import { parse, stringify } from 'yaml';
 
 const source = '1'.repeat(40);
 
@@ -24,12 +24,21 @@ type PublishFixture = {
   options: Parameters<typeof publishStatistics>[0];
 };
 
-function fixture({
-  changed = true,
-  advanced = false,
-  pushFails = false,
-  invalid = false,
-} = {}): PublishFixture {
+function fixture(
+  input: {
+    changed?: boolean;
+    advanced?: boolean;
+    pushFails?: boolean;
+    invalid?: boolean;
+  } = {},
+): PublishFixture {
+  const {
+    changed = true,
+    advanced = false,
+    pushFails = false,
+    invalid = false,
+  } = input;
+
   const calls: {
     command: string | undefined;
     args?: string[];
@@ -37,7 +46,15 @@ function fixture({
 
   let sha = source;
 
-  const runGit = (args: string[]): string => {
+  function remoteReference(): string {
+    if (advanced) {
+      return `${committed}\trefs/heads/main`;
+    }
+
+    return `${source}\trefs/heads/main`;
+  }
+
+  function runGit(args: string[]): string {
     const command = args.find((entry): boolean => {
       return [
         'rev-parse',
@@ -62,11 +79,7 @@ function fixture({
     }
 
     if (command === 'ls-remote') {
-      if (advanced) {
-        return `${committed}\trefs/heads/main`;
-      }
-
-      return `${source}\trefs/heads/main`;
+      return remoteReference();
     }
 
     if (command === 'commit') {
@@ -78,17 +91,19 @@ function fixture({
     }
 
     return '';
-  };
+  }
 
-  const validate = async (): Promise<void> => {
+  function validate(): Promise<void> {
     calls.push({
       command: 'validate',
     });
 
     if (invalid) {
-      throw new Error('invalid statistics');
+      return Promise.reject(new Error('invalid statistics'));
     }
-  };
+
+    return Promise.resolve();
+  }
 
   return {
     calls,

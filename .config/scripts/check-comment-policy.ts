@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 const dockerfile = '.config/container/Dockerfile';
 
 const dockerfileDirective =
-  /^#\s*(?:syntax=|escape=|check=|hadolint\s+ignore=|renovate:\s+datasource=)/;
+  /^#\s*(?:syntax=|escape=|check=|hadolint\s+ignore=|renovate:\s+datasource=|IMPORTANT:|SPDX-License-Identifier:|Copyright)/;
 
 const plainCommentFiles = [
   '.config/lychee.toml',
@@ -23,7 +23,7 @@ export function dockerfileCommentViolations(source: string): string[] {
       }
 
       return [
-        `${dockerfile}:${index + 1}: narrative comments are not allowed`,
+        `${dockerfile}:${String(index + 1)}: narrative comments are not allowed`,
       ];
     });
 }
@@ -46,7 +46,7 @@ export function configCommentViolations(
       }
 
       return [
-        `${path}:${index + 1}: comments are not allowed in this config`,
+        `${path}:${String(index + 1)}: comments are not allowed in this config`,
       ];
     });
 }
@@ -95,20 +95,15 @@ function advanceTomlCommentState(
     };
   }
 
-  if (
-    (character === '"' || character === "'") &&
-    (!quote || quote === character)
-  ) {
+  if (isTomlQuote(character, quote)) {
+    let nextQuote = character;
+
     if (quote) {
-      return {
-        quote: '',
-        escaped: false,
-        comment: false,
-      };
+      nextQuote = '';
     }
 
     return {
-      quote: character,
+      quote: nextQuote,
       escaped: false,
       comment: false,
     };
@@ -127,6 +122,12 @@ function advanceTomlCommentState(
     escaped,
     comment: false,
   };
+}
+
+function isTomlQuote(character: string, quote: string): boolean {
+  return (
+    (character === '"' || character === "'") && (!quote || quote === character)
+  );
 }
 
 async function main(): Promise<void> {

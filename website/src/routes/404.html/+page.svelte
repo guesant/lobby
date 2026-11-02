@@ -1,8 +1,8 @@
 <script lang="ts">
-  import NotFound from '$lib/NotFound.svelte';
   import type { PageData } from './$types';
+  import NotFound from '#lib/features/navigation/NotFound.svelte';
 
-  let {
+  const {
     data,
   }: {
     data: PageData;

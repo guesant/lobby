@@ -11,6 +11,13 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedSideEffectImports": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "useUnknownInCatchVariables": true,
     "erasableSyntaxOnly": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -26,6 +33,7 @@
     ]
   },
   "include": [
+    "../website/node_modules/$app/types/index.d.ts",
     "**/*.d.ts",
     "**/*.ts",
     "../website/src/lib/**/*.ts"

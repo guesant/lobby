@@ -1,15 +1,15 @@
-import { aiCatalog } from '$lib/ai-catalog.server.ts';
-import { getSiteData } from '$lib/site-data.server.ts';
 import type { RequestHandler } from './$types';
+import { getSiteData } from '#lib/features/content/content.server.ts';
+import { aiCatalog } from '#lib/features/metadata/ai-catalog.server.ts';
 
 export const prerender = true;
 
 export const trailingSlash = 'never';
 
-export const GET: RequestHandler = async (): Promise<Response> => {
+export async function GET(): Promise<Awaited<ReturnType<RequestHandler>>> {
   return Response.json(aiCatalog(await getSiteData()), {
     headers: {
       'content-type': 'application/json; charset=utf-8',
     },
   });
-};
+}

@@ -1,10 +1,10 @@
-export const measureMaterialContrast = async (): Promise<{
+export async function measureMaterialContrast(): Promise<{
   panel: number;
   wood: number;
-}> => {
+}> {
   const root = document.documentElement;
 
-  const rgb = (value: string): number[] => {
+  function rgb(value: string): number[] {
     const result = value.match(/[\d.]+/g)
       ?.map(Number);
 
@@ -13,9 +13,9 @@ export const measureMaterialContrast = async (): Promise<{
     }
 
     return result;
-  };
+  }
 
-  const color = (name: string): number[] => {
+  function color(name: string): number[] {
     const sample = document.createElement('span');
 
     sample.style.color = `var(--${name})`;
@@ -26,37 +26,42 @@ export const measureMaterialContrast = async (): Promise<{
     sample.remove();
 
     return result;
-  };
-
-  const imageURL = getComputedStyle(root)
-    .getPropertyValue('--texture-aged-oak')
-    .match(/url\(["']?(.*?)["']?\)/)?.[1];
-
-  if (!imageURL) {
-    throw new Error('Missing material texture URL');
   }
 
-  const image = new Image();
+  async function texturePixels(): Promise<Uint8ClampedArray> {
+    const imageURL = /url\(["']?(.*?)["']?\)/.exec(
+      getComputedStyle(root)
+        .getPropertyValue('--texture-aged-oak'),
+    )?.[1];
 
-  image.src = imageURL;
-  await image.decode();
+    if (!imageURL) {
+      throw new Error('Missing material texture URL');
+    }
 
-  const canvas = document.createElement('canvas');
+    const image = new Image();
 
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
+    image.src = imageURL;
+    await image.decode();
 
-  const context = canvas.getContext('2d');
+    const canvas = document.createElement('canvas');
 
-  if (!context) {
-    throw new Error('Canvas 2D context unavailable');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      throw new Error('Canvas 2D context unavailable');
+    }
+
+    context.drawImage(image, 0, 0);
+
+    return context.getImageData(0, 0, canvas.width, canvas.height).data;
   }
 
-  context.drawImage(image, 0, 0);
+  const pixels = await texturePixels();
 
-  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-
-  const luminance = (rgb: number[]): number => {
+  function luminance(rgb: number[]): number {
     return rgb
       .slice(0, 3)
       .map((value): number => {
@@ -69,19 +74,21 @@ export const measureMaterialContrast = async (): Promise<{
         return ((value + 0.055) / 1.055) ** 2.4;
       })
       .reduce((sum, value, index: number): number => {
-        return (
-          sum +
-          value *
-            [
-              0.2126,
-              0.7152,
-              0.0722,
-            ][index]!
-        );
-      }, 0);
-  };
+        const requiredValue = [
+          0.2126,
+          0.7152,
+          0.0722,
+        ][index];
 
-  const blend = (under: number[], over: number[]): number[] => {
+        if (requiredValue === undefined) {
+          throw new Error('Missing required requiredValue');
+        }
+
+        return sum + value * requiredValue;
+      }, 0);
+  }
+
+  function blend(under: number[], over: number[]): number[] {
     return under.map((value, index: number): number => {
       const component = over[index];
 
@@ -91,14 +98,14 @@ export const measureMaterialContrast = async (): Promise<{
 
       return value * (1 - (over[3] ?? 1)) + component * (over[3] ?? 1);
     });
-  };
+  }
 
-  const ratio = (one: number[], two: number[]): number => {
+  function ratio(one: number[], two: number[]): number {
     const a = luminance(one),
       b = luminance(two);
 
     return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-  };
+  }
 
   const panelWash = color('color-panel-wash');
 
@@ -156,4 +163,4 @@ export const measureMaterialContrast = async (): Promise<{
     panel,
     wood,
   };
-};
+}

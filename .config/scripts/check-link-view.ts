@@ -1,25 +1,13 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { createPreferenceController } from '../../website/src/lib/features/preferences/preferences.controller.ts';
 import {
   assignPreference,
-  restorePreferences,
-  setPreference,
-  type InterfaceState,
-} from '../../website/src/lib/preferences.svelte.ts';
-
-function state(): InterfaceState {
-  return {
-    theme: 'system',
-    view: 'compact',
-    motion: 'on',
-    sound: 'on',
-    dialog: 'none',
-    reducedMotion: false,
-  };
-}
+  defaultPreferences,
+} from '../../website/src/lib/features/preferences/preferences.model.ts';
+import assert from 'node:assert/strict';
+import test from 'node:test';
 
 void test('preferences retain safe defaults and reject unknown persisted values', (): void => {
-  const ui = state();
+  const ui = defaultPreferences();
 
   assert.equal(assignPreference(ui, 'view', 'unknown'), false);
   assert.equal(ui.view, 'compact');
@@ -41,35 +29,38 @@ void test('view and sound preferences persist independently and survive route ch
     },
   };
 
-  const ui = state();
+  const ui = defaultPreferences();
 
-  setPreference(ui, 'view', 'detailed', (): typeof storage => {
-    return storage;
-  });
-  setPreference(ui, 'sound', 'off', (): typeof storage => {
+  const preferences = createPreferenceController(ui, (): typeof storage => {
     return storage;
   });
 
-  const next = state();
+  preferences.set('view', 'detailed');
+  preferences.set('sound', 'off');
 
-  restorePreferences(next, (): typeof storage => {
+  const next = defaultPreferences();
+
+  createPreferenceController(next, (): typeof storage => {
     return storage;
-  });
+  })
+    .restore();
   assert.equal(next.view, 'detailed');
   assert.equal(next.sound, 'off');
   assert.equal(next.theme, 'system');
 });
 
 void test('storage failures do not prevent an explicit choice', (): void => {
-  const ui = state();
+  const ui = defaultPreferences();
 
-  const blocked = (): never => {
+  function blocked(): never {
     throw new Error('blocked');
-  };
+  }
 
-  restorePreferences(ui, blocked);
-  setPreference(ui, 'view', 'detailed', blocked);
+  const preferences = createPreferenceController(ui, blocked);
+
+  preferences.restore();
+  preferences.set('view', 'detailed');
   assert.equal(ui.view, 'detailed');
-  setPreference(ui, 'view', 'unknown', blocked);
+  preferences.set('view', 'unknown');
   assert.equal(ui.view, 'detailed');
 });

@@ -1,5 +1,5 @@
-import type { ErrorLocale } from './lib/not-found.ts';
-import type { PageLoadData } from './lib/site-data.ts';
+import type { PageLoadData } from './lib/features/content/content.types.ts';
+import type { ErrorLocale } from '#lib/features/navigation/not-found.model.ts';
 
 declare global {
   namespace App {

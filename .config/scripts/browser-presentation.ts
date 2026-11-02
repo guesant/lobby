@@ -1,6 +1,7 @@
-import puppeteer from 'puppeteer-core';
-import type { Browser, Page, BrowserContext } from 'puppeteer-core';
+import { createAuditPage } from './browser-fixture.ts';
 import { readConfiguration } from './configuration.ts';
+import type { Browser, BrowserContext, Page } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 
 type BrowserAudit = {
   context: BrowserContext;
@@ -15,7 +16,7 @@ export async function createBrowserAudit(
 ): Promise<BrowserAudit> {
   const context = await browser.createBrowserContext();
 
-  const page = await context.newPage();
+  const page = await createAuditPage(context);
 
   const errors: string[] = [];
 
@@ -57,8 +58,25 @@ async function useBrowserLanguages(
 
 async function applyAppearance(page: Page, appearance: string): Promise<void> {
   await page.evaluate((value): void => {
-    document.documentElement.dataset.theme = value;
+    document.documentElement.dataset['theme'] = value;
   }, appearance);
+}
+
+export async function applyLinkPresentation(
+  page: Page,
+  theme: string,
+  view: string,
+): Promise<void> {
+  await page.evaluate(
+    (input): void => {
+      document.documentElement.dataset['theme'] = input.theme;
+      document.documentElement.dataset['linkView'] = input.view;
+    },
+    {
+      theme,
+      view,
+    },
+  );
 }
 
 async function captureFromTop(page: Page, path: string): Promise<void> {
@@ -95,7 +113,7 @@ function editorialDestinations(entries: Element[]): boolean {
         'youtu.be',
       ].includes(new URL(repository.href).hostname) &&
       repository.getClientRects().length > 0 &&
-      Boolean(repository.querySelector<HTMLElement>('.link-third-party-badge')!)
+      Boolean(repository.querySelector<HTMLElement>('.link-third-party-badge'))
     );
   });
 }
@@ -122,10 +140,10 @@ async function withBrowser<T>(
 }
 
 export {
-  editorialDestinations,
-  withBrowser,
-  responsiveWidths,
-  useBrowserLanguages,
   applyAppearance,
   captureFromTop,
+  editorialDestinations,
+  responsiveWidths,
+  useBrowserLanguages,
+  withBrowser,
 };

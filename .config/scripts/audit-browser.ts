@@ -1,12 +1,12 @@
-import type { Browser, Page } from 'puppeteer-core';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { createRequire } from 'node:module';
 import {
   array,
   record,
   requiredText,
-} from '../../website/src/lib/validation-primitives.ts';
+} from '../../website/src/lib/features/content/validation.model.ts';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import type { Browser, Page } from 'puppeteer-core';
 
 type AccessibilityOptions = {
   browser: Browser;
@@ -25,11 +25,9 @@ export async function pa11y(
   url: string,
   options: AccessibilityOptions,
 ): Promise<{
-  issues: Array<
-    Record<string, unknown> & {
-      type: string;
-    }
-  >;
+  issues: (Record<string, unknown> & {
+    type: string;
+  })[];
 }> {
   const imported: unknown = await import(
     pathToFileURL(
@@ -38,7 +36,7 @@ export async function pa11y(
     ).href
   );
 
-  const method = record(imported, 'Pa11y module').default;
+  const method = record(imported, 'Pa11y module')['default'];
 
   if (typeof method !== 'function') {
     throw new Error('Missing Pa11y audit function');
@@ -52,7 +50,7 @@ export async function pa11y(
   const result = record(value, 'Pa11y result');
 
   return {
-    issues: array(result.issues, 'Pa11y issues')
+    issues: array(result['issues'], 'Pa11y issues')
       .map(
         (
           value,
@@ -63,7 +61,7 @@ export async function pa11y(
 
           return {
             ...issue,
-            type: requiredText(issue.type, 'Pa11y issue type'),
+            type: requiredText(issue['type'], 'Pa11y issue type'),
           };
         },
       ),

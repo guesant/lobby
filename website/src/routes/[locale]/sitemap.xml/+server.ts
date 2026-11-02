@@ -1,17 +1,13 @@
+import type { EntryGenerator, RequestEvent } from './$types';
 import { error } from '@sveltejs/kit';
-import { getSiteData } from '$lib/site-data.server.ts';
-import { sitemap } from '$lib/public-resources.server.ts';
-import type { EntryGenerator, RequestHandler } from './$types';
+import { getSiteData } from '#lib/features/content/content.server.ts';
+import { sitemap } from '#lib/features/metadata/resources.server.ts';
 
 export const prerender = true;
 
 export const trailingSlash = 'never';
 
-export const entries: EntryGenerator = async (): Promise<
-  {
-    locale: string;
-  }[]
-> => {
+export async function entries(): Promise<Awaited<ReturnType<EntryGenerator>>> {
   const data = await getSiteData();
 
   return data.links.language_options.map(
@@ -25,11 +21,11 @@ export const entries: EntryGenerator = async (): Promise<
       };
     },
   );
-};
+}
 
-export const GET: RequestHandler = async ({
-  params
-}): Promise<Response> => {
+export async function GET(event: RequestEvent): Promise<Response> {
+  const params = event.params;
+
   const data = await getSiteData();
 
   if (
@@ -45,4 +41,4 @@ export const GET: RequestHandler = async ({
       'content-type': 'application/xml; charset=utf-8',
     },
   });
-};
+}

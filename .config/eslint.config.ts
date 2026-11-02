@@ -1,14 +1,18 @@
-import js from '@eslint/js';
-import stylistic from '@stylistic/eslint-plugin';
-import typescriptParser from '@typescript-eslint/parser';
-import globals from 'globals';
-import sonarjs from 'eslint-plugin-sonarjs';
-import svelte from 'eslint-plugin-svelte';
-import svelteParser from 'svelte-eslint-parser';
+import { blockDirectiveNewline } from './eslint-rules/block-directive-newline.ts';
+import { multilineStructures } from './eslint-rules/layout.ts';
 import noNarrativeComments from './eslint-rules/no-narrative-comments.ts';
 import statementSpacing from './eslint-rules/statement-spacing.ts';
+import js from '@eslint/js';
+import stylistic from '@stylistic/eslint-plugin';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
-import { multilineStructures } from './eslint-rules/layout.ts';
+import typescriptParser from '@typescript-eslint/parser';
+import { importX } from 'eslint-plugin-import-x';
+import importSort from 'eslint-plugin-simple-import-sort';
+import sonarjs from 'eslint-plugin-sonarjs';
+import svelte from 'eslint-plugin-svelte';
+import globals from 'globals';
+import svelteParser from 'svelte-eslint-parser';
+import tseslint from 'typescript-eslint';
 
 const separatedStatements = [
   'const',
@@ -46,6 +50,34 @@ export default [
     ],
   },
   js.configs.recommended,
+  ...tseslint.configs.strictTypeChecked.map(
+    (
+      configuration,
+    ): typeof configuration & {
+      files: string[];
+    } => {
+      return {
+        ...configuration,
+        files: [
+          '**/*.{ts,mts,cts,svelte}',
+        ],
+      };
+    },
+  ),
+  ...tseslint.configs.stylisticTypeChecked.map(
+    (
+      configuration,
+    ): typeof configuration & {
+      files: string[];
+    } => {
+      return {
+        ...configuration,
+        files: [
+          '**/*.{ts,mts,cts,svelte}',
+        ],
+      };
+    },
+  ),
   ...svelte.configs['flat/recommended'],
   {
     files: [
@@ -59,16 +91,20 @@ export default [
     },
     plugins: {
       sonarjs,
+      'simple-import-sort': importSort,
+      'import-x': importX,
       '@stylistic': stylistic,
       lobby: {
         rules: {
           ...statementSpacing.rules,
           'no-narrative-comments': noNarrativeComments,
           'multiline-structures': multilineStructures,
+          'block-directive-newline': blockDirectiveNewline,
         },
       },
     },
     rules: {
+      'lobby/no-narrative-comments': 'error',
       '@stylistic/indent': [
         'error',
         2,
@@ -185,7 +221,45 @@ export default [
         'always',
       ],
       'no-ternary': 'error',
-      'no-empty': 'off',
+      'no-empty': [
+        'error',
+        {
+          allowEmptyCatch: true,
+        },
+      ],
+      'simple-import-sort/imports': [
+        'error',
+        {
+          groups: [
+            [
+              '^',
+            ],
+          ],
+        },
+      ],
+      'simple-import-sort/exports': 'error',
+      'import-x/first': 'error',
+      'func-style': [
+        'error',
+        'declaration',
+        {
+          allowArrowFunctions: false,
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: ':function > :matches(ObjectPattern, ArrayPattern).params',
+          message:
+            'Keep a named input parameter and destructure it inside the function.',
+        },
+        {
+          selector:
+            ':function > AssignmentPattern.params > :matches(ObjectPattern, ArrayPattern).left',
+          message:
+            'Keep a named input parameter and destructure it inside the function.',
+        },
+      ],
       'no-unused-vars': [
         'error',
         {
@@ -194,26 +268,46 @@ export default [
       ],
       complexity: [
         'error',
-        15,
+        8,
       ],
       'max-depth': [
         'error',
-        4,
+        3,
       ],
       'max-lines': [
         'error',
         {
-          max: 600,
+          max: 250,
           skipBlankLines: true,
           skipComments: true,
         },
       ],
       'sonarjs/cognitive-complexity': [
         'error',
+        10,
+      ],
+      'max-lines-per-function': [
+        'error',
+        {
+          max: 50,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
+      'max-statements': [
+        'error',
         15,
       ],
-      'svelte/no-navigation-without-resolve': 'off',
-      'svelte/require-each-key': 'off',
+      'max-params': [
+        'error',
+        3,
+      ],
+      'max-nested-callbacks': [
+        'error',
+        2,
+      ],
+      'svelte/no-navigation-without-resolve': 'error',
+      'svelte/require-each-key': 'error',
     },
   },
   {
@@ -235,8 +329,9 @@ export default [
     },
     rules: {
       'no-unused-vars': 'off',
-      'lobby/no-narrative-comments': 'error',
+      'lobby/block-directive-newline': 'error',
       'lobby/svelte-top-level-spacing': 'error',
+      'lobby/svelte-import-first': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -251,6 +346,10 @@ export default [
       ],
       '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/consistent-type-definitions': [
+        'error',
+        'type',
+      ],
       'no-undef': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'error',
       '@typescript-eslint/no-unsafe-call': 'error',
@@ -279,7 +378,7 @@ export default [
           'ts-ignore': true,
           'ts-nocheck': true,
           'ts-check': false,
-          'ts-expect-error': true,
+          'ts-expect-error': 'allow-with-description',
         },
       ],
     },
@@ -298,6 +397,15 @@ export default [
     },
     rules: {
       '@stylistic/indent': 'off',
+      'max-lines': 'off',
+      'svelte/max-lines-per-block': [
+        'error',
+        {
+          script: 250,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
       'svelte/indent': [
         'error',
         {
@@ -307,7 +415,6 @@ export default [
           alignAttributesVertically: false,
         },
       ],
-      'lobby/no-narrative-comments': 'error',
     },
   },
   {
@@ -318,7 +425,7 @@ export default [
       'max-lines': [
         'error',
         {
-          max: 800,
+          max: 250,
           skipBlankLines: true,
           skipComments: true,
         },
@@ -327,7 +434,97 @@ export default [
   },
   {
     files: [
-      'website/src/lib/SitePage.svelte',
+      '.config/**/*.config.{ts,js}',
+      '.config/eslint.config.ts',
+      '**/*.d.ts',
+      '**/*.types.ts',
+    ],
+    rules: {
+      'max-lines': 'off',
+      'max-lines-per-function': 'off',
+    },
+  },
+  {
+    files: [
+      '.config/scripts/*.test.ts',
+      '.config/scripts/check-*-browser.ts',
+      '.config/scripts/check-layout.ts',
+      '.config/scripts/check-language-continuity.ts',
+      '.config/scripts/check-language-spa.ts',
+      '.config/scripts/check-compact-controls.ts',
+      '.config/scripts/check-component-parity.ts',
+      '.config/scripts/check-progressive-scene.ts',
+      '.config/scripts/check-link-view.ts',
+      '.config/scripts/check-pointer-sound.ts',
+      '.config/scripts/check-search.ts',
+      '.config/scripts/check-federation.ts',
+      '.config/scripts/check-stats.ts',
+      '.config/scripts/layout-*.ts',
+    ],
+    rules: {
+      'max-lines': 'off',
+      'max-lines-per-function': 'off',
+      'max-statements': 'off',
+    },
+  },
+  {
+    files: [
+      'website/src/lib/features/**/*.model.ts',
+      'website/src/lib/features/**/*.validation.ts',
+      'website/src/lib/features/**/*.viewmodel.ts',
+      'website/src/lib/features/**/*.viewmodel.svelte.ts',
+    ],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        'window',
+        'document',
+        'navigator',
+        'localStorage',
+        'sessionStorage',
+        'HTMLElement',
+        'HTMLDialogElement',
+        'matchMedia',
+      ],
+    },
+  },
+  {
+    files: [
+      'website/src/**/*.svelte',
+    ],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        'fetch',
+        'localStorage',
+        'sessionStorage',
+      ],
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'window',
+          property: 'localStorage',
+          message: 'Use the preference controller or a browser adapter.',
+        },
+        {
+          object: 'window',
+          property: 'sessionStorage',
+          message: 'Use the preference controller or a browser adapter.',
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      '**/*.d.ts',
+    ],
+    rules: {
+      '@typescript-eslint/consistent-type-definitions': 'off',
+    },
+  },
+  {
+    files: [
+      'website/src/lib/features/metadata/JsonLd.svelte',
     ],
     rules: {
       'svelte/no-at-html-tags': 'off',

@@ -1,10 +1,10 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
-import { resolve } from 'node:path';
-import ts from 'typescript';
-import { parseForESLint } from 'svelte-eslint-parser';
-import typescriptParser from '@typescript-eslint/parser';
 import { canonicalFormat } from './quality.ts';
+import typescriptParser from '@typescript-eslint/parser';
+import assert from 'node:assert/strict';
+import { resolve } from 'node:path';
+import test from 'node:test';
+import { parseForESLint } from 'svelte-eslint-parser';
+import ts from 'typescript';
 
 function tokens(source: string, component: boolean): string[] {
   let script = source;
@@ -58,18 +58,18 @@ function tokens(source: string, component: boolean): string[] {
       '}',
       ']',
       ')',
-    ].includes(result[index + 1] || '');
+    ].includes(result[index + 1] ?? '');
   });
 }
 
 const fixtures = [
   {
-    file: 'website/src/lib/configuration.ts',
+    file: 'website/src/lib/features/navigation/routes.model.ts',
     source:
       "// @ts-expect-error: formatting fixture\nimport 'node:assert';\n\nimport 'node:path';\ntype Value = { count: number }; interface Values { first: number; second: number }\nconst { value } = { value: 1 }; const [first] = [value];\nexport const text = `keep  \nspaces`;\nexport async function run(): Promise<void> { object.method(); object?.method(); (await load()).method(); object.method().next(); object?.method()?.next(); if (first) { object.method(); } }",
   },
   {
-    file: 'website/src/lib/SitePage.svelte',
+    file: 'website/src/lib/app/SitePage.svelte',
     source:
       '<script lang="ts">import { onMount } from "svelte";const values = [{ key: 1 }];onMount((): void => { values.map((value): number => { return value.key; }).filter(Boolean); });</script><p>Ready</p>',
   },

@@ -1,10 +1,10 @@
-import { readFile } from 'node:fs/promises';
-import { parse } from 'yaml';
 import {
   array,
   record,
   requiredText,
-} from '../../website/src/lib/validation-primitives.ts';
+} from '../../website/src/lib/features/content/validation.model.ts';
+import { readFile } from 'node:fs/promises';
+import { parse } from 'yaml';
 
 export type IconManifest = {
   count: number;
@@ -31,7 +31,7 @@ export type IconGeometry = {
 export type CursorCatalog = {
   browser_size: number;
   padding: number;
-  assets: Array<{
+  assets: {
     id: string;
     source: string;
     file: string;
@@ -39,7 +39,7 @@ export type CursorCatalog = {
       number,
       number,
     ];
-  }>;
+  }[];
 };
 
 export type RailGeometry = {
@@ -53,10 +53,7 @@ export type RailGeometry = {
   >;
 };
 
-export function required<T>(
-  value: T | null | undefined,
-  label: string = 'value',
-): T {
+export function required<T>(value: T | null | undefined, label = 'value'): T {
   if (value === null || value === undefined) {
     throw new Error(`Missing ${label}`);
   }
@@ -105,24 +102,24 @@ export async function iconManifest(): Promise<IconManifest> {
   for (const [
     key,
     value,
-  ] of Object.entries(record(source.icons, 'icon manifest entries'))) {
+  ] of Object.entries(record(source['icons'], 'icon manifest entries'))) {
     const entry = record(value, `icon ${key}`);
 
-    if (typeof entry.colored !== 'boolean') {
+    if (typeof entry['colored'] !== 'boolean') {
       throw new Error('Invalid icon color flag');
     }
 
     icons[key] = {
-      colored: entry.colored,
-      position: number(entry.position),
-      opticalScale: number(entry.opticalScale),
+      colored: entry['colored'],
+      position: number(entry['position']),
+      opticalScale: number(entry['opticalScale']),
     };
   }
 
   return {
-    count: number(source.count),
-    tileSize: number(source.tileSize),
-    compactTileSize: number(source.compactTileSize),
+    count: number(source['count']),
+    tileSize: number(source['tileSize']),
+    compactTileSize: number(source['compactTileSize']),
     icons,
   };
 }
@@ -134,12 +131,12 @@ export async function iconGeometry(): Promise<IconGeometry> {
   );
 
   return {
-    tile_size: number(source.tile_size),
-    compact_tile_size: number(source.compact_tile_size),
-    interface_grid: number(source.interface_grid),
-    display_sizes: array(source.display_sizes, 'display sizes')
+    tile_size: number(source['tile_size']),
+    compact_tile_size: number(source['compact_tile_size']),
+    interface_grid: number(source['interface_grid']),
+    display_sizes: array(source['display_sizes'], 'display sizes')
       .map(number),
-    icons: record(source.icons, 'icon geometry entries'),
+    icons: record(source['icons'], 'icon geometry entries'),
   };
 }
 
@@ -149,21 +146,21 @@ export async function cursorCatalog(): Promise<CursorCatalog> {
     'cursor catalog',
   );
 
-  const assets = array(source.assets, 'cursor assets')
+  const assets = array(source['assets'], 'cursor assets')
     .map(
       (value): CursorCatalog['assets'][number] => {
         const entry = record(value, 'cursor entry');
 
-        const coordinates = array(entry.hotspot, 'cursor hotspot');
+        const coordinates = array(entry['hotspot'], 'cursor hotspot');
 
         if (coordinates.length !== 2) {
           throw new Error('Invalid cursor hotspot');
         }
 
         return {
-          id: requiredText(entry.id, 'cursor id'),
-          source: requiredText(entry.source, 'cursor source'),
-          file: requiredText(entry.file, 'cursor file'),
+          id: requiredText(entry['id'], 'cursor id'),
+          source: requiredText(entry['source'], 'cursor source'),
+          file: requiredText(entry['file'], 'cursor file'),
           hotspot: [
             number(coordinates[0]),
             number(coordinates[1]),
@@ -173,8 +170,8 @@ export async function cursorCatalog(): Promise<CursorCatalog> {
     );
 
   return {
-    browser_size: number(source.browser_size),
-    padding: number(source.padding),
+    browser_size: number(source['browser_size']),
+    padding: number(source['padding']),
     assets,
   };
 }
@@ -191,17 +188,17 @@ export async function railGeometry(): Promise<RailGeometry> {
   for (const [
     key,
     value,
-  ] of Object.entries(record(source.slices, 'rail slices'))) {
+  ] of Object.entries(record(source['slices'], 'rail slices'))) {
     const slice = record(value, `rail ${key}`);
 
     slices[key] = {
-      top: number(slice.top),
-      height: number(slice.height),
+      top: number(slice['top']),
+      height: number(slice['height']),
     };
   }
 
   return {
-    width: number(source.width),
+    width: number(source['width']),
     slices,
   };
 }

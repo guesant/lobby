@@ -1,5 +1,7 @@
 packages:
   - '.'
+overrides:
+  'glob@>=9 <14': 14.0.2
 allowBuilds:
   puppeteer: false
   sharp: true
@@ -7,3 +9,9 @@ allowBuilds:
   dtrace-provider: false
   protobufjs: false
   re2: true
+minimumReleaseAgeExclude:
+  - '@containerbase/base@14.59.8'
+  - '@renovatebot/base-image@13.152.12'
+  - '@renovatebot/osv-offline-db@4.5.7'
+  - '@renovatebot/osv-offline@4.5.7'
+  - renovate@44.201.1

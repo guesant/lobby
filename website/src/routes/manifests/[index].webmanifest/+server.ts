@@ -1,9 +1,9 @@
+import type { EntryGenerator, RequestHandler } from './$types';
 import {
   localizedResourceEntries,
   resourceRequest,
   webManifest,
-} from '$lib/public-resources.server.ts';
-import type { EntryGenerator, RequestHandler } from './$types';
+} from '#lib/features/metadata/resources.server.ts';
 
 export const prerender = true;
 

@@ -1,5 +1,13 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json",
+  "extends": "$app/tsconfig",
+  "include": [
+    "src",
+    "test",
+    "*"
+  ],
+  "exclude": [
+    "src/service-worker"
+  ],
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
@@ -17,6 +25,13 @@
     "moduleResolution": "bundler",
     "noEmit": true,
     "noImplicitAny": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedSideEffectImports": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "useUnknownInCatchVariables": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   }

@@ -1,7 +1,8 @@
 import { dialogIsOpen, inputIsChecked } from './browser-dom.ts';
+import { createAuditPage } from './browser-fixture.ts';
+import { readConfiguration } from './configuration.ts';
 import assert from 'node:assert/strict';
 import type { Browser, Page } from 'puppeteer-core';
-import { readConfiguration } from './configuration.ts';
 
 async function inspectNativeAssets(page: Page): Promise<void> {
   const assets = await page.evaluate(
@@ -91,7 +92,7 @@ async function inspectInterfaceNavigation(page: Page): Promise<void> {
     await page.click(`label[for="interface-${target}"]`);
     await page.waitForFunction(
       (expected): boolean => {
-        return document.documentElement.dataset.interface === expected;
+        return document.documentElement.dataset['interface'] === expected;
       },
       {},
       target,
@@ -140,7 +141,7 @@ async function inspectSoundPreference(page: Page): Promise<void> {
   });
   assert.equal(
     await page.$eval('html', (root): string | undefined => {
-      return root.dataset.sound;
+      return root.dataset['sound'];
     }),
     'off',
   );
@@ -156,7 +157,7 @@ async function inspectStaticErrors(
   const context = await browser.createBrowserContext();
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await page.setJavaScriptEnabled(false);
     await page.goto(new URL('404.html', base).href, {
@@ -200,7 +201,7 @@ export default async function checkNativeRuntime(
   const context = await browser.createBrowserContext();
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await page.goto(new URL('pt-br/', base).href, {
       waitUntil: 'networkidle2',

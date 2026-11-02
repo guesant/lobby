@@ -1,12 +1,12 @@
+import { getSiteData } from '../../website/src/lib/features/content/content.server.ts';
+import { record } from '../../website/src/lib/features/content/validation.model.ts';
+import { websiteRoot } from './paths.ts';
 import assert from 'node:assert/strict';
-import test from 'node:test';
-import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import test from 'node:test';
 import { parse, stringify } from 'yaml';
-import { getSiteData } from '../../website/src/lib/site-data.server.ts';
-import { record } from '../../website/src/lib/validation-primitives.ts';
-import { websiteRoot } from './paths.ts';
 
 void test('editorial cache is isolated by root and invalidates after a source change', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-content-'));
@@ -37,9 +37,9 @@ void test('editorial cache is isolated by root and invalidates after a source ch
       'links',
     );
 
-    const profile = record(document.profile, 'profile');
+    const profile = record(document['profile'], 'profile');
 
-    profile.name = 'Cache Isolation Fixture';
+    profile['name'] = 'Cache Isolation Fixture';
     await writeFile(path, stringify(document));
 
     const original = await getSiteData(first);
@@ -49,7 +49,7 @@ void test('editorial cache is isolated by root and invalidates after a source ch
       'Cache Isolation Fixture',
     );
     assert.notEqual(original.links.profile.name, 'Cache Isolation Fixture');
-    profile.name = 'Updated Cache Fixture';
+    profile['name'] = 'Updated Cache Fixture';
     await writeFile(path, stringify(document));
     assert.equal(
       (await getSiteData(second)).links.profile.name,

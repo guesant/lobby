@@ -1,7 +1,8 @@
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { record } from '../../website/src/lib/features/content/validation.model.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { record } from '../../website/src/lib/validation-primitives.ts';
 
 export type RunPlan = {
   operation: string;
@@ -35,17 +36,19 @@ export function validateRepository(value: unknown): string {
   return value;
 }
 
-export function resolveRun({
-  eventName,
-  ref,
-  sha,
-  operation = 'validate',
-}: {
+export function resolveRun(input: {
   eventName?: string | undefined;
   ref?: string | undefined;
   sha?: unknown;
   operation?: string | undefined;
 }): RunPlan {
+  const {
+    eventName,
+    ref,
+    sha,
+    operation = 'validate'
+  } = input;
+
   const operations: Record<string, string> = {
     push: 'publish',
     pull_request: 'validate',
@@ -53,7 +56,7 @@ export function resolveRun({
     workflow_dispatch: operation,
   };
 
-  const selected = operations[eventName || ''];
+  const selected = operations[eventName ?? ''];
 
   if (
     !selected ||
@@ -84,12 +87,7 @@ export function resolveRun({
   };
 }
 
-export async function deploymentStatus({
-  sha,
-  repository,
-  token,
-  fetcher = fetch,
-}: {
+export async function deploymentStatus(input: {
   sha?: unknown;
   repository?: unknown;
   token?: string | undefined;
@@ -99,6 +97,13 @@ export async function deploymentStatus({
   source_sha: string;
   main_sha: string;
 }> {
+  const {
+    sha,
+    repository,
+    token,
+    fetcher = fetch
+  } = input;
+
   const source = validateSha(sha);
 
   const project = validateRepository(repository);
@@ -122,13 +127,15 @@ export async function deploymentStatus({
   );
 
   if (!response.ok) {
-    throw new Error(`Cannot verify current main: HTTP ${response.status}`);
+    throw new Error(
+      `Cannot verify current main: HTTP ${String(response.status)}`,
+    );
   }
 
   const payload = record(await response.json(), 'GitHub reference');
 
   const current = validateSha(
-    record(payload.object, 'GitHub reference object').sha,
+    record(payload['object'], 'GitHub reference object')['sha'],
   );
 
   return {
@@ -143,9 +150,9 @@ export async function writeCiOutputs(
   summary: string,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<void> {
-  const output = env.CI_OUTPUT_PATH;
+  const output = env['CI_OUTPUT_PATH'];
 
-  const summaryPath = env.CI_SUMMARY_PATH;
+  const summaryPath = env['CI_SUMMARY_PATH'];
 
   if (!output || !summaryPath) {
     throw new Error('Missing CI output or summary path');
@@ -163,14 +170,14 @@ export async function writeCiOutputs(
   await writeFile(
     output,
     Object.entries(result)
-      .map(
-        ([
+      .map((entry): string => {
+        const [
           key,
           value,
-        ]): string => {
-          return `${key}=${value}\n`;
-        },
-      )
+        ] = entry;
+
+        return `${key}=${String(value)}\n`;
+      })
       .join(''),
   );
   await writeFile(summaryPath, `${summary}\n`);
@@ -179,10 +186,10 @@ export async function writeCiOutputs(
 async function main(): Promise<void> {
   if (process.argv[2] === 'plan') {
     const result = resolveRun({
-      eventName: process.env.GITHUB_EVENT_NAME,
-      ref: process.env.GITHUB_REF,
-      sha: process.env.GITHUB_SHA,
-      operation: process.env.CI_OPERATION || 'validate',
+      eventName: process.env['GITHUB_EVENT_NAME'],
+      ref: process.env['GITHUB_REF'],
+      sha: process.env['GITHUB_SHA'],
+      operation: textOr(process.env['CI_OPERATION'], 'validate'),
     });
 
     await writeCiOutputs(
@@ -198,9 +205,9 @@ async function main(): Promise<void> {
   }
 
   const result = await deploymentStatus({
-    sha: process.env.CI_SOURCE_SHA,
-    repository: process.env.GITHUB_REPOSITORY,
-    token: process.env.GITHUB_TOKEN,
+    sha: process.env['CI_SOURCE_SHA'],
+    repository: process.env['GITHUB_REPOSITORY'],
+    token: process.env['GITHUB_TOKEN'],
   });
 
   let summary = `Deploying current main ${result.source_sha}.`;

@@ -17,7 +17,7 @@ services:
     ports:
       - '127.0.0.1:4173:4173'
     environment:
-      PNPM_STORE_DIR: /pnpm/store
+      PNPM_CONFIG_STORE_DIR: /pnpm/store
       GITHUB_STATS_TOKEN: ${GITHUB_STATS_TOKEN:-}
       LOBBY_BLOG_FEED: ${LOBBY_BLOG_FEED:-}
       LOBBY_RESUME_FEED: ${LOBBY_RESUME_FEED:-}

@@ -1,11 +1,11 @@
-import { siteOrigin } from '$lib/site-origin.ts';
 import type { RequestHandler } from './$types';
+import { siteOrigin } from '#lib/features/navigation/origin.model.ts';
 
 export const prerender = true;
 
 export const trailingSlash = 'never';
 
-export const GET: RequestHandler = (): Response => {
+export function GET(): ReturnType<RequestHandler> {
   return new Response(
     `User-agent: *\nAllow: /\nSitemap: ${siteOrigin}/sitemap.xml\n`,
     {
@@ -14,4 +14,4 @@ export const GET: RequestHandler = (): Response => {
       },
     },
   );
-};
+}

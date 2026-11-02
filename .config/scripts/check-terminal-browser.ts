@@ -1,17 +1,15 @@
-import type { Page } from 'puppeteer-core';
-import { animationFrames } from './browser-dom.ts';
-import { dialogIsOpen, waitForBoot } from './browser-dom.ts';
-import type { Browser } from 'puppeteer-core';
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
 import { pa11y } from './audit-browser.ts';
+import { animationFrames, dialogIsOpen, waitForBoot } from './browser-dom.ts';
+import {
+  createBrowserAudit,
+  editorialDestinations,
+} from './browser-presentation.ts';
 import type { ConfiguredPage } from './configuration.ts';
 import { pagesFor } from './configuration.ts';
-import {
-  editorialDestinations,
-  createBrowserAudit,
-} from './browser-presentation.ts';
-import type { LinkDocument } from '../../website/src/lib/site-data.ts';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import type { Browser, Page } from 'puppeteer-core';
 
 export default async function checkTerminalBrowser(
   browser: Browser,
@@ -29,9 +27,9 @@ export default async function checkTerminalBrowser(
 
   const accessibility: Record<string, unknown>[] = [];
 
-  const url = (path: string): string => {
+  function url(path: string): string {
     return new URL(path.replace(/^\//, ''), baseURL).href;
-  };
+  }
 
   try {
     for (const language of config.language_options) {
@@ -41,7 +39,7 @@ export default async function checkTerminalBrowser(
             return !entry.fallback;
           },
         )) {
-        await inspectTerminalRoute(
+        await inspectTerminalRoute({
           route,
           language,
           page,
@@ -51,7 +49,7 @@ export default async function checkTerminalBrowser(
           reportDirectory,
           browser,
           accessibility,
-        );
+        });
       }
     }
 
@@ -72,7 +70,7 @@ export default async function checkTerminalBrowser(
     assert.equal(new URL(page.url()).hash, '#main-content');
     assert.equal(
       await page.$eval('html', (root): string | undefined => {
-        return root.dataset.theme;
+        return root.dataset['theme'];
       }),
       'light',
     );
@@ -127,7 +125,7 @@ export default async function checkTerminalBrowser(
       ),
     );
     console.log(
-      `Terminal: ${checks.length} responsive checks and interface/BIOS lifecycle passed`,
+      `Terminal: ${String(checks.length)} responsive checks and interface/BIOS lifecycle passed`,
     );
   } finally {
     await context.close();
@@ -155,9 +153,7 @@ async function inspectTerminalStyles(page: Page, path: string): Promise<void> {
 
   assert.equal(
     await page.evaluate((): boolean => {
-      return [
-        ...document.styleSheets,
-      ].some((sheet): boolean => {
+      function stylesheetIsIndependent(sheet: CSSStyleSheet): boolean {
         return [
           ...sheet.cssRules,
         ].some((rule): boolean => {
@@ -165,52 +161,67 @@ async function inspectTerminalStyles(page: Page, path: string): Promise<void> {
             '@scope (:root[data-interface="terminal"])',
           );
         });
-      });
+      }
+
+      return [
+        ...document.styleSheets,
+      ].some(stylesheetIsIndependent);
     }),
     true,
     `${path} must load the independent Terminal scope`,
   );
 }
 
-async function inspectTerminalRoute(
-  route: ConfiguredPage,
+async function inspectTerminalRoute(input: {
+  route: ConfiguredPage;
   language: {
     id: string;
     path: string;
     label: string;
     hreflang: string;
-  },
-  page: Page,
-  url: (path: string) => string,
-  config: LinkDocument,
-  checks: Record<string, unknown>[],
-  reportDirectory: string,
-  browser: Browser,
-  accessibility: Record<string, unknown>[],
-): Promise<void> {
-  const resolvePath = (): string => {
+  };
+  page: Page;
+  url: (path: string) => string;
+  config: LinkDocument;
+  checks: Record<string, unknown>[];
+  reportDirectory: string;
+  browser: Browser;
+  accessibility: Record<string, unknown>[];
+}): Promise<void> {
+  const {
+    route,
+    language,
+    page,
+    url,
+    config,
+    checks,
+    reportDirectory,
+    browser,
+    accessibility,
+  } = input;
+
+  function resolvePath(): string {
     if (route.id === 'home') {
       return '';
     }
 
     return `${route.id}/`;
-  };
+  }
 
   const path = `${language.path}terminal/${resolvePath()}`;
 
-  assert.equal(
-    (await page.goto(url(path), {
-      waitUntil: 'networkidle2',
-    }))!.status(),
-    200,
-    path,
-  );
+  const response = await page.goto(url(path), {
+    waitUntil: 'networkidle2',
+  });
+
+  assert.ok(response, 'direct navigation has an HTTP response');
+  assert.equal(response.status(), 200, path);
   await page.evaluate((): Promise<FontFaceSet> => {
     return document.fonts.ready;
   });
   assert.equal(
     await page.$eval('html', (root): string | undefined => {
-      return root.dataset.interface;
+      return root.dataset['interface'];
     }),
     'terminal',
   );
@@ -231,7 +242,7 @@ async function inspectTerminalRoute(
       });
     }),
     config.language_options.map((option): string => {
-      const resolveValue = (): string => {
+      function localizedSectionPath(): string {
         if (
           route.id === 'home' ||
           (route.id === 'now' && !config.now[option.id])
@@ -240,9 +251,9 @@ async function inspectTerminalRoute(
         }
 
         return `${route.id}/`;
-      };
+      }
 
-      return `${option.path}terminal/${resolveValue()}`;
+      return `${option.path}terminal/${localizedSectionPath()}`;
     }),
   );
   assert.equal(await page.$eval('#bios-dialog', dialogIsOpen), false);
@@ -257,7 +268,13 @@ async function inspectTerminalRoute(
           throw new Error('Expected HTMLElement: item');
         }
 
-        return item.dataset.linkId || item.dataset.editorialId;
+        const linkID = item.dataset['linkId'];
+
+        if (linkID) {
+          return linkID;
+        }
+
+        return item.dataset['editorialId'];
       });
     },
   );
@@ -275,7 +292,14 @@ async function inspectTerminalRoute(
     'compact',
     'detailed',
   ] as const) {
-    await inspectTerminalMode(route, page, mode, path, initial, checks);
+    await inspectTerminalMode({
+      route,
+      page,
+      mode,
+      path,
+      initial,
+      checks,
+    });
   }
 
   if (route.id === 'home' && language.id === 'pt-br') {
@@ -283,29 +307,7 @@ async function inspectTerminalRoute(
       'compact',
       'detailed',
     ] as const) {
-      await page.click(`label[for="link-view-${mode}"]`);
-
-      for (const theme of [
-        'light',
-        'dark',
-      ] as const) {
-        await page.evaluate((value): void => {
-          document.documentElement.dataset.theme = value;
-        }, theme);
-
-        for (const width of [
-          390,
-          1440,
-        ] as const) {
-          await captureTerminalViewport(
-            page,
-            width,
-            reportDirectory,
-            mode,
-            theme,
-          );
-        }
-      }
+      await inspectHomeMode(mode);
     }
   }
 
@@ -322,7 +324,7 @@ async function inspectTerminalRoute(
       'dark',
     ] as const) {
       await page.evaluate((value): void => {
-        document.documentElement.dataset.theme = value;
+        document.documentElement.dataset['theme'] = value;
       }, theme);
 
       const result = await pa11y(url(path), {
@@ -359,35 +361,90 @@ async function inspectTerminalRoute(
       assert.deepEqual(issues, [], `${path} ${theme} accessibility`);
     }
   }
+
+  async function inspectHomeMode(mode: string): Promise<void> {
+    await page.click(`label[for="link-view-${mode}"]`);
+
+    for (const theme of [
+      'light',
+      'dark',
+    ] as const) {
+      await inspectThemeCase(theme, mode);
+    }
+  }
+
+  async function inspectThemeCase(theme: string, mode: string): Promise<void> {
+    await page.evaluate((value): void => {
+      document.documentElement.dataset['theme'] = value;
+    }, theme);
+
+    for (const width of [
+      390,
+      1440,
+    ] as const) {
+      await inspectWidthCase(width, mode, theme);
+    }
+  }
+
+  async function inspectWidthCase(
+    width: number,
+    mode: string,
+    theme: string,
+  ): Promise<void> {
+    await captureTerminalViewport({
+      page,
+      width,
+      reportDirectory,
+      mode,
+      theme,
+    });
+  }
 }
 
-async function captureTerminalViewport(
-  page: Page,
-  width: number,
-  reportDirectory: string,
-  mode: string,
-  theme: string,
-): Promise<void> {
+async function captureTerminalViewport(input: {
+  page: Page;
+  width: number;
+  reportDirectory: string;
+  mode: string;
+  theme: string;
+}): Promise<void> {
+  const {
+    page,
+    width,
+    reportDirectory,
+    mode,
+    theme
+  } = input;
+
   await page.setViewport({
     width,
     height: 900,
   });
   await page.evaluate((): void => {
-    return scrollTo(0, 0);
+    scrollTo(0, 0);
   });
   await page.screenshot({
-    path: `${reportDirectory}/terminal-${mode}-${theme}-${width}.png`,
+    path: `${reportDirectory}/terminal-${mode}-${theme}-${String(width)}.png`,
   });
 }
 
-async function inspectTerminalMode(
-  route: ConfiguredPage,
-  page: Page,
-  mode: string,
-  path: string,
-  initial: (string | undefined)[],
-  checks: Record<string, unknown>[],
-): Promise<void> {
+async function inspectTerminalMode(input: {
+  route: ConfiguredPage;
+  page: Page;
+  mode: string;
+  path: string;
+  initial: (string | undefined)[];
+  checks: Record<string, unknown>[];
+}): Promise<void> {
+  const {
+    route,
+    page,
+    mode,
+    path,
+    initial,
+    checks
+  } = input;
+
   if (route.type !== 'now') {
     await page.click(`label[for="link-view-${mode}"]`);
   }
@@ -397,7 +454,7 @@ async function inspectTerminalMode(
     'dark',
   ] as const) {
     await page.evaluate((value): void => {
-      document.documentElement.dataset.theme = value;
+      document.documentElement.dataset['theme'] = value;
     }, theme);
 
     for (const width of [
@@ -407,7 +464,7 @@ async function inspectTerminalMode(
       1024,
       1440,
     ] as const) {
-      await inspectTerminalViewport(
+      await inspectTerminalViewport({
         page,
         width,
         path,
@@ -415,20 +472,30 @@ async function inspectTerminalMode(
         mode,
         initial,
         checks,
-      );
+      });
     }
   }
 }
 
-async function inspectTerminalViewport(
-  page: Page,
-  width: number,
-  path: string,
-  theme: string,
-  mode: string,
-  initial: (string | undefined)[],
-  checks: Record<string, unknown>[],
-): Promise<void> {
+async function inspectTerminalViewport(input: {
+  page: Page;
+  width: number;
+  path: string;
+  theme: string;
+  mode: string;
+  initial: (string | undefined)[];
+  checks: Record<string, unknown>[];
+}): Promise<void> {
+  const {
+    page,
+    width,
+    path,
+    theme,
+    mode,
+    initial,
+    checks
+  } = input;
+
   await page.setViewport({
     width,
     height: 900,
@@ -444,14 +511,13 @@ async function inspectTerminalViewport(
       thirdPartyBadges: boolean;
       ids: (string | undefined)[];
     } => {
+      const skipLink = window.lobbyAssertions.element(document, '.skip-link');
+
       return {
         overflow: document.documentElement.scrollWidth > innerWidth,
         font: getComputedStyle(document.body).fontFamily,
-        skipHidden:
-          document
-            .querySelector<HTMLElement>('.skip-link')!
-            .getBoundingClientRect().bottom <= 0,
-        nestedLinks: Boolean(document.querySelector<HTMLAnchorElement>('a a')!),
+        skipHidden: skipLink.getBoundingClientRect().bottom <= 0,
+        nestedLinks: Boolean(document.querySelector<HTMLAnchorElement>('a a')),
         thirdPartyBadges: [
           ...document.querySelectorAll<HTMLElement>(
             '.terminal-third-party-badge,.link-third-party-badge',
@@ -467,7 +533,13 @@ async function inspectTerminalViewport(
             '[data-link-id],[data-editorial-id]',
           ),
         ].map((item): string | undefined => {
-          return item.dataset.linkId || item.dataset.editorialId;
+          const linkID = item.dataset['linkId'];
+
+          if (linkID) {
+            return linkID;
+          }
+
+          return item.dataset['editorialId'];
         }),
       };
     },
@@ -476,7 +548,7 @@ async function inspectTerminalViewport(
   assert.equal(
     actual.overflow,
     false,
-    `${path} ${width}/${theme}/${mode} overflow`,
+    `${path} ${String(width)}/${theme}/${mode} overflow`,
   );
   assert.match(actual.font, /JetBrains Mono/);
   assert(actual.skipHidden, `${path} skip link remains visible without focus`);

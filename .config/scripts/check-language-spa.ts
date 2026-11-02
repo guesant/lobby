@@ -1,14 +1,16 @@
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
 import { dialogIsOpen } from './browser-dom.ts';
+import { createAuditPage } from './browser-fixture.ts';
+import { waitForLandscape } from './check-progressive-scene.ts';
 import assert from 'node:assert/strict';
-import type {
-  Page,
-  HTTPRequest,
-  Browser,
-  BrowserContext,
-} from 'puppeteer-core';
 import fs from 'node:fs';
 import { resolve } from 'node:path';
-import { waitForLandscape } from './check-progressive-scene.ts';
+import type {
+  Browser,
+  BrowserContext,
+  HTTPRequest,
+  Page,
+} from 'puppeteer-core';
 
 async function initialize(
   page: Page,
@@ -46,12 +48,12 @@ async function snapshot(page: Page): Promise<{
       height: number;
       history: number;
     } => {
+      const siteFrame = window.lobbyAssertions.element(document, '.site-frame');
+
       const {
         width,
         height
-      } = document
-        .querySelector<HTMLElement>('.site-frame')!
-        .getBoundingClientRect();
+      } = siteFrame.getBoundingClientRect();
 
       const headings = Array.from(
         document.querySelectorAll<HTMLElement>('main h2,main h3'),
@@ -75,7 +77,7 @@ async function preparePage(
   theme: string,
   width: number,
 ): Promise<Page> {
-  const page = await context.newPage();
+  const page = await createAuditPage(context);
 
   await initialize(page, theme);
   await page.setViewport({
@@ -86,13 +88,21 @@ async function preparePage(
   return page;
 }
 
-async function inspectRoot(
-  browser: Browser,
-  baseURL: string,
-  width: number,
-  theme: string,
-  directory: string,
-): Promise<void> {
+async function inspectRoot(input: {
+  browser: Browser;
+  baseURL: string;
+  width: number;
+  theme: string;
+  directory: string;
+}): Promise<void> {
+  const {
+    browser,
+    baseURL,
+    width,
+    theme,
+    directory
+  } = input;
+
   const context = await browser.createBrowserContext();
 
   try {
@@ -184,7 +194,7 @@ async function inspectRoot(
       '/pt-br/',
     );
     await page.screenshot({
-      path: resolve(directory, `root-${width}-${theme}.png`),
+      path: resolve(directory, `root-${String(width)}-${theme}.png`),
     });
     holding = false;
     await Promise.all(
@@ -195,8 +205,8 @@ async function inspectRoot(
     await page.waitForFunction((): boolean => {
       return (
         location.pathname === '/pt-br/' &&
-        document.querySelector<HTMLMetaElement>('meta[name="robots"]')!
-          .content === 'index, follow'
+        document.querySelector<HTMLMetaElement>('meta[name="robots"]')
+          ?.content === 'index, follow'
       );
     });
     await waitForLandscape(page);
@@ -225,32 +235,40 @@ async function inspectRoot(
     assert.equal(final.restarts, 1);
     assert.equal(documents, 1);
     await page.screenshot({
-      path: resolve(directory, `localized-${width}-${theme}.png`),
+      path: resolve(directory, `localized-${String(width)}-${theme}.png`),
     });
   } finally {
     await context.close();
   }
 }
 
-async function inspectMenu(
-  browser: Browser,
-  baseURL: string,
-  terminal: boolean,
-  width: number,
-  theme: string,
-): Promise<void> {
+async function inspectMenu(input: {
+  browser: Browser;
+  baseURL: string;
+  terminal: boolean;
+  width: number;
+  theme: string;
+}): Promise<void> {
+  const {
+    browser,
+    baseURL,
+    terminal,
+    width,
+    theme
+  } = input;
+
   const context = await browser.createBrowserContext();
 
   try {
     const page = await preparePage(context, theme, width);
 
-    const resolveSegment = (): '' | 'terminal/' => {
+    function resolveSegment(): '' | 'terminal/' {
       if (terminal) {
         return 'terminal/';
       }
 
       return '';
-    };
+    }
 
     const segment = resolveSegment();
 
@@ -302,10 +320,19 @@ async function inspectMenu(
       );
       await page.waitForFunction(
         (locale): boolean => {
+          const dataLanguageSwitcher =
+            document.querySelector<HTMLSelectElement>(
+              '[data-language-switcher]',
+            );
+
+          if (dataLanguageSwitcher === null) {
+            throw new Error('Missing required dataLanguageSwitcher');
+          }
+
           return (
-            document
-              .querySelector<HTMLSelectElement>('[data-language-switcher]')!
-              .selectedOptions.item(0)?.dataset.language === locale
+            dataLanguageSwitcher.selectedOptions.item(0)?.dataset[
+              'language'
+            ] === locale
           );
         },
         {},
@@ -324,34 +351,40 @@ async function inspectMenu(
           interface: string | undefined;
           bios: boolean;
         } => {
+          const settingsDialog =
+            document.querySelector<HTMLDialogElement>('#settings-dialog');
+
+          if (settingsDialog === null) {
+            throw new Error('Missing required settingsDialog');
+          }
+
           return {
             settings:
               window.__languageSettings ===
               document.querySelector<HTMLDialogElement>('#settings-dialog'),
             document: window.__languageDocument === document,
-            open: document.querySelector<HTMLDialogElement>('#settings-dialog')!
-              .open,
+            open: settingsDialog.open,
             focus: Boolean(
               document.activeElement?.matches('[data-language-switcher]'),
             ),
             history: history.length === window.__languageHistory,
             query: location.search,
             hash: location.hash,
-            interface: document.documentElement.dataset.interface,
+            interface: document.documentElement.dataset['interface'],
             bios:
-              document.querySelector<HTMLDialogElement>('#bios-dialog')?.open ||
+              document.querySelector<HTMLDialogElement>('#bios-dialog')?.open ??
               false,
           };
         },
       );
 
-      const resolveInterface = (): 'minecraft' | 'terminal' => {
+      function resolveInterface(): 'minecraft' | 'terminal' {
         if (terminal) {
           return 'terminal';
         }
 
         return 'minecraft';
-      };
+      }
 
       assert.deepEqual(state, {
         settings: true,
@@ -378,7 +411,7 @@ async function inspectFallbacks(
   const context = await browser.createBrowserContext();
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await initialize(page, 'dark', [
       'en',
@@ -416,7 +449,7 @@ export default async function checkLanguageSPA(
   baseURL: string,
 ): Promise<void> {
   const directory = resolve(
-    process.env.QA_REPORT_DIR || '.local/reports',
+    textOr(process.env['QA_REPORT_DIR'], '.local/reports'),
     'language-spa',
   );
 
@@ -435,7 +468,13 @@ export default async function checkLanguageSPA(
       1024,
       1440,
     ] as const) {
-      await inspectRoot(browser, baseURL, width, theme, directory);
+      await inspectRoot({
+        browser,
+        baseURL,
+        width,
+        theme,
+        directory,
+      });
     }
 
     for (const terminal of [
@@ -446,7 +485,13 @@ export default async function checkLanguageSPA(
         390,
         1440,
       ] as const) {
-        await inspectMenu(browser, baseURL, terminal, width, theme);
+        await inspectMenu({
+          browser,
+          baseURL,
+          terminal,
+          width,
+          theme,
+        });
       }
     }
   }

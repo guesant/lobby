@@ -1,15 +1,15 @@
-import { llmsText } from '$lib/ai-catalog.server.ts';
-import { getSiteData } from '$lib/site-data.server.ts';
 import type { RequestHandler } from './$types';
+import { getSiteData } from '#lib/features/content/content.server.ts';
+import { llmsText } from '#lib/features/metadata/ai-catalog.server.ts';
 
 export const prerender = true;
 
 export const trailingSlash = 'never';
 
-export const GET: RequestHandler = async (): Promise<Response> => {
+export async function GET(): Promise<Awaited<ReturnType<RequestHandler>>> {
   return new Response(llmsText(await getSiteData()), {
     headers: {
       'content-type': 'text/plain; charset=utf-8',
     },
   });
-};
+}

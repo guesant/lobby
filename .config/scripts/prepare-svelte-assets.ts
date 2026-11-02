@@ -1,11 +1,8 @@
-import sharp, { type Region, type ResizeOptions } from 'sharp';
+import { record } from '../../website/src/lib/features/content/validation.model.ts';
+import { generated, imagesToGenerate, scenery, ui } from './raster.config.ts';
 import { mkdir, readFile, rm, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { record } from '../../website/src/lib/validation-primitives.ts';
-
-const assets = resolve('website/src/assets');
-
-const generated = resolve('website/src/static/assets/generated');
+import sharp, { type ResizeOptions } from 'sharp';
 
 await rm(generated, {
   recursive: true,
@@ -14,12 +11,6 @@ await rm(generated, {
 await mkdir(generated, {
   recursive: true,
 });
-
-const images = resolve(assets, 'images');
-
-const ui = resolve(images, 'ui');
-
-const scenery = resolve(images, 'scenery');
 
 const rail = sharp(resolve(ui, 'suspension-rail.png'));
 
@@ -32,16 +23,16 @@ const rawGeometry: unknown = JSON.parse(
 const geometryRecord = record(rawGeometry, 'rail geometry');
 
 if (
-  typeof geometryRecord.width !== 'number' ||
-  !Number.isInteger(geometryRecord.width) ||
+  typeof geometryRecord['width'] !== 'number' ||
+  !Number.isInteger(geometryRecord['width']) ||
   !railMetadata.width
 ) {
   throw new Error('Invalid rail width');
 }
 
 const geometry = {
-  width: geometryRecord.width,
-  slices: record(geometryRecord.slices, 'rail slices'),
+  width: geometryRecord['width'],
+  slices: record(geometryRecord['slices'], 'rail slices'),
 };
 
 const railLeft = Math.floor((railMetadata.width - geometry.width) / 2);
@@ -54,7 +45,7 @@ for (const [
 ] of Object.entries(geometry.slices)) {
   const slice = record(rawSlice, `rail slice ${name}`);
 
-  if (typeof slice.top !== 'number' || typeof slice.height !== 'number') {
+  if (typeof slice['top'] !== 'number' || typeof slice['height'] !== 'number') {
     throw new Error(`Invalid rail slice ${name}`);
   }
 
@@ -63,9 +54,9 @@ for (const [
   await sharp(resolve(ui, 'suspension-rail.png'))
     .extract({
       left: railLeft,
-      top: slice.top,
+      top: slice['top'],
       width: geometry.width,
-      height: slice.height,
+      height: slice['height'],
     })
     .png({
       compressionLevel: 9,
@@ -128,126 +119,6 @@ for (const [
   }
 }
 
-const imagesToGenerate: Array<
-  [
-    string,
-    string,
-    {
-      extract?: Region;
-      resize: ResizeOptions;
-    },
-  ]
-> = [
-  [
-    'stone-frame.webp',
-    resolve(ui, 'stone-frame.png'),
-    {
-      extract: {
-        left: 57,
-        top: 57,
-        width: 1140,
-        height: 1140,
-      },
-      resize: {
-        width: 384,
-      },
-    },
-  ],
-  [
-    'oak-frame.webp',
-    resolve(ui, 'oak-frame.png'),
-    {
-      extract: {
-        left: 57,
-        top: 57,
-        width: 1140,
-        height: 1140,
-      },
-      resize: {
-        width: 512,
-      },
-    },
-  ],
-  [
-    'oak-drape-start.webp',
-    resolve(ui, 'oak-frame.png'),
-    {
-      extract: {
-        left: 0,
-        top: 0,
-        width: 384,
-        height: 448,
-      },
-      resize: {
-        width: 160,
-      },
-    },
-  ],
-  [
-    'oak-drape-end.webp',
-    resolve(ui, 'oak-frame.png'),
-    {
-      extract: {
-        left: 870,
-        top: 57,
-        width: 384,
-        height: 448,
-      },
-      resize: {
-        width: 160,
-      },
-    },
-  ],
-  [
-    'stone-foot-start.webp',
-    resolve(ui, 'stone-frame.png'),
-    {
-      extract: {
-        left: 0,
-        top: 998,
-        width: 384,
-        height: 256,
-      },
-      resize: {
-        width: 160,
-      },
-    },
-  ],
-  [
-    'stone-foot-end.webp',
-    resolve(ui, 'stone-frame.png'),
-    {
-      extract: {
-        left: 870,
-        top: 998,
-        width: 384,
-        height: 256,
-      },
-      resize: {
-        width: 160,
-      },
-    },
-  ],
-  [
-    'profile-lantern.webp',
-    resolve(generated, 'rail-profile-lantern.png'),
-    {
-      resize: {
-        width: 96,
-      },
-    },
-  ],
-  [
-    'aged-oak.webp',
-    resolve(ui, 'charcoal-planks.png'),
-    {
-      resize: {
-        width: 160,
-      },
-    },
-  ],
-];
-
 for (const [
   name,
   path,
@@ -304,13 +175,11 @@ for (const [
       fit: 'cover',
     },
   ],
-] satisfies Array<
-  [
-    string,
-    string,
-    ResizeOptions,
-  ]
->) {
+] satisfies [
+  string,
+  string,
+  ResizeOptions,
+][]) {
   await sharp(path)
     .resize(resize)
     .webp({
@@ -356,13 +225,11 @@ for (const [
       fit: 'cover',
     },
   ],
-] satisfies Array<
-  [
-    string,
-    string,
-    ResizeOptions,
-  ]
->) {
+] satisfies [
+  string,
+  string,
+  ResizeOptions,
+][]) {
   await sharp(path)
     .resize(resize)
     .webp({

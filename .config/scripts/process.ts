@@ -1,18 +1,22 @@
 import { spawn } from 'node:child_process';
 
+export type CommandOptions = {
+  environment?: NodeJS.ProcessEnv;
+  cwd?: string;
+};
+
 export async function runCommand(
   name: string,
   args: string[] = [],
-  environment: NodeJS.ProcessEnv = {},
-  cwd: string = process.cwd(),
+  options: CommandOptions = {},
 ): Promise<void> {
   await new Promise<void>((accept, reject): void => {
     const child = spawn(name, args, {
-      cwd,
+      cwd: options.cwd ?? process.cwd(),
       stdio: 'inherit',
       env: {
         ...process.env,
-        ...environment,
+        ...options.environment,
       },
     });
 
@@ -24,7 +28,7 @@ export async function runCommand(
         return;
       }
 
-      reject(new Error(`${name} failed: ${code ?? signal}`));
+      reject(new Error(`${name} failed: ${String(code ?? signal)}`));
     });
   });
 }

@@ -1,10 +1,11 @@
-import type {
-  Page,
-  BrowserContext,
-  Browser,
-  HTTPRequest,
-} from 'puppeteer-core';
+import { createAuditPage } from './browser-fixture.ts';
 import assert from 'node:assert/strict';
+import type {
+  Browser,
+  BrowserContext,
+  HTTPRequest,
+  Page,
+} from 'puppeteer-core';
 
 async function waitForLandscape(
   page: Page,
@@ -24,29 +25,30 @@ async function waitForLandscape(
         const root = document.documentElement;
 
         const landscape =
-          document.querySelector<HTMLElement>('.world-landscape')!;
+          document.querySelector<HTMLElement>('.world-landscape');
 
         const preview = document.querySelector<HTMLElement>(
           '.world-landscape-preview',
-        )!;
+        );
 
         if (!landscape || !preview) {
           return false;
         }
 
-        const expected = getComputedStyle(root)
-          .getPropertyValue('--landscape-image')
-          .match(/url\(["']?(.*?)["']?\)/)?.[1];
+        const expected = /url\(["']?(.*?)["']?\)/.exec(
+          getComputedStyle(root)
+            .getPropertyValue('--landscape-image'),
+        )?.[1];
 
         const finalStyle = getComputedStyle(landscape);
 
-        const resolveReady = (): string | undefined => {
+        function resolveReady(): string | undefined {
           if (previewFailed) {
-            return root.dataset.landscapePreviewFailed;
+            return root.dataset['landscapePreviewFailed'];
           }
 
-          return root.dataset.landscapeReady;
-        };
+          return root.dataset['landscapeReady'];
+        }
 
         const ready = resolveReady();
 
@@ -70,31 +72,31 @@ async function waitForLandscape(
       (): {
         url: string;
         width: number;
-        state: {
-          [name: string]: string | undefined;
-        };
+        state: Record<string, string | undefined>;
         expected: string;
         final: {
           inline: string;
           image: string;
           opacity: string;
-        };
+        } | null;
         preview: {
           image: string;
           opacity: string;
-        };
+        } | null;
       } => {
-        const final = document.querySelector<HTMLElement>('.world-landscape')!;
+        const final = document.querySelector<HTMLElement>('.world-landscape');
 
         const preview = document.querySelector<HTMLElement>(
           '.world-landscape-preview',
-        )!;
+        );
 
         return {
           url: location.href,
           width: innerWidth,
           state: {
-            ...document.documentElement.dataset,
+            ...Object.fromEntries(
+              Object.entries(document.documentElement.dataset),
+            ),
           },
           expected: getComputedStyle(document.documentElement)
             .getPropertyValue(
@@ -122,12 +124,7 @@ async function waitForLandscape(
 async function createScenePage(
   context: BrowserContext,
   baseURL: string,
-  {
-    failure,
-    hold = false,
-    reduced = false,
-    javascript = true,
-  }: {
+  input: {
     failure?: string;
     hold?: boolean;
     reduced?: boolean;
@@ -139,7 +136,14 @@ async function createScenePage(
   release: () => Promise<void>;
   settle: () => Promise<void>;
 }> {
-  const page = await context.newPage();
+  const {
+    failure,
+    hold = false,
+    reduced = false,
+    javascript = true
+  } = input;
+
+  const page = await createAuditPage(context);
 
   await page.setCacheEnabled(false);
 
@@ -147,7 +151,7 @@ async function createScenePage(
 
   let holding = hold;
 
-  const resolveHeld = (): Promise<void> | Promise<HTTPRequest> => {
+  function resolveHeld(): Promise<void> | Promise<HTTPRequest> {
     if (hold) {
       return page.waitForRequest(
         (request): boolean => {
@@ -161,7 +165,7 @@ async function createScenePage(
     }
 
     return Promise.resolve();
-  };
+  }
 
   const held = resolveHeld();
 
@@ -170,13 +174,13 @@ async function createScenePage(
     height: 900,
   });
 
-  const resolveValue = (): 'reduce' | 'no-preference' => {
+  function motionPreference(): 'reduce' | 'no-preference' {
     if (reduced) {
       return 'reduce';
     }
 
     return 'no-preference';
-  };
+  }
 
   await page.emulateMediaFeatures([
     {
@@ -185,7 +189,7 @@ async function createScenePage(
     },
     {
       name: 'prefers-reduced-motion',
-      value: resolveValue(),
+      value: motionPreference(),
     },
   ]);
   await page.setJavaScriptEnabled(javascript);
@@ -195,7 +199,7 @@ async function createScenePage(
 
   const failures: unknown[] = [];
 
-  const handleRequest = async (request: HTTPRequest): Promise<void> => {
+  async function handleRequest(request: HTTPRequest): Promise<void> {
     const path = new URL(request.url()).pathname;
 
     if (failure && path.endsWith(failure)) {
@@ -209,7 +213,7 @@ async function createScenePage(
     }
 
     return request.continue();
-  };
+  }
 
   page.on('request', (request): void => {
     const completion = handleRequest(request)
@@ -282,9 +286,13 @@ async function previewBounds(page: Page): Promise<{
   await page.waitForFunction((): boolean => {
     const preview = document.querySelector<HTMLElement>(
       '.world-landscape-preview',
-    )!;
+    );
 
-    const final = document.querySelector<HTMLElement>('.world-landscape')!;
+    const final = document.querySelector<HTMLElement>('.world-landscape');
+
+    if (!preview || !final) {
+      return false;
+    }
 
     return (
       getComputedStyle(preview).opacity === '1' &&
@@ -364,7 +372,7 @@ async function checkThemeRace(
     await held;
     await previewBounds(page);
     await page.evaluate((): void => {
-      document.documentElement.dataset.theme = 'light';
+      document.documentElement.dataset['theme'] = 'light';
     });
     await waitForLandscape(page);
     await release();
@@ -389,15 +397,15 @@ async function checkFailure(
   baseURL: string,
   previewFails: boolean,
 ): Promise<void> {
-  const resolveFailure = ():
+  function resolveFailure():
     | '/night-mobile.webp'
-    | '/night-mobile-preview.webp' => {
+    | '/night-mobile-preview.webp' {
     if (previewFails) {
       return '/night-mobile-preview.webp';
     }
 
     return '/night-mobile.webp';
-  };
+  }
 
   const failure = resolveFailure();
 
@@ -510,4 +518,4 @@ async function checkProgressiveScene(
   }
 }
 
-export { waitForLandscape, checkProgressiveScene };
+export { checkProgressiveScene, waitForLandscape };

@@ -14,25 +14,7 @@
     <script>
       document.documentElement.dataset.jsEnabled = 'true';
       try {
-        const options = {
-          theme: [
-            'system',
-            'light',
-            'dark',
-          ],
-          view: [
-            'compact',
-            'detailed',
-          ],
-          motion: [
-            'on',
-            'off',
-          ],
-          sound: [
-            'on',
-            'off',
-          ],
-        };
+        const options = __PREFERENCE_OPTIONS__;
         for (const key of Object.keys(options)) {
           const value = localStorage.getItem('guesant-links-' + key);
           if (value && options[key].includes(value)) {

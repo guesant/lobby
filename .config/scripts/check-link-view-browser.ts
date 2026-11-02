@@ -1,18 +1,17 @@
-import type { Page } from 'puppeteer-core';
-import { useBrowserLanguages } from './browser-presentation.ts';
-import { animationFrames } from './browser-dom.ts';
-import { inputIsChecked, anchorURLs } from './browser-dom.ts';
-import type { Browser } from 'puppeteer-core';
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import { readConfiguration, pagesFor } from './configuration.ts';
-import type { ConfiguredPage } from '../../website/src/lib/configuration.ts';
+import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.model.ts';
+import { anchorURLs, animationFrames, inputIsChecked } from './browser-dom.ts';
+import { createAuditPage } from './browser-fixture.ts';
 import {
-  responsiveWidths,
   applyAppearance,
   captureFromTop,
   editorialDestinations,
+  responsiveWidths,
+  useBrowserLanguages,
 } from './browser-presentation.ts';
+import { pagesFor, readConfiguration } from './configuration.ts';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import type { Browser, Page } from 'puppeteer-core';
 
 type ViewSnapshot = {
   overflow: boolean;
@@ -39,16 +38,20 @@ export default async function checkLinkViewBrowser(
 
   const base = new URL(baseURL);
 
-  const href = (path: string): string => {
+  function href(path: string): string {
     return new URL(path.replace(/^\//, ''), base).href;
-  };
+  }
 
   const routes = config.language_options.flatMap(
-    ({
-      id,
-    }): (ConfiguredPage & {
+    (
+      input,
+    ): (ConfiguredPage & {
       language: string;
     })[] => {
+      const {
+        id
+      } = input;
+
       return pagesFor(config, id)
         .filter((page: ConfiguredPage): boolean => {
           return [
@@ -78,7 +81,7 @@ export default async function checkLinkViewBrowser(
   const errors: string[] = [];
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     page.on('pageerror', (error): number => {
       return errors.push(String(error));
@@ -89,7 +92,7 @@ export default async function checkLinkViewBrowser(
     });
     assert.equal(
       await page.$eval('html', (root): string | undefined => {
-        return root.dataset.linkView;
+        return root.dataset['linkView'];
       }),
       'compact',
     );
@@ -100,15 +103,21 @@ export default async function checkLinkViewBrowser(
     await page.keyboard.press('ArrowRight');
     assert.equal(
       await page.$eval('html', (root): string | undefined => {
-        return root.dataset.linkView;
+        return root.dataset['linkView'];
       }),
       'detailed',
     );
     assert.equal(
       await page.$eval('#link-view-detailed', (input): boolean => {
+        const label = input.nextElementSibling;
+
+        if (!label) {
+          return false;
+        }
+
         return (
           input === document.activeElement &&
-          getComputedStyle(input.nextElementSibling!).outlineStyle === 'solid'
+          getComputedStyle(label).outlineStyle === 'solid'
         );
       }),
       true,
@@ -123,7 +132,7 @@ export default async function checkLinkViewBrowser(
     });
     assert.equal(
       await page.$eval('html', (root): string | undefined => {
-        return root.dataset.linkView;
+        return root.dataset['linkView'];
       }),
       'detailed',
     );
@@ -139,12 +148,12 @@ export default async function checkLinkViewBrowser(
     ]);
     assert.equal(
       await page.$eval('html', (root): string | undefined => {
-        return root.dataset.linkView;
+        return root.dataset['linkView'];
       }),
       'detailed',
     );
     await page.evaluate((): void => {
-      return localStorage.removeItem('guesant-links-language');
+      localStorage.removeItem('guesant-links-language');
     });
 
     for (const route of routes) {
@@ -152,13 +161,19 @@ export default async function checkLinkViewBrowser(
         waitUntil: 'networkidle2',
       });
 
-      const labels = config.locales[route.language]!.ui;
+      const requiredValue = config.locales[route.language];
+
+      if (requiredValue === undefined) {
+        throw new Error('Missing required requiredValue');
+      }
+
+      const labels = requiredValue.ui;
 
       assert.equal(
         await page.$eval('.link-view-control legend', (legend): string => {
           return legend.textContent.trim();
         }),
-        labels.link_view_label,
+        labels['link_view_label'],
       );
 
       const initialLinks = await page.$$eval('.link-button', anchorURLs);
@@ -173,14 +188,14 @@ export default async function checkLinkViewBrowser(
         'compact',
         'detailed',
       ] as const) {
-        await inspectLinkViewMode(
+        await inspectLinkViewMode({
           page,
           mode,
           route,
           checks,
           reportDirectory,
           initialLinks,
-        );
+        });
       }
     }
 
@@ -237,7 +252,7 @@ export default async function checkLinkViewBrowser(
             return document.documentElement.scrollWidth > innerWidth;
           }),
           false,
-          `${mode} enlarged text ${width}`,
+          `${mode} enlarged text ${String(width)}`,
         );
       }
 
@@ -265,7 +280,7 @@ export default async function checkLinkViewBrowser(
     const isolated = await browser.createBrowserContext();
 
     try {
-      const page = await isolated.newPage();
+      const page = await createAuditPage(isolated);
 
       await page.evaluateOnNewDocument((blocked): void => {
         if (blocked) {
@@ -283,14 +298,14 @@ export default async function checkLinkViewBrowser(
       });
       assert.equal(
         await page.$eval('html', (root): string | undefined => {
-          return root.dataset.linkView;
+          return root.dataset['linkView'];
         }),
         'compact',
       );
       await page.click('label[for=link-view-detailed]');
       assert.equal(
         await page.$eval('html', (root): string | undefined => {
-          return root.dataset.linkView;
+          return root.dataset['linkView'];
         }),
         'detailed',
       );
@@ -302,7 +317,7 @@ export default async function checkLinkViewBrowser(
   const noJS = await browser.createBrowserContext();
 
   try {
-    const page = await noJS.newPage();
+    const page = await createAuditPage(noJS);
 
     await page.setJavaScriptEnabled(false);
 
@@ -321,7 +336,7 @@ export default async function checkLinkViewBrowser(
       );
       assert.equal(
         await page.$eval('html', (root): string | undefined => {
-          return root.dataset.linkView;
+          return root.dataset['linkView'];
         }),
         'compact',
       );
@@ -356,16 +371,25 @@ export default async function checkLinkViewBrowser(
   );
 }
 
-async function inspectLinkViewMode(
-  page: Page,
-  mode: string,
+async function inspectLinkViewMode(input: {
+  page: Page;
+  mode: string;
   route: ConfiguredPage & {
     language: string;
-  },
-  checks: Record<string, unknown>[],
-  reportDirectory: string,
-  initialLinks: string[],
-): Promise<void> {
+  };
+  checks: Record<string, unknown>[];
+  reportDirectory: string;
+  initialLinks: string[];
+}): Promise<void> {
+  const {
+    page,
+    mode,
+    route,
+    checks,
+    reportDirectory,
+    initialLinks
+  } = input;
+
   await page.click(`label[for="link-view-${mode}"]`);
 
   for (const theme of [
@@ -375,7 +399,7 @@ async function inspectLinkViewMode(
     await applyAppearance(page, theme);
 
     for (const width of responsiveWidths) {
-      await inspectLinkViewViewport(
+      await inspectLinkViewViewport({
         page,
         width,
         route,
@@ -383,24 +407,34 @@ async function inspectLinkViewMode(
         theme,
         checks,
         reportDirectory,
-      );
+      });
     }
   }
 
   assert.deepEqual(await page.$$eval('.link-button', anchorURLs), initialLinks);
 }
 
-async function inspectLinkViewViewport(
-  page: Page,
-  width: number,
+async function inspectLinkViewViewport(input: {
+  page: Page;
+  width: number;
   route: ConfiguredPage & {
     language: string;
-  },
-  mode: string,
-  theme: string,
-  checks: Record<string, unknown>[],
-  reportDirectory: string,
-): Promise<void> {
+  };
+  mode: string;
+  theme: string;
+  checks: Record<string, unknown>[];
+  reportDirectory: string;
+}): Promise<void> {
+  const {
+    page,
+    width,
+    route,
+    mode,
+    theme,
+    checks,
+    reportDirectory
+  } = input;
+
   await page.setViewport({
     width,
     height: 900,
@@ -408,24 +442,64 @@ async function inspectLinkViewViewport(
   await page.evaluate(animationFrames, 3);
 
   const actual = await page.evaluate((): ViewSnapshot => {
-    const detailed = document.documentElement.dataset.linkView === 'detailed';
+    const detailed =
+      document.documentElement.dataset['linkView'] === 'detailed';
 
     const links = [
       ...document.querySelectorAll<HTMLElement>('.link-button'),
     ];
 
-    const visible = (element: Element): boolean => {
+    function visible(element: Element): boolean {
       return element.getClientRects().length > 0;
-    };
+    }
+
+    const dataLinkViewControlChecked = document.querySelector<HTMLInputElement>(
+      '[data-link-view-control]:checked',
+    );
+
+    if (dataLinkViewControlChecked === null) {
+      throw new Error('Missing required dataLinkViewControlChecked');
+    }
+
+    function inspectRailsEntry(body: HTMLElement): boolean {
+      if (!visible(body)) {
+        return true;
+      }
+
+      const top = body.getBoundingClientRect().top;
+
+      const anchors = [
+        ...document.querySelectorAll<HTMLElement>('[data-rail-anchor]'),
+      ];
+
+      const suspendedContent = window.lobbyAssertions.element(
+        document,
+        '.suspended-content',
+      );
+
+      const gap = parseFloat(getComputedStyle(suspendedContent).rowGap);
+
+      return [
+        ...body.querySelectorAll<HTMLElement>('[data-rail-lantern]'),
+      ].every((lamp): boolean => {
+        const anchor = anchors[Number(lamp.dataset['railLantern'])];
+
+        return (
+          !anchor ||
+          Math.abs(
+            parseFloat(lamp.style.getPropertyValue('--rail-lantern-position')) -
+              (anchor.getBoundingClientRect().bottom + gap / 2 - top),
+          ) < 1
+        );
+      });
+    }
 
     return {
       overflow: document.documentElement.scrollWidth > innerWidth,
       stableLinks: links.every((link, index): boolean => {
         return link === window.initialViewLinks[index];
       }),
-      checked: document.querySelector<HTMLInputElement>(
-        '[data-link-view-control]:checked',
-      )!.value,
+      checked: dataLinkViewControlChecked.value,
       contentFits: links.every((link): boolean => {
         return link.scrollWidth <= link.clientWidth + 1;
       }),
@@ -450,6 +524,13 @@ async function inspectLinkViewViewport(
       ].every((card): boolean => {
         const style = getComputedStyle(card);
 
+        const categoryLinks =
+          card.querySelector<HTMLElement>('.category-links');
+
+        if (!categoryLinks) {
+          return false;
+        }
+
         const available =
           card.clientWidth -
           parseFloat(style.paddingLeft) -
@@ -457,31 +538,37 @@ async function inspectLinkViewViewport(
 
         return (
           getComputedStyle(card).gridTemplateColumns.split(' ').length === 1 &&
-          Math.abs(
-            card
-              .querySelector<HTMLElement>('.category-links')!
-              .getBoundingClientRect().width - available,
-          ) < 1
+          Math.abs(categoryLinks.getBoundingClientRect().width - available) < 1
         );
       }),
       categoryHeaderLayout: [
         ...document.querySelectorAll<HTMLElement>('.category-summary'),
       ].every((summary): boolean => {
-        const icon = summary
-          .querySelector<HTMLElement>('.category-icon')!
-          .getBoundingClientRect();
+        const categoryIcon = window.lobbyAssertions.element(
+          summary,
+          '.category-icon',
+        );
 
-        const title = summary
-          .querySelector<HTMLElement>('.category-title')!
-          .getBoundingClientRect();
+        const icon = categoryIcon.getBoundingClientRect();
 
-        const heading = summary
-          .querySelector<HTMLElement>('.category-heading')!
-          .getBoundingClientRect();
+        const categoryTitle = window.lobbyAssertions.element(
+          summary,
+          '.category-title',
+        );
 
-        const copy = summary
-          .querySelector<HTMLElement>('.category-copy')
-          ?.getBoundingClientRect();
+        const title = categoryTitle.getBoundingClientRect();
+
+        const categoryHeading = window.lobbyAssertions.element(
+          summary,
+          '.category-heading',
+        );
+
+        const heading = categoryHeading.getBoundingClientRect();
+
+        const copyElement =
+          summary.querySelector<HTMLElement>('.category-copy');
+
+        const copy = copyElement?.getBoundingClientRect();
 
         const rect = summary.getBoundingClientRect();
 
@@ -494,6 +581,16 @@ async function inspectLinkViewViewport(
           parseFloat(style.paddingLeft) -
           parseFloat(style.paddingRight);
 
+        function copyFollowsHeading(): boolean {
+          return (
+            !copy ||
+            !copyElement ||
+            (heading.bottom <= copy.top &&
+              Math.abs(copy.width - contentWidth) < 1 &&
+              getComputedStyle(copyElement).textAlign === 'center')
+          );
+        }
+
         return (
           getComputedStyle(summary).gridTemplateColumns.split(' ').length ===
             1 &&
@@ -503,12 +600,7 @@ async function inspectLinkViewViewport(
           icon.bottom <= title.top &&
           Math.abs(icon.left + icon.width / 2 - title.left - title.width / 2) <
             1 &&
-          (!copy ||
-            (heading.bottom <= copy.top &&
-              Math.abs(copy.width - contentWidth) < 1 &&
-              getComputedStyle(
-                summary.querySelector<HTMLElement>('.category-copy')!,
-              ).textAlign === 'center'))
+          copyFollowsHeading()
         );
       }),
       linksIndependent: [
@@ -540,52 +632,26 @@ async function inspectLinkViewViewport(
         .every((element): boolean => {
           const range = document.createRange();
 
-          range.selectNodeContents(element.firstChild!);
+          const firstChildValue = element.firstChild;
+
+          if (firstChildValue === null) {
+            throw new Error('Missing required firstChildValue');
+          }
+
+          range.selectNodeContents(firstChildValue);
 
           return range.getClientRects().length === 1;
         }),
       rails: [
         ...document.querySelectorAll<HTMLElement>('.suspension-body'),
-      ].every((body): boolean => {
-        if (!visible(body)) {
-          return true;
-        }
-
-        const top = body.getBoundingClientRect().top;
-
-        const anchors = [
-          ...document.querySelectorAll<HTMLElement>('[data-rail-anchor]'),
-        ];
-
-        const gap = parseFloat(
-          getComputedStyle(
-            document.querySelector<HTMLElement>('.suspended-content')!,
-          ).rowGap,
-        );
-
-        return [
-          ...body.querySelectorAll<HTMLElement>('[data-rail-lantern]'),
-        ].every((lamp): boolean => {
-          const anchor = anchors[Number(lamp.dataset.railLantern)];
-
-          return (
-            !anchor ||
-            Math.abs(
-              parseFloat(
-                lamp.style.getPropertyValue('--rail-lantern-position'),
-              ) -
-                (anchor.getBoundingClientRect().bottom + gap / 2 - top),
-            ) < 1
-          );
-        });
-      }),
+      ].every(inspectRailsEntry),
     };
   });
 
   assert.equal(
     actual.overflow,
     false,
-    `${route.url} ${mode} ${theme} ${width} overflow`,
+    `${route.url} ${mode} ${theme} ${String(width)} overflow`,
   );
   assert.equal(actual.checked, mode);
 
@@ -614,7 +680,7 @@ async function inspectLinkViewViewport(
     assert.equal(
       complete[key],
       true,
-      `${route.url} ${mode} ${theme} ${width} ${key}`,
+      `${route.url} ${mode} ${theme} ${String(width)} ${key}`,
     );
   }
 
@@ -639,7 +705,7 @@ async function inspectLinkViewViewport(
   ) {
     await captureFromTop(
       page,
-      `${reportDirectory}/view-${route.id}-${mode}-${theme}-${width}.png`,
+      `${reportDirectory}/view-${route.id}-${mode}-${theme}-${String(width)}.png`,
     );
   }
 }

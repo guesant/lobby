@@ -1,9 +1,9 @@
+import { searchEntries } from '../../../lib/features/search/search-index.server.ts';
+import type { EntryGenerator, RequestHandler } from './$types';
 import {
   localizedResourceEntries,
   resourceRequest,
-  searchEntries,
-} from '$lib/public-resources.server.ts';
-import type { EntryGenerator, RequestHandler } from './$types';
+} from '#lib/features/metadata/resources.server.ts';
 
 export const prerender = true;
 

@@ -1,52 +1,77 @@
-import { spawn } from 'node:child_process';
-import { mkdir, writeFile, mkdtemp, cp, rm, lstat } from 'node:fs/promises';
-import { execFileSync } from 'node:child_process';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
 import {
   array,
   record,
   requiredText,
-} from '../../website/src/lib/validation-primitives.ts';
+} from '../../website/src/lib/features/content/validation.model.ts';
 import {
   dependencyInventory,
   type ManagedDependency,
 } from './dependency-inventory.ts';
+import { execFileSync, spawn } from 'node:child_process';
+import { cp, lstat, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+
+type ExtractedDependency = {
+  name: string;
+  version: string | undefined;
+  digest: string | undefined;
+};
+
+function extractedValue(
+  dependency: Record<string, unknown>,
+  key: string,
+): string | undefined {
+  const value = dependency[key];
+
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return requiredText(value, `Renovate ${key}`);
+}
 
 function extractFile(
   value: unknown,
-  extracted: Map<string, Set<string>>,
+  extracted: Map<string, ExtractedDependency[]>,
 ): void {
   const file = record(value, 'Renovate file');
 
-  const path = requiredText(file.packageFile, 'Renovate package file');
+  const path = requiredText(file['packageFile'], 'Renovate package file');
 
-  const names = extracted.get(path) || new Set<string>();
+  const dependencies = extracted.get(path) ?? [];
 
-  for (const rawDependency of array(file.deps || [], 'Renovate dependencies')) {
+  for (const rawDependency of array(
+    file['deps'] ?? [],
+    'Renovate dependencies',
+  )) {
     const dependency = record(rawDependency, 'Renovate dependency');
 
     if (
-      dependency.skipReason === 'unversioned-reference' ||
-      dependency.enabled === false
+      dependency['skipReason'] === 'unversioned-reference' ||
+      dependency['enabled'] === false
     ) {
       throw new Error(
-        `Renovate cannot update dependency in ${path}: ${String(dependency.depName)}`,
+        `Renovate cannot update dependency in ${path}: ${String(dependency['depName'])}`,
       );
     }
 
-    if (typeof dependency.depName === 'string') {
-      names.add(dependency.depName);
+    if (typeof dependency['depName'] === 'string') {
+      dependencies.push({
+        name: dependency['depName'],
+        version: extractedValue(dependency, 'currentValue'),
+        digest: extractedValue(dependency, 'currentDigest'),
+      });
     }
   }
 
-  extracted.set(path, names);
+  extracted.set(path, dependencies);
 }
 
 export function extractedDependencies(
   output: string,
-): Map<string, Set<string>> {
-  const extracted = new Map<string, Set<string>>();
+): Map<string, ExtractedDependency[]> {
+  const extracted = new Map<string, ExtractedDependency[]>();
 
   let found = false;
 
@@ -54,14 +79,14 @@ export function extractedDependencies(
     .filter(Boolean)) {
     const message = record(JSON.parse(line) as unknown, 'Renovate log record');
 
-    if (message.msg !== 'Extracted dependencies') {
+    if (message['msg'] !== 'Extracted dependencies') {
       continue;
     }
 
     found = true;
 
     for (const files of Object.values(
-      record(message.packageFiles, 'Renovate package files'),
+      record(message['packageFiles'], 'Renovate package files'),
     )) {
       for (const rawFile of array(files, 'Renovate manager files')) {
         extractFile(rawFile, extracted);
@@ -74,6 +99,23 @@ export function extractedDependencies(
   }
 
   return extracted;
+}
+
+export function hasManagedDependency(
+  extracted: Map<string, ExtractedDependency[]>,
+  dependency: ManagedDependency,
+): boolean {
+  return (
+    extracted.get(dependency.file)
+      ?.some((entry): boolean => {
+        return (
+          entry.name === dependency.name &&
+        (!dependency.digest ||
+          (entry.version === dependency.version &&
+            entry.digest === dependency.digest))
+        );
+      }) ?? false
+  );
 }
 
 async function extraction(cwd: string): Promise<string> {
@@ -108,7 +150,9 @@ async function extraction(cwd: string): Promise<string> {
     child.on('error', reject);
     child.on('close', (code, signal): void => {
       if (code !== 0) {
-        reject(new Error(`Renovate extraction failed: ${code ?? signal}`));
+        reject(
+          new Error(`Renovate extraction failed: ${String(code ?? signal)}`),
+        );
 
         return;
       }
@@ -119,55 +163,58 @@ async function extraction(cwd: string): Promise<string> {
   });
 }
 
+async function copyRepository(directory: string): Promise<void> {
+  const files = execFileSync(
+    'git',
+    [
+      'ls-files',
+      '--cached',
+      '--others',
+      '--exclude-standard',
+      '-z',
+    ],
+    {
+      encoding: 'utf8',
+    },
+  )
+    .split('\0')
+    .filter(Boolean);
+
+  for (const file of new Set(files)) {
+    const status = await lstat(file)
+      .catch((error: unknown): undefined => {
+        if (
+          error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'ENOENT'
+        ) {
+          return undefined;
+        }
+
+        throw error;
+      });
+
+    if (!status?.isFile()) {
+      continue;
+    }
+
+    const target = join(directory, file);
+
+    await mkdir(dirname(target), {
+      recursive: true,
+    });
+    await cp(file, target);
+  }
+}
+
 export async function checkRenovate(): Promise<void> {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-renovate-'));
 
   let output: string;
 
   try {
-    const files = execFileSync(
-      'git',
-      [
-        'ls-files',
-        '--cached',
-        '--others',
-        '--exclude-standard',
-        '-z',
-      ],
-      {
-        encoding: 'utf8',
-      },
-    )
-      .split('\0')
-      .filter(Boolean);
-
-    for (const file of new Set(files)) {
-      const status = await lstat(file)
-        .catch((error: unknown): undefined => {
-          if (
-            error &&
-          typeof error === 'object' &&
-          'code' in error &&
-          error.code === 'ENOENT'
-          ) {
-            return undefined;
-          }
-
-          throw error;
-        });
-
-      if (!status?.isFile()) {
-        continue;
-      }
-
-      const target = join(directory, file);
-
-      await mkdir(dirname(target), {
-        recursive: true,
-      });
-      await cp(file, target);
-    }
-
+    await copyRepository(directory);
     output = await extraction(directory);
   } finally {
     await rm(directory, {
@@ -186,8 +233,7 @@ export async function checkRenovate(): Promise<void> {
   const inventory: ManagedDependency[] = await dependencyInventory();
 
   for (const dependency of inventory) {
-    if (!extracted.get(dependency.file)
-      ?.has(dependency.name)) {
+    if (!hasManagedDependency(extracted, dependency)) {
       throw new Error(
         `Dependency not extracted by Renovate: ${dependency.file}: ${dependency.name}`,
       );
@@ -199,7 +245,7 @@ export async function checkRenovate(): Promise<void> {
     JSON.stringify(inventory, null, 2),
   );
   console.log(
-    `Renovate extracted all ${inventory.length} declared dependencies`,
+    `Renovate extracted all ${String(inventory.length)} declared dependencies`,
   );
 }
 

@@ -1,55 +1,14 @@
-import { loadPageData } from '$lib/page-data.server.ts';
-import { getSiteData, pagesFor } from '$lib/site-data.server.ts';
-import type { EntryGenerator, PageServerLoad } from './$types';
-import type { PageLoadData } from '$lib/site-data.ts';
+import type { PageLoadData } from '../../../../lib/features/content/content.types.ts';
+import type { PageServerLoadEvent } from './$types';
+import { error } from '@sveltejs/kit';
+import { loadPageData } from '#lib/features/content/page.controller.server.ts';
 
-export const prerender = true;
+export { terminalEntries as entries } from '#lib/features/navigation/entries.server.ts';
 
-export const trailingSlash = 'always';
+export async function load(event: PageServerLoadEvent): Promise<PageLoadData> {
+  const params = event.params;
 
-export const entries: EntryGenerator = async (): Promise<
-  {
-    locale: string;
-    path: string;
-  }[]
-> => {
-  const data = await getSiteData();
-
-  return data.links.language_options.flatMap(
-    (
-      language,
-    ): {
-      locale: string;
-      path: string;
-    }[] => {
-      const prefix = `${language.path}terminal/`;
-
-      return pagesFor(data, language.id, 'terminal')
-        .filter((page): boolean => {
-          return !page.fallback;
-        })
-        .map(
-          (
-            page,
-          ): {
-            locale: string;
-            path: string;
-          } => {
-            return {
-              locale: language.id,
-              path: page.url.slice(prefix.length)
-                .replace(/\/$/, ''),
-            };
-          },
-        );
-    },
-  );
-};
-
-export const load: PageServerLoad = async ({
-  params,
-}): Promise<PageLoadData> => {
-  return loadPageData(
+  const page = await loadPageData(
     [
       params.locale,
       'terminal',
@@ -58,4 +17,10 @@ export const load: PageServerLoad = async ({
       .filter(Boolean)
       .join('/'),
   );
-};
+
+  if (!page) {
+    error(404, 'Page not found');
+  }
+
+  return page;
+}

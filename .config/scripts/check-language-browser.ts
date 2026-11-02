@@ -1,10 +1,12 @@
-import { useBrowserLanguages } from './browser-presentation.ts';
+import { textOr } from '../../website/src/lib/features/content/text.model.ts';
 import { dialogIsOpen } from './browser-dom.ts';
-import type { Browser } from 'puppeteer-core';
-import assert from 'node:assert/strict';
-import checkLanguageSPA from './check-language-spa.ts';
-import checkLanguageContinuity from './check-language-continuity.ts';
+import { createAuditPage } from './browser-fixture.ts';
+import { useBrowserLanguages } from './browser-presentation.ts';
 import withBrowserErrors from './check-browser-errors.ts';
+import checkLanguageContinuity from './check-language-continuity.ts';
+import checkLanguageSPA from './check-language-spa.ts';
+import assert from 'node:assert/strict';
+import type { Browser } from 'puppeteer-core';
 
 async function checkLanguageBrowser(
   browser: Browser,
@@ -12,9 +14,9 @@ async function checkLanguageBrowser(
 ): Promise<void> {
   const origin = new URL(baseURL);
 
-  const href = (path: string): string => {
+  function href(path: string): string {
     return new URL(path.replace(/^\//, ''), origin).href;
-  };
+  }
 
   const key = 'guesant-links-language';
 
@@ -118,14 +120,16 @@ async function checkLanguageBrowser(
     const context = await browser.createBrowserContext();
 
     try {
-      const page = await context.newPage();
+      const page = await createAuditPage(context);
 
       await page.evaluateOnNewDocument(
-        ({
-          languages,
-          saved,
-          key
-        }): void => {
+        (input): void => {
+          const {
+            languages,
+            saved,
+            key
+          } = input;
+
           Object.defineProperty(navigator, 'languages', {
             get: (): string[] => {
               return languages;
@@ -171,7 +175,7 @@ async function checkLanguageBrowser(
         await page.evaluate((key): string | null => {
           return localStorage.getItem(key);
         }, key),
-        scenario.expectedSaved || scenario.saved || null,
+        textOr(textOr(scenario.expectedSaved, scenario.saved), null),
       );
       passed++;
     } finally {
@@ -182,7 +186,7 @@ async function checkLanguageBrowser(
   const context = await browser.createBrowserContext();
 
   try {
-    const page = await context.newPage();
+    const page = await createAuditPage(context);
 
     await useBrowserLanguages(page);
     await page.goto(href('/en/code/?source=link#details'), {

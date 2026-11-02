@@ -8,17 +8,6 @@ export type CategoryPreviews = {
   previews: PreviewRecord[];
 };
 
-declare global {
-  interface Window {
-    lobbyLayout: {
-      rowAligned(elements: Element[]): boolean;
-      galleryColumns(): number;
-      previewLinks(elements: Element[]): PreviewRecord[];
-      categories(elements: Element[]): CategoryPreviews[];
-    };
-  }
-}
-
 export function installLayoutHelpers(): void {
   window.lobbyLayout = {
     categories(elements: Element[]): CategoryPreviews[] {
@@ -28,7 +17,7 @@ export function installLayoutHelpers(): void {
         }
 
         return {
-          id: element.dataset.category,
+          id: element.dataset['category'],
           previews: window.lobbyLayout.previewLinks([
             ...element.querySelectorAll('[data-preview-id]'),
           ]),
@@ -51,7 +40,7 @@ export function installLayoutHelpers(): void {
           }
 
           return {
-            id: element.dataset.previewId,
+            id: element.dataset['previewId'],
             href: element.href,
           };
         },
