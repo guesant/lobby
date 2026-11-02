@@ -1,6 +1,7 @@
-type UptimeUnit = 'years' | 'months' | 'days';
-
-type UptimeParts = Record<UptimeUnit, number>;
+import type { UptimeParts } from './uptime.types.ts';
+import { uptimeAnniversary } from './uptime-anniversary.model.ts';
+import { uptimeMonthiversary } from './uptime-monthiversary.model.ts';
+import { utcDate } from './utc-date.model.ts';
 
 export function elapsedParts(birthDate: string, now: Date): UptimeParts {
   const [
@@ -10,48 +11,30 @@ export function elapsedParts(birthDate: string, now: Date): UptimeParts {
   ] = birthDate.split('-')
     .map(Number);
 
-  const today = new Date(
-    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()),
-  );
+  const today = utcDate(now);
 
-  let years = today.getUTCFullYear() - year;
-
-  let anniversary = new Date(Date.UTC(year + years, month - 1, day));
-
-  if (anniversary > today) {
-    years -= 1;
-    anniversary = new Date(Date.UTC(year + years, month - 1, day));
-  }
-
-  let months =
-    (today.getUTCFullYear() - anniversary.getUTCFullYear()) * 12 +
-    today.getUTCMonth() -
-    anniversary.getUTCMonth();
-
-  let monthiversary = new Date(
-    Date.UTC(
-      anniversary.getUTCFullYear(),
-      anniversary.getUTCMonth() + months,
+  const anniversary = uptimeAnniversary(
+    {
+      year,
+      month,
       day,
-    ),
+    },
+    today,
   );
 
-  if (monthiversary > today) {
-    months -= 1;
-    monthiversary = new Date(
-      Date.UTC(
-        anniversary.getUTCFullYear(),
-        anniversary.getUTCMonth() + months,
-        day,
-      ),
-    );
-  }
+  const monthiversary = uptimeMonthiversary(
+    anniversary.anniversary,
+    today,
+    day,
+  );
 
-  const days = (today.getTime() - monthiversary.getTime()) / 86400000;
+  const elapsedTime = today.getTime() - monthiversary.monthiversary.getTime();
+
+  const days = elapsedTime / 86400000;
 
   return {
-    years,
-    months,
+    years: anniversary.years,
+    months: monthiversary.months,
     days,
   };
 }

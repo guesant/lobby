@@ -8,15 +8,15 @@ export { terminalEntries as entries } from '#lib/features/navigation/entries.ser
 export async function load(event: PageServerLoadEvent): Promise<PageLoadData> {
   const params = event.params;
 
-  const page = await loadPageData(
-    [
-      params.locale,
-      'terminal',
-      params.path,
-    ]
-      .filter(Boolean)
-      .join('/'),
-  );
+  const routeParts = [
+    params.locale,
+    'terminal',
+    params.path,
+  ].filter(Boolean);
+
+  const route = routeParts.join('/');
+
+  const page = await loadPageData(route);
 
   if (!page) {
     error(404, 'Page not found');

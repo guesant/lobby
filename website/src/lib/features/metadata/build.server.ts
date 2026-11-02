@@ -1,6 +1,9 @@
 import { type PageLoadData, type SiteData } from '../content/content.types.ts';
-import { textOr } from '../content/text.model.ts';
-import { requiredText } from '../content/validation.model.ts';
+import { localizedText } from '../content/localized-text.model.ts';
+import { textOr } from '../content/text-or.model.ts';
+import { buildLabel } from './build-label.server.ts';
+import { commitLabel } from './commit-label.server.ts';
+import { workflowURL } from './workflow-url.server.ts';
 
 export function buildMetadata(
   data: SiteData,
@@ -13,41 +16,20 @@ export function buildMetadata(
 
   const runID = process.env['GITHUB_RUN_ID'] ?? '';
 
-  function uiText(key: string): string {
-    return requiredText(localized.ui[key], `links.locales.${locale}.ui.${key}`);
-  }
-
-  function resolveCommitLabel(): string {
-    if (commitSHA.length > 7) {
-      return commitSHA.slice(0, 7);
-    }
-
-    return uiText('local_commit');
-  }
-
-  function resolveWorkflowURL(): string {
-    if (runID) {
-      return `${repositoryURL}/actions/runs/${runID}`;
-    }
-
-    return repositoryURL;
-  }
-
-  function resolveBuildLabel(): string {
-    if (runID) {
-      return uiText('footer_workflow');
-    }
-
-    return uiText('local_build');
-  }
+  const runNumber = textOr(process.env['GITHUB_RUN_NUMBER'], runID);
 
   const build = {
-    commitLabel: resolveCommitLabel(),
+    commitLabel: commitLabel(commitSHA, localized.ui, locale),
     commitURL: `${repositoryURL}/commit/${commitSHA}`,
-    versionLabel: uiText('footer_version'),
-    workflowLabel: uiText('footer_workflow'),
-    buildLabel: resolveBuildLabel(),
-    workflowURL: resolveWorkflowURL(),
+    versionLabel: localizedText(localized.ui, locale, 'footer_version'),
+    workflowLabel: localizedText(localized.ui, locale, 'footer_workflow'),
+    buildLabel: buildLabel({
+      locale,
+      localized: localized.ui,
+      runID,
+      runNumber,
+    }),
+    workflowURL: workflowURL(repositoryURL, runID),
   };
 
   return build;

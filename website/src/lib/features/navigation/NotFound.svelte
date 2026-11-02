@@ -1,10 +1,12 @@
 <script lang="ts">
   import '../../../assets/css/not-found.css';
-  import { textOr } from '../content/text.model.ts';
-  import { initializeErrorPage } from '#lib/browser/error-page.ts';
+  import { textOr } from '../content/text-or.model.ts';
+  import { errorHomeURL } from './error-home-url.viewmodel.ts';
+  import { errorInterfaceName } from './error-interface-name.viewmodel.ts';
+  import { selectedErrorLocale } from './selected-error-locale.viewmodel.ts';
+  import { syncErrorPage } from './sync-error-page.ts';
   import NavigationLink from '#lib/components/NavigationLink.svelte';
   import type { ErrorLocale } from '#lib/features/navigation/not-found.model.ts';
-  import { onMount } from 'svelte';
 
   const {
     locales,
@@ -14,36 +16,18 @@
     status?: number;
   } = $props();
 
-  let selected = $state('');
-
-  let terminal = $state(false);
-
-  onMount((): void => {
-    const presentation = initializeErrorPage(locales);
-
-    selected = presentation.selected;
-    terminal = presentation.terminal;
+  const state = $state({
+    selected: '',
+    terminal: false,
   });
 
-  function homeURL(locale: ErrorLocale): string {
-    if (terminal) {
-      return `${locale.home}terminal/`;
-    }
+  const getLanguagesLabel = (): string => {
+    const selectedLocale = selectedErrorLocale(locales, state.selected);
 
-    return locale.home;
-  }
+    return textOr(selectedLocale?.languagesLabel, 'Languages');
+  };
 
-  function interfaceName(): string {
-    if (terminal) {
-      return 'terminal';
-    }
-
-    if (selected) {
-      return 'minecraft';
-    }
-
-    return 'neutral';
-  }
+  const languagesLabel = $derived.by(getLanguagesLabel);
 </script>
 
 <svelte:head>
@@ -51,12 +35,19 @@
   <meta name="robots" content="noindex, follow" />
 </svelte:head>
 
-<main class="not-found" data-error-interface={interfaceName()}>
+<main
+  class="not-found"
+  data-error-interface={errorInterfaceName(state)}
+  use:syncErrorPage={{
+    locales,
+    state,
+  }}
+>
   <p class="not-found-code">{status}</p>
   {#each locales as locale (locale.id)}
     <section
       lang={locale.id}
-      hidden={Boolean(selected && selected !== locale.id)}
+      hidden={Boolean(state.selected && state.selected !== locale.id)}
     >
       {#if status === 404}
         <h1>{locale.title}</h1>
@@ -65,19 +56,17 @@
         <h1>{locale.errorTitle}</h1>
         <p>{locale.errorDescription}</p>
       {/if}
-      <NavigationLink href={homeURL(locale)}>{locale.homeLabel}</NavigationLink>
+      <NavigationLink href={errorHomeURL(locale, state.terminal)}>
+        {locale.homeLabel}
+      </NavigationLink>
     </section>
   {/each}
-  <nav
-    aria-label={textOr(
-      locales.find((locale): boolean => {
-        return locale.id === selected;
-      })?.languagesLabel,
-      'Languages',
-    )}
-  >
+  <nav aria-label={languagesLabel}>
     {#each locales as locale (locale.id)}
-      <NavigationLink lang={locale.id} href={homeURL(locale)}>
+      <NavigationLink
+        lang={locale.id}
+        href={errorHomeURL(locale, state.terminal)}
+      >
         {locale.name}
       </NavigationLink>
     {/each}

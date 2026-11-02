@@ -24,11 +24,17 @@ export function initializeErrorPage(locales: ErrorLocale[]): {
     document.documentElement.dataset['errorAppearance'] = 'system';
   }
 
+  let selected = '';
+
+  for (const locale of locales) {
+    if (locale.id === parts[0]) {
+      selected = locale.id;
+      break;
+    }
+  }
+
   return {
-    selected:
-      locales.find((locale): boolean => {
-        return locale.id === parts[0];
-      })?.id ?? '',
+    selected,
     terminal: parts[1] === 'terminal',
   };
 }

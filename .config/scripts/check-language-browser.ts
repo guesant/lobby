@@ -1,4 +1,4 @@
-import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { dialogIsOpen } from './browser-dom.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import { useBrowserLanguages } from './browser-presentation.ts';

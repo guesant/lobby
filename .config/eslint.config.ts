@@ -1,6 +1,8 @@
 import { blockDirectiveNewline } from './eslint-rules/block-directive-newline.ts';
 import { multilineStructures } from './eslint-rules/layout.ts';
 import noNarrativeComments from './eslint-rules/no-narrative-comments.ts';
+import noNestedCallArguments from './eslint-rules/no-nested-call-arguments.ts';
+import oneFunctionPerFile from './eslint-rules/one-function-per-file.ts';
 import statementSpacing from './eslint-rules/statement-spacing.ts';
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
@@ -98,6 +100,8 @@ export default [
         rules: {
           ...statementSpacing.rules,
           'no-narrative-comments': noNarrativeComments,
+          ...noNestedCallArguments.rules,
+          ...oneFunctionPerFile.rules,
           'multiline-structures': multilineStructures,
           'block-directive-newline': blockDirectiveNewline,
         },
@@ -175,6 +179,17 @@ export default [
             'import',
             'cjs-import',
           ],
+        },
+        {
+          blankLine: 'never',
+          prev: {
+            selector:
+              ':matches(ExportNamedDeclaration[source!=null], ExportAllDeclaration)',
+          },
+          next: {
+            selector:
+              ':matches(ExportNamedDeclaration[source!=null], ExportAllDeclaration)',
+          },
         },
       ],
       '@stylistic/lines-between-class-members': [
@@ -308,6 +323,33 @@ export default [
       ],
       'svelte/no-navigation-without-resolve': 'error',
       'svelte/require-each-key': 'error',
+    },
+  },
+  {
+    files: [
+      'website/src/**/*.{js,mjs,cjs,ts,mts,cts,svelte}',
+      '.config/scripts/**/*.{js,mjs,cjs,ts,mts,cts}',
+    ],
+    ignores: [
+      '**/*.test.*',
+      '**/fixtures/**',
+      '.config/scripts/accessibility-*.ts',
+      '.config/scripts/audit-browser.ts',
+      '.config/scripts/browser-*.ts',
+      '.config/scripts/check-*.ts',
+      '.config/scripts/layout-*.ts',
+    ],
+    rules: {
+      'lobby/one-function-per-file': 'error',
+      'lobby/one-class-per-file': 'error',
+      'lobby/no-nested-call-arguments': 'error',
+      'func-style': [
+        'error',
+        'declaration',
+        {
+          allowArrowFunctions: true,
+        },
+      ],
     },
   },
   {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { internalPath } from './internal-path.model.ts';
   import { resolve } from '$app/paths';
   import type { Snippet } from 'svelte';
   import type { HTMLAnchorAttributes } from 'svelte/elements';
@@ -12,14 +13,12 @@
     href: string;
     children?: Snippet;
   } = $props();
-
-  function internalPath(value: string): boolean {
-    return value.startsWith('/') && !value.startsWith('//');
-  }
 </script>
 
 {#if internalPath(href)}
-  <a {...attributes} href={resolve(href.slice(1))} {rel}>
+  {@const path = href.slice(1)}
+  {@const destination = resolve(path)}
+  <a {...attributes} href={destination} {rel}>
     {@render children?.()}
   </a>
 {:else if href.startsWith('#')}

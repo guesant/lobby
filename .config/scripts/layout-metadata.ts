@@ -1,5 +1,5 @@
 import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
-import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { localizedURL, pagesFor } from './configuration.ts';
 import type { LayoutRoute } from './layout-types.ts';
 import assert from 'node:assert/strict';

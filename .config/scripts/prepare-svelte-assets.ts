@@ -12,13 +12,17 @@ await mkdir(generated, {
   recursive: true,
 });
 
-const rail = sharp(resolve(ui, 'suspension-rail.png'));
+const railPath = resolve(ui, 'suspension-rail.png');
+
+const rail = sharp(railPath);
 
 const railMetadata = await rail.metadata();
 
-const rawGeometry: unknown = JSON.parse(
-  await readFile(resolve(ui, 'suspension-rail.json'), 'utf8'),
-);
+const geometryPath = resolve(ui, 'suspension-rail.json');
+
+const geometrySource = await readFile(geometryPath, 'utf8');
+
+const rawGeometry: unknown = JSON.parse(geometrySource);
 
 const geometryRecord = record(rawGeometry, 'rail geometry');
 
@@ -51,13 +55,15 @@ for (const [
 
   const path = resolve(generated, `rail-${name}.png`);
 
-  await sharp(resolve(ui, 'suspension-rail.png'))
-    .extract({
-      left: railLeft,
-      top: slice['top'],
-      width: geometry.width,
-      height: slice['height'],
-    })
+  const sliceOptions = {
+    left: railLeft,
+    top: slice['top'],
+    width: geometry.width,
+    height: slice['height'],
+  };
+
+  await sharp(railPath)
+    .extract(sliceOptions)
     .png({
       compressionLevel: 9,
       adaptiveFiltering: true,
@@ -77,6 +83,8 @@ for (const [
   pngPath,
 ] of Object.entries(losslessImages)) {
   const webpPath = resolve(generated, `${name}.webp`);
+
+  const pngInfo = await stat(pngPath);
 
   await sharp(pngPath)
     .webp({
@@ -99,6 +107,8 @@ for (const [
       resolveWithObject: true,
     });
 
+  const webpInfo = await stat(webpPath);
+
   for (let index = 0; index < png.data.length; index += 4) {
     if (png.data[index + 3] === 0 && webp.data[index + 3] === 0) {
       png.data.fill(0, index, index + 3);
@@ -114,7 +124,7 @@ for (const [
     throw new Error(`Lossless WebP changed pixels: ${name}`);
   }
 
-  if ((await stat(webpPath)).size >= (await stat(pngPath)).size) {
+  if (webpInfo.size >= pngInfo.size) {
     throw new Error(`Lossless WebP is not smaller: ${name}`);
   }
 }
@@ -124,6 +134,8 @@ for (const [
   path,
   options,
 ] of imagesToGenerate) {
+  const outputPath = resolve(generated, name);
+
   let image = sharp(path);
 
   if (options.extract) {
@@ -135,7 +147,7 @@ for (const [
     .webp({
       quality: 82,
     })
-    .toFile(resolve(generated, name));
+    .toFile(outputPath);
 }
 
 for (const [
@@ -180,12 +192,14 @@ for (const [
   string,
   ResizeOptions,
 ][]) {
+  const outputPath = resolve(generated, name);
+
   await sharp(path)
     .resize(resize)
     .webp({
       quality: 78,
     })
-    .toFile(resolve(generated, name));
+    .toFile(outputPath);
 }
 
 for (const [
@@ -230,11 +244,13 @@ for (const [
   string,
   ResizeOptions,
 ][]) {
+  const outputPath = resolve(generated, name);
+
   await sharp(path)
     .resize(resize)
     .webp({
       quality: 48,
       effort: 4,
     })
-    .toFile(resolve(generated, name));
+    .toFile(outputPath);
 }

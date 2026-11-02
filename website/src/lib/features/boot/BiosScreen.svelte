@@ -2,6 +2,10 @@
   import { createBootController } from './boot.controller.ts';
   import { bootModules } from './boot.model.ts';
   import { createBootViewModel } from './boot.viewmodel.svelte.ts';
+  import type { BootControllerState } from './boot-controller.types.ts';
+  import { cancelBoot } from './cancel-boot.ts';
+  import { finishBootForReducedMotion } from './finish-boot-for-reduced-motion.ts';
+  import { syncBootDialog } from './sync-boot-dialog.ts';
   import { registerBootNavigation } from '#lib/browser/boot-navigation.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
   import { page } from '$app/state';
@@ -15,72 +19,46 @@
 
   const preferences = interfaceState();
 
-  let dialog = $state<HTMLDialogElement>();
-
   const model = createBootViewModel();
 
   const step = $derived(model.step);
 
-  const actions = createBootController(model, {
-    canStart(): boolean {
-      return (
-        Boolean(dialog?.isConnected) &&
-        preferences.motion !== 'off' &&
-        !preferences.reducedMotion
-      );
-    },
+  const getProgress = (): string => {
+    const length = Math.max(0, step - 17);
+
+    return '█'.repeat(length);
+  };
+
+  const progress = $derived.by(getProgress);
+
+  const runtime = $state<BootControllerState>({
+    model,
+    preferences,
+    previous: null,
   });
 
-  let previous: HTMLElement | null = null;
+  const actions = createBootController(runtime);
 
-  function finish(): void {
-    actions.finish();
-  }
+  const syncDialog = syncBootDialog.bind(null, runtime, preferences);
 
-  $effect((): void => {
-    if (!dialog) {
-      return;
-    }
+  const finishReducedMotion = finishBootForReducedMotion.bind(
+    null,
+    model,
+    preferences,
+    actions,
+  );
 
-    if (model.running) {
-      if (document.activeElement instanceof HTMLElement) {
-        previous = document.activeElement;
-      }
-
-      preferences.dialog = 'none';
-      dialog.showModal();
-
-      return;
-    }
-
-    dialog.close();
-
-    if (previous?.isConnected) {
-      previous.focus();
-    }
-
-    previous = null;
-  });
+  $effect(syncDialog);
 
   registerBootNavigation(actions.start);
 
-  $effect((): void => {
-    if (
-      model.running &&
-      (preferences.motion === 'off' || preferences.reducedMotion)
-    ) {
-      finish();
-    }
-  });
+  $effect(finishReducedMotion);
   onDestroy(actions.destroy);
 </script>
 
 <dialog
-  bind:this={dialog}
-  oncancel={(event): void => {
-    event.preventDefault();
-    finish();
-  }}
+  bind:this={runtime.dialog}
+  oncancel={cancelBoot.bind(null, actions)}
   id="bios-dialog"
   class="bios-dialog"
   aria-labelledby="bios-title"
@@ -122,7 +100,7 @@
         Starting interface: <span data-bios-interface>
           {page.data.interfaceName}
         </span>
-        <span data-bios-progress>{'█'.repeat(Math.max(0, step - 17))}</span>
+        <span data-bios-progress>{progress}</span>
         <span class="bios-cursor"></span>
       </p>
     </div>
@@ -130,7 +108,7 @@
       {ui['bios_status']}
     </p>
     <footer class="bios-footer">
-      <button type="button" data-bios-skip onclick={finish}>
+      <button type="button" data-bios-skip onclick={actions.finish}>
         {ui['bios_skip']} · Esc
       </button>
       <span>Automatic startup sequence</span>

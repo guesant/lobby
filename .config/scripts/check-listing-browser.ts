@@ -1,5 +1,5 @@
 import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
-import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { required } from './asset-data.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import {

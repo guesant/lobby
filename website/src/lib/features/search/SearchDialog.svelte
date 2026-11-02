@@ -1,13 +1,17 @@
 <script lang="ts">
+  import { dialogBackdrop } from '../../browser/dialog.ts';
+  import { navigationOrigin } from '../../browser/origin.ts';
+  import { searchKeydown } from '../../browser/search-keyboard.ts';
+  import IconButton from '../../components/IconButton.svelte';
+  import NavigationLink from '../../components/NavigationLink.svelte';
   import type { PageLoadData } from '../content/content.types.ts';
+  import { interfaceState } from '../preferences/preferences.viewmodel.svelte.ts';
+  import { closeSearchDialog } from './close-search-dialog.ts';
   import { createSearchController } from './search.controller.ts';
   import { createSearchViewModel } from './search.viewmodel.svelte.ts';
-  import { dialogBackdrop, showDialog } from '#lib/browser/dialog.ts';
-  import { navigationOrigin } from '#lib/browser/origin.ts';
-  import { searchKeydown } from '#lib/browser/search-keyboard.ts';
-  import IconButton from '#lib/components/IconButton.svelte';
-  import NavigationLink from '#lib/components/NavigationLink.svelte';
-  import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
+  import type { SearchDialogContext } from './search-dialog-context.types.ts';
+  import { searchIndexURL } from './search-index-url.ts';
+  import { syncSearchDialog } from './sync-search-dialog.ts';
   import { onDestroy } from 'svelte';
 
   const {
@@ -18,57 +22,38 @@
 
   const ui = interfaceState();
 
-  const model = createSearchViewModel((): PageLoadData => {
-    return data;
-  }, navigationOrigin);
+  const origin = navigationOrigin();
+
+  const model = createSearchViewModel(origin);
+
+  const closeDialog = closeSearchDialog.bind(null, ui);
 
   const actions = createSearchController(model.state, {
-    indexURL(): string {
-      return `/search/${data.locale}-${data.interfaceName}.json`;
-    },
-    closeDialog(): void {
-      ui.dialog = 'none';
-    },
+    indexURL: searchIndexURL,
+    closeDialog,
   });
 
-  let dialog = $state<HTMLDialogElement>();
-
-  let input = $state<HTMLInputElement>();
-
-  function keydown(event: KeyboardEvent): void {
-    searchKeydown(event, {
-      dialog,
-      input,
-    });
-  }
-
-  $effect((): void => {
-    const opened = ui.dialog === 'search';
-
-    showDialog(dialog, opened);
-
-    if (opened) {
-      input?.focus();
-      void actions.prepare();
-    }
+  const context = $state<SearchDialogContext>({
+    dialog: undefined,
+    input: undefined,
   });
+
+  const syncDialog = syncSearchDialog.bind(null, context, ui, actions);
+
+  $effect(syncDialog);
 
   onDestroy(actions.destroy);
 </script>
 
 <dialog
-  bind:this={dialog}
+  bind:this={context.dialog}
   class="app-dialog search-dialog"
   id="search-dialog"
   aria-labelledby="search-title"
-  onclose={(): void => {
-    if (!dialog?.open) {
-      actions.close();
-    }
-  }}
+  onclose={actions.close}
   oncancel={actions.close}
   onclick={dialogBackdrop}
-  onkeydown={keydown}
+  onkeydown={searchKeydown}
 >
   <div class="app-dialog-content">
     <header class="app-dialog-header">
@@ -87,7 +72,7 @@
       {model.labels['search']}
     </label>
     <input
-      bind:this={input}
+      bind:this={context.input}
       bind:value={model.state.query}
       id="search-query"
       type="search"
@@ -124,9 +109,7 @@
       class="ui-button search-retry"
       data-search-retry
       hidden={model.state.phase !== 'error'}
-      onclick={(): void => {
-        void actions.load();
-      }}
+      onclick={actions.load}
     >
       {model.labels['search_retry']}
     </button>

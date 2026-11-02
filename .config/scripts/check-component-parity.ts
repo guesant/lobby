@@ -1,9 +1,9 @@
 import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
-import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import { applyLinkPresentation, withBrowser } from './browser-presentation.ts';
 import { readConfiguration } from './configuration.ts';
-import { inspectControlReadiness } from './control-readiness.ts';
+import { inspectControlReadiness } from './fixtures/control-readiness.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { resolve } from 'node:path';

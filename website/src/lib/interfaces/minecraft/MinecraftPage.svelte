@@ -9,8 +9,8 @@
   import { progressiveScene } from '#lib/browser/progressive-scene.ts';
   import { suspensionRails } from '#lib/browser/suspension-rails.ts';
   import { tooltip } from '#lib/browser/tooltip.ts';
-  import BuildMetadata from '#lib/components/BuildMetadata.svelte';
   import EditorialList from '#lib/components/EditorialList.svelte';
+  import FooterMetadata from '#lib/components/FooterMetadata.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import IconButton from '#lib/components/IconButton.svelte';
   import LinkList from '#lib/components/LinkList.svelte';
@@ -22,41 +22,33 @@
   import SectionCard from '#lib/components/SectionCard.svelte';
   import SuspensionRails from '#lib/components/SuspensionRails.svelte';
   import { reboot } from '#lib/features/boot/reboot.controller.ts';
-  import FederationStatus from '#lib/features/content/FederationStatus.svelte';
   import Uptime from '#lib/features/content/Uptime.svelte';
   import { requiredText } from '#lib/features/content/validation.model.ts';
   import { emptyActionFor } from '#lib/features/listings/listing.model.ts';
   import { pagePresentation } from '#lib/features/listings/page.viewmodel.ts';
   import { profileInitials } from '#lib/features/listings/presentation.model.ts';
+  import { openDialog } from '#lib/features/preferences/open-dialog.controller.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
 
   const state = interfaceState();
 
   const data: PageLoadData = $props();
 
-  const {
-    config,
-    editorialUI,
-    localized,
-    build,
-    locale,
-    page,
-    homeSections,
-    quickLinks,
-    links,
-    editorial,
-    now,
-  } = $derived(data);
-
-  const home = $derived(page.id === 'home');
+  const home = $derived(data.page.id === 'home');
 
   const profile = $derived({
-    ...config.profile,
-    bio: localized.profile.bio,
-    birthDate: config.profile.birth_date,
+    ...data.config.profile,
+    bio: data.localized.profile.bio,
+    birthDate: data.config.profile.birth_date,
   });
 
-  const presentation = $derived(pagePresentation(data, navigationOrigin()));
+  const createPresentation = (): ReturnType<typeof pagePresentation> => {
+    const origin = navigationOrigin();
+
+    return pagePresentation(data, origin);
+  };
+
+  const presentation = $derived.by(createPresentation);
 
   const nowActivities = $derived(presentation.nowActivities);
 
@@ -65,12 +57,10 @@
   const lanternCount = $derived(presentation.lanternCount);
 
   const destination = $derived(presentation.destination);
-
-  const uiText = $derived(presentation.text);
 </script>
 
 <NavigationLink class="skip-link" href="#main-content">
-  {localized.ui['skip_link']}
+  {data.localized.ui['skip_link']}
 </NavigationLink>
 <div class="world-scene" aria-hidden="true" {@attach progressiveScene}>
   <div class="world-landscape"></div>
@@ -100,8 +90,14 @@
         <p class="profile-username">@{profile.username}</p>
         <p class="profile-bio">{profile.bio}</p>
         <p class="profile-uptime">
-          <OrnamentLabel as="span" label={uiText('uptime_label')} />
-          <Uptime birthDate={profile.birthDate} {locale} />
+          <OrnamentLabel
+            as="span"
+            label={requiredText(
+              data.localized.ui['uptime_label'],
+              `locales.$locale={data.locale}.ui.uptime_label`,
+            )}
+          />
+          <Uptime birthDate={profile.birthDate} locale={data.locale} />
         </p>
         <nav
           class="profile-navigation"
@@ -109,24 +105,30 @@
         >
           <OrnamentLabel
             id="profile-navigation-title"
-            label={uiText('navigation_label')}
+            label={requiredText(
+              data.localized.ui['navigation_label'],
+              `locales.$locale={data.locale}.ui.navigation_label`,
+            )}
           />
           <NavigationLinks
             pages={navigationPages}
-            currentID={page.id}
+            currentID={data.page.id}
             placement="header"
           />
         </nav>
         <OrnamentLabel
           id="profile-quick-access-title"
-          label={uiText('quick_access_title')}
+          label={requiredText(
+            data.localized.ui['quick_access_title'],
+            `locales.$locale={data.locale}.ui.quick_access_title`,
+          )}
         />
         <div
           class="quick-contacts"
           role="group"
           aria-labelledby="profile-quick-access-title"
         >
-          {#each quickLinks as item (item.id)}
+          {#each data.quickLinks as item (item.id)}
             <NavigationLink
               class="quick-contact-link"
               href={destination(item).href}
@@ -151,7 +153,7 @@
           <section class="presentation-group">
             <header class="section-toolbar">
               <h2 class="section-toolbar-title" id="presentation-title">
-                {localized.presentation.title}
+                {data.localized.presentation.title}
               </h2>
             </header>
             <section
@@ -161,7 +163,7 @@
             >
               <div class="about-context-grid">
                 <ul class="about-facts">
-                  {#each localized.presentation.facts as fact (fact.text)}
+                  {#each data.localized.presentation.facts as fact (fact.text)}
                     <li class="about-fact">
                       <span class="about-fact-icon">
                         <Icon name={fact.icon} optical />
@@ -173,10 +175,10 @@
                 <section class="about-site">
                   <h3 class="about-site-title">
                     <IconButton name="target" />
-                    <span>{localized.presentation.site_title}</span>
+                    <span>{data.localized.presentation.site_title}</span>
                   </h3>
                   <ul class="about-topics">
-                    {#each localized.presentation.topics as topic (topic)}
+                    {#each data.localized.presentation.topics as topic (topic)}
                       <li>
                         <span class="about-topic-check">
                           <Icon name="check" optical />
@@ -191,24 +193,24 @@
           </section>
           <header class="section-toolbar">
             <h2 class="section-toolbar-title" id="home-categories-title">
-              {localized.ui['home_sections_label']}
+              {data.localized.ui['home_sections_label']}
             </h2>
           </header>
-          <LinkView ui={localized.ui} pageKey="sections" />
+          <LinkView ui={data.localized.ui} pageKey="sections" />
           <section
             class="home-categories"
             id="home-categories"
             aria-labelledby="home-categories-title"
           >
             <div class="category-grid">
-              {#each homeSections as section, index (section.page.id)}
+              {#each data.homeSections as section, index (section.page.id)}
                 <SectionCard
                   page={section.page}
                   items={section.links}
                   editorial={section.editorial}
-                  {editorialUI}
-                  thirdPartyLabel={localized.ui.third_party}
-                  {locale}
+                  editorialUI={data.editorialUI}
+                  thirdPartyLabel={data.localized.ui.third_party}
+                  locale={data.locale}
                   {destination}
                   {index}
                 />
@@ -221,9 +223,9 @@
                 page={entry}
                 items={entry.nowLinks}
                 editorial={[]}
-                {editorialUI}
-                thirdPartyLabel={localized.ui.third_party}
-                {locale}
+                editorialUI={data.editorialUI}
+                thirdPartyLabel={data.localized.ui.third_party}
+                locale={data.locale}
                 {destination}
                 update
               />
@@ -231,28 +233,30 @@
                 <article class="now-activity">
                   <NowActivity
                     entries={nowActivities}
-                    labels={editorialUI}
+                    labels={data.editorialUI}
                     className=""
                   />
                 </article>
               {/if}
             </section>
           {/each}
-        {:else if page.id === 'now'}
+        {:else if data.page.id === 'now'}
           <section class="presentation-group page-introduction">
             <header class="section-toolbar">
-              <h1 class="section-toolbar-title" id="now-title">{now.title}</h1>
+              <h1 class="section-toolbar-title" id="now-title">
+                {data.now.title}
+              </h1>
             </header>
             <div
               class="presentation page-introduction-content"
               data-rail-anchor
             >
-              <p class="presentation-intro">{now.intro}</p>
+              <p class="presentation-intro">{data.now.intro}</p>
             </div>
           </section>
           <article class="presentation" aria-labelledby="now-title">
             <div class="presentation-focus">
-              {#each now.sections as section (section.id)}
+              {#each data.now.sections as section (section.id)}
                 <section class="presentation-focus-item" id="now-{section.id}">
                   <span class="presentation-focus-marker"></span>
                   <div class="presentation-focus-copy">
@@ -263,7 +267,7 @@
               {/each}
             </div>
             {#if nowActivities.length}
-              <NowActivity entries={nowActivities} labels={editorialUI} />
+              <NowActivity entries={nowActivities} labels={data.editorialUI} />
             {/if}
           </article>
         {:else}
@@ -273,43 +277,46 @@
           >
             <header class="section-toolbar">
               <h1 class="section-toolbar-title" id="page-title">
-                {page.title}
+                {data.page.title}
               </h1>
             </header>
             <div
               class="presentation page-introduction-content"
               data-rail-anchor
             >
-              <p class="presentation-intro">{page.description}</p>
+              <p class="presentation-intro">{data.page.description}</p>
             </div>
           </section>
           <section class="link-sections" aria-labelledby="page-title">
-            <section class="link-section" id={page.id}>
-              <LinkView ui={localized.ui} pageKey={page.id} /><LinkList
-                items={links}
-                ui={editorialUI}
-                thirdPartyLabel={localized.ui.third_party}
+            <section class="link-section" id={data.page.id}>
+              <LinkView
+                ui={data.localized.ui}
+                pageKey={data.page.id}
+              /><LinkList
+                items={data.links}
+                ui={data.editorialUI}
+                thirdPartyLabel={data.localized.ui.third_party}
                 {destination}
-                sectionID={page.id}
+                sectionID={data.page.id}
                 headingLevel={2}
               /><EditorialList
-                items={editorial}
-                ui={editorialUI}
-                thirdPartyLabel={localized.ui.third_party}
-                sectionID={page.id}
-                {locale}
+                items={data.editorial}
+                ui={data.editorialUI}
+                thirdPartyLabel={data.localized.ui.third_party}
+                sectionID={data.page.id}
+                locale={data.locale}
                 interfaceName="minecraft"
                 {destination}
                 headingLevel={2}
                 emptyAction={emptyActionFor({
                   home: false,
-                  pageURL: page.url,
-                  homeURL: `/${locale}/`,
-                  sectionID: page.id,
-                  linksCount: links.length,
-                  ui: editorialUI,
+                  pageURL: data.page.url,
+                  homeURL: `/${data.locale}/`,
+                  sectionID: data.page.id,
+                  linksCount: data.links.length,
+                  ui: data.editorialUI,
                 })}
-                empty={!links.length}
+                empty={!data.links.length}
               />
             </section>
           </section>
@@ -325,27 +332,28 @@
       <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
         <OrnamentLabel
           id="footer-navigation-title"
-          label={uiText('navigation_label')}
+          label={requiredText(
+            data.localized.ui['navigation_label'],
+            `locales.$locale={data.locale}.ui.navigation_label`,
+          )}
           variant="footer"
         />
         <NavigationLinks
           pages={navigationPages}
-          currentID={page.id}
+          currentID={data.page.id}
           placement="footer"
         />
       </nav>
       <nav
         class="site-footer-content"
-        aria-label={localized.ui['footer_aria_label']}
+        aria-label={data.localized.ui['footer_aria_label']}
       >
         <button
           class="site-footer-button icon-control"
           type="button"
           data-search-open
-          onclick={(): void => {
-            state.dialog = 'search';
-          }}
-          aria-label={editorialUI['search']}
+          onclick={openDialog.bind(null, state, 'search')}
+          aria-label={data.editorialUI['search']}
           data-tooltip
           {@attach tooltip}
         >
@@ -353,50 +361,46 @@
         </button>
         <NavigationLink
           class="site-footer-repository icon-control"
-          href={`https://github.com/${config.site.repository}`}
+          href={`https://github.com/${data.config.site.repository}`}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={localized.ui['footer_repository']}
+          aria-label={data.localized.ui['footer_repository']}
           data-tooltip
           {@attach tooltip}
         >
           <IconButton name="github" />
           <span class="control-tooltip" aria-hidden="true">
-            {localized.ui['footer_repository']}
+            {data.localized.ui['footer_repository']}
           </span>
         </NavigationLink>
         <button
           class="site-footer-link site-footer-button icon-control"
           type="button"
-          aria-label={localized.ui['credits']}
+          aria-label={data.localized.ui['credits']}
           data-tooltip
           {@attach tooltip}
           data-dialog-open="credits-dialog"
           data-credits-open
-          onclick={(): void => {
-            state.dialog = 'credits';
-          }}
+          onclick={openDialog.bind(null, state, 'credits')}
         >
           <IconButton name="scale-balanced" />
           <span class="control-tooltip" aria-hidden="true">
-            {localized.ui['credits']}
+            {data.localized.ui['credits']}
           </span>
         </button>
         <button
           class="site-footer-link site-footer-button icon-control"
           type="button"
-          aria-label={localized.ui['settings_label']}
+          aria-label={data.localized.ui['settings_label']}
           data-tooltip
           {@attach tooltip}
           data-dialog-open="settings-dialog"
           data-settings-open
-          onclick={(): void => {
-            state.dialog = 'settings';
-          }}
+          onclick={openDialog.bind(null, state, 'settings')}
         >
           <IconButton name="gear" />
           <span class="control-tooltip" aria-hidden="true">
-            {localized.ui['settings_label']}
+            {data.localized.ui['settings_label']}
           </span>
         </button>
         <NavigationLink
@@ -406,30 +410,16 @@
           data-sveltekit-reload
           data-tooltip
           {@attach tooltip}
-          href={`${page.url}?lobby-boot=1`}
-          aria-label={editorialUI['reboot']}
+          href={`${data.page.url}?lobby-boot=1`}
+          aria-label={data.editorialUI['reboot']}
         >
           <IconButton name="desktop" />
         </NavigationLink>
       </nav>
-      <BuildMetadata
-        {build}
-        localCommitLabel={requiredText(
-          localized.ui['local_commit'],
-          'local commit label',
-        )}
+      <FooterMetadata
+        {data}
+        translationDisclaimer={data.localized.ui['translation_disclaimer']}
       />
-      {#if localized.ui['translation_disclaimer']}
-        <p class="translation-disclaimer">
-          {localized.ui['translation_disclaimer']}
-        </p>
-      {/if}
-      <FederationStatus
-        sources={data.federationStatus}
-        labels={editorialUI}
-        {locale}
-      />
-      <p class="brand-disclaimer">{localized.ui['brand_disclaimer']}</p>
     </footer>
   </div>
 </div>

@@ -1,47 +1,16 @@
 import type { PageLoadData } from '../content/content.types.ts';
-import type { Appearance } from './preferences.model.ts';
+import type { SettingsViewModel } from './settings.types.ts';
+import { settingsLanguageRoutes } from './settings-language-routes.viewmodel.ts';
+import { settingsThemes } from './settings-themes.viewmodel.ts';
 
-type SettingsViewModel = {
-  terminal: boolean;
-  languageRoutes: (PageLoadData['languageRoutes'][number] & {
-    url: string;
-  })[];
-  themes: {
-    value: Appearance;
-    label: string;
-  }[];
-};
+export type { SettingsViewModel } from './settings.types.ts';
 
 export function settingsPresentation(page: PageLoadData): SettingsViewModel {
-  const themes: Appearance[] = [
-    'system',
-    'dark',
-    'light',
-  ];
-
   const terminal = page.interfaceName === 'terminal';
 
   return {
     terminal,
-    languageRoutes: page.languageRoutes.map(
-      (route): SettingsViewModel['languageRoutes'][number] => {
-        let url = route.standardURL;
-
-        if (terminal) {
-          url = route.terminalURL;
-        }
-
-        return {
-          ...route,
-          url,
-        };
-      },
-    ),
-    themes: themes.map((value): SettingsViewModel['themes'][number] => {
-      return {
-        value,
-        label: page.localized.ui[`theme_${value}`] ?? '',
-      };
-    }),
+    languageRoutes: settingsLanguageRoutes(page, terminal),
+    themes: settingsThemes(page),
   };
 }

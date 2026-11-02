@@ -1,22 +1,19 @@
-import type { PageLoadData } from '../features/content/content.types.ts';
 import { createInterfaceController } from '../features/navigation/interface.controller.ts';
-import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
+import { closeSettingsDialog } from '../features/preferences/close-settings-dialog.ts';
+import type { InterfaceState } from '../features/preferences/preferences.model.ts';
+import { currentBrowserURL } from './current-browser-url.ts';
+import { currentInterfacePage } from './current-interface-page.ts';
+import { navigateInterfaceURL } from './navigate-interface-url.ts';
 
 export function createBrowserInterfaceController(
-  page: () => PageLoadData,
-  closeDialog: () => void,
+  controls: InterfaceState,
 ): ReturnType<typeof createInterfaceController> {
+  const closeDialog = closeSettingsDialog.bind(null, controls);
+
   return createInterfaceController({
-    page,
+    page: currentInterfacePage,
+    currentURL: currentBrowserURL,
     closeDialog,
-    currentURL(): URL {
-      return new URL(window.location.href);
-    },
-    async navigate(url): Promise<void> {
-      await goto(resolve(`${url.pathname.slice(1)}${url.search}${url.hash}`), {
-        reset: true,
-      });
-    },
+    navigate: navigateInterfaceURL,
   });
 }

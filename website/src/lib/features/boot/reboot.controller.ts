@@ -1,4 +1,4 @@
-import { rebootURL } from '../navigation/interface.model.ts';
+import { rebootURL } from '../navigation/reboot-url.model.ts';
 
 export function reboot(event: MouseEvent): void {
   if (

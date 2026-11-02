@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { closeCreditsDialog } from './close-credits-dialog.ts';
   import type { PageLoadData } from './content.types.ts';
-  import { textOr } from './text.model.ts';
-  import { dialogBackdrop, showDialog } from '#lib/browser/dialog.ts';
+  import { syncCreditsDialog } from './sync-credits-dialog.controller.ts';
+  import { textOr } from './text-or.model.ts';
+  import { dialogBackdrop } from '#lib/browser/dialog.ts';
   import IconButton from '#lib/components/IconButton.svelte';
   import NavigationLink from '#lib/components/NavigationLink.svelte';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
@@ -17,23 +19,13 @@
   const localized = $derived(data.localized);
 
   const credits = $derived(data.credits.entries);
-
-  let creditsDialog = $state<HTMLDialogElement>();
-
-  $effect((): void => {
-    showDialog(creditsDialog, controls.dialog === 'credits');
-  });
 </script>
 
 <dialog
   class="app-dialog credits-dialog"
-  bind:this={creditsDialog}
+  use:syncCreditsDialog={controls.dialog === 'credits'}
   onclick={dialogBackdrop}
-  onclose={(): void => {
-    if (!creditsDialog?.open && controls.dialog === 'credits') {
-      controls.dialog = 'none';
-    }
-  }}
+  onclose={closeCreditsDialog.bind(null, controls)}
   id="credits-dialog"
   data-credits-dialog
   aria-labelledby="credits-dialog-title"

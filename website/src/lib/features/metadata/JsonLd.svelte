@@ -7,13 +7,17 @@
     serialized: string;
   } = $props();
 
-  const markup = $derived(
-    '<scr' +
+  const createMarkup = (): string => {
+    return (
+      '<scr' +
       'ipt type="application/ld+json">' +
       jsonScriptContent(serialized) +
       '</scr' +
-      'ipt>',
-  );
+      'ipt>'
+    );
+  };
+
+  const markup = $derived.by(createMarkup);
 </script>
 
 <svelte:head>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tooltip } from '#lib/browser/tooltip.ts';
   import IconButton from '#lib/components/IconButton.svelte';
+  import { changeLinkView } from '#lib/components/link-view-change.ts';
   import { createPreferenceController } from '#lib/features/preferences/preferences.controller.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
 
@@ -39,9 +40,7 @@
         value="compact"
         data-link-view-control
         checked={state.view === 'compact'}
-        onchange={(event): void => {
-          preferences.set('view', event.currentTarget.value);
-        }}
+        onchange={changeLinkView.bind(null, preferences)}
       />
       <label
         class="toggle-button icon-control"
@@ -67,9 +66,7 @@
         value="detailed"
         data-link-view-control
         checked={state.view === 'detailed'}
-        onchange={(event): void => {
-          preferences.set('view', event.currentTarget.value);
-        }}
+        onchange={changeLinkView.bind(null, preferences)}
       />
       <label
         class="toggle-button icon-control"

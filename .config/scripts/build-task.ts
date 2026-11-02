@@ -1,4 +1,4 @@
-import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import * as configuration from './configuration.ts';
 import { syncFederation } from './federation.ts';
 import { runCommand as command } from './process.ts';
@@ -25,6 +25,34 @@ export async function build(
     '.config/scripts/prepare-svelte-assets.ts',
   ]);
 
+  const destinationPath = resolve(destination);
+
+  const siteConfiguration = configuration.readConfiguration();
+
+  const repository = textOr(
+    dependencies.environment['GITHUB_REPOSITORY'],
+    siteConfiguration.site.repository,
+  );
+
+  const serverURL = textOr(
+    dependencies.environment['GITHUB_SERVER_URL'],
+    'https://github.com',
+  );
+
+  const sourceSHA = textOr(
+    dependencies.environment['LOBBY_SOURCE_SHA'],
+    dependencies.environment['GITHUB_SHA'],
+  );
+
+  const environment = {
+    SITE_OUTPUT_DIR: destinationPath,
+    GITHUB_REPOSITORY: repository,
+    GITHUB_SERVER_URL: serverURL,
+    GITHUB_SHA: sourceSHA ?? '',
+    GITHUB_RUN_ID: dependencies.environment['GITHUB_RUN_ID'] ?? '',
+    GITHUB_RUN_NUMBER: dependencies.environment['GITHUB_RUN_NUMBER'] ?? '',
+  };
+
   return dependencies.command(
     'pnpm',
     [
@@ -34,23 +62,7 @@ export async function build(
       'build',
     ],
     {
-      environment: {
-        SITE_OUTPUT_DIR: resolve(destination),
-        GITHUB_REPOSITORY: textOr(
-          dependencies.environment['GITHUB_REPOSITORY'],
-          configuration.readConfiguration().site.repository,
-        ),
-        GITHUB_SERVER_URL: textOr(
-          dependencies.environment['GITHUB_SERVER_URL'],
-          'https://github.com',
-        ),
-        GITHUB_SHA:
-          textOr(
-            dependencies.environment['LOBBY_SOURCE_SHA'],
-            dependencies.environment['GITHUB_SHA'],
-          ) ?? '',
-        GITHUB_RUN_ID: dependencies.environment['GITHUB_RUN_ID'] ?? '',
-      },
+      environment,
     },
   );
 }

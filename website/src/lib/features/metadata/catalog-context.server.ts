@@ -1,4 +1,3 @@
-import { siteOrigin } from '../navigation/origin.model.ts';
 import type { InterfaceName } from './resources.server.ts';
 
 export const interfaceNames: InterfaceName[] = [
@@ -6,10 +5,5 @@ export const interfaceNames: InterfaceName[] = [
   'terminal',
 ];
 
-export function absoluteURL(value: string): string {
-  return new URL(value, `${siteOrigin}/`).href;
-}
-
-export function isLocalURL(value: string): boolean {
-  return new URL(value, `${siteOrigin}/`).origin === siteOrigin;
-}
+export { absoluteURL } from './absolute-url.server.ts';
+export { isLocalURL } from './is-local-url.server.ts';

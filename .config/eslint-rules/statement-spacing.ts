@@ -27,6 +27,16 @@ const separated = new Set([
   'ThrowStatement',
 ]);
 
+function reexport(statement: ScriptStatement): boolean {
+  if (statement.type === 'ExportAllDeclaration') {
+    return true;
+  }
+
+  return (
+    statement.type === 'ExportNamedDeclaration' && statement.source !== null
+  );
+}
+
 function spacingKind(
   previous: ScriptStatement,
   current: ScriptStatement,
@@ -35,6 +45,10 @@ function spacingKind(
     previous.type === 'ImportDeclaration' &&
     current.type === 'ImportDeclaration'
   ) {
+    return 'grouped';
+  }
+
+  if (reexport(previous) && reexport(current)) {
     return 'grouped';
   }
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { EditorialRecord } from '../features/content/content.types.ts';
-  import { textOr } from '../features/content/text.model.ts';
+  import { textOr } from '../features/content/text-or.model.ts';
   import ActionRow from '#lib/components/ActionRow.svelte';
   import { editorialEntryPresentation } from '#lib/features/listings/editorial.viewmodel.ts';
   import type { ListingDestination } from '#lib/features/listings/listing.model.ts';
@@ -25,13 +25,17 @@
     headingLevel: 3 | 4 | 5;
   } = $props();
 
-  const presentation = $derived(
-    editorialEntryPresentation(item, destination, {
+  const createPresentation = (): ReturnType<
+    typeof editorialEntryPresentation
+  > => {
+    return editorialEntryPresentation(item, destination, {
       locale,
       interfaceName,
       languageLabel: ui['language'] ?? '',
-    }),
-  );
+    });
+  };
+
+  const presentation = $derived.by(createPresentation);
 </script>
 
 <article

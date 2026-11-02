@@ -7,7 +7,11 @@ export const prerender = true;
 export const trailingSlash = 'never';
 
 export async function GET(): Promise<Awaited<ReturnType<RequestHandler>>> {
-  return Response.json(aiCatalog(await getSiteData()), {
+  const data = await getSiteData();
+
+  const catalog = aiCatalog(data);
+
+  return Response.json(catalog, {
     headers: {
       'content-type': 'application/json; charset=utf-8',
     },

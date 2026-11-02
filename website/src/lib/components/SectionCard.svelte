@@ -4,7 +4,7 @@
     EditorialRecord,
     PageRecord,
   } from '../features/content/content.types.ts';
-  import { textOr } from '../features/content/text.model.ts';
+  import { textOr } from '../features/content/text-or.model.ts';
   import EditorialList from '#lib/components/EditorialList.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import LinkList from '#lib/components/LinkList.svelte';
@@ -35,18 +35,22 @@
     index?: number;
     update?: boolean;
   } = $props();
+
+  const railAnchorEnabled =
+    update ||
+      [
+        'writing',
+        'games',
+      ].includes(page.id);
+
+  const railAnchor = enabledAttribute(railAnchorEnabled);
 </script>
 
 <article
   class="category-card"
   data-category={page.id}
   data-ornament={index % 3}
-  data-rail-anchor={enabledAttribute(
-    update || [
-      'writing',
-      'games'
-    ].includes(page.id),
-  )}
+  data-rail-anchor={railAnchor}
   aria-labelledby="category-{page.id}-title"
 >
   <div class="category-summary">

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { type EditorialRecord } from '../features/content/content.types.ts';
-  import { textOr } from '../features/content/text.model.ts';
+  import { textOr } from '../features/content/text-or.model.ts';
   import ActionRow from '#lib/components/ActionRow.svelte';
   import ContentListHeading from '#lib/components/ContentListHeading.svelte';
   import EditorialEntry from '#lib/components/EditorialEntry.svelte';
@@ -35,14 +35,18 @@
     empty?: boolean;
   } = $props();
 
-  const presentation = $derived(
-    editorialListPresentation({
+  const createPresentation = (): ReturnType<
+    typeof editorialListPresentation
+  > => {
+    return editorialListPresentation({
       items,
       sectionID,
       destination,
       emptyAction,
-    }),
-  );
+    });
+  };
+
+  const presentation = $derived.by(createPresentation);
 </script>
 
 {#if items.length}

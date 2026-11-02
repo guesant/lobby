@@ -1,74 +1,33 @@
 import { createPointerFeedback } from '../features/preferences/audio.controller.ts';
+import type { PointerSound } from '../features/preferences/audio.types.ts';
+import { destroyPointerSound } from './destroy-pointer-sound.ts';
+import { installPointerListeners } from './install-pointer-listeners.ts';
 import type {
-  PointerSound,
-  SoundTiming,
-} from '../features/preferences/audio.types.ts';
-import { WebAudioPlayer } from './web-audio.ts';
-
-const timing: SoundTiming = {
-  now(): number {
-    return performance.now();
-  },
-  delay(callback, duration): () => void {
-    const timer = setTimeout(callback, duration);
-
-    return (): void => {
-      clearTimeout(timer);
-    };
-  },
-};
+  PointerSoundState,
+  PointerSoundURLs,
+} from './pointer-sound.types.ts';
+import { setPointerSoundEnabled } from './set-pointer-sound-enabled.ts';
+import { soundTiming } from './sound-timing.ts';
+import { createWebAudioPlayer } from './web-audio.ts';
 
 export function createPointerSound(
-  urls: {
-    pointerPress: string;
-    pointerRelease: string;
-  },
+  urls: PointerSoundURLs,
   enabled: boolean,
 ): PointerSound {
-  const player = new WebAudioPlayer({
+  const player = createWebAudioPlayer({
     press: urls.pointerPress,
     release: urls.pointerRelease,
   });
 
-  const feedback = createPointerFeedback(player, enabled, timing);
-
-  const controller = new AbortController();
-
-  const options = {
-    capture: true,
-    passive: true,
-    signal: controller.signal,
+  const state: PointerSoundState = {
+    feedback: createPointerFeedback(player, enabled, soundTiming),
+    controller: new AbortController(),
   };
 
-  document.addEventListener('pointerdown', feedback.press, options);
-  document.addEventListener('pointerup', feedback.release, options);
-  document.addEventListener(
-    'pointercancel',
-    (event): void => {
-      feedback.cancel(event.pointerId);
-    },
-    options,
-  );
-  window.addEventListener('blur', feedback.reset, {
-    signal: controller.signal,
-  });
-  document.addEventListener(
-    'visibilitychange',
-    (): void => {
-      if (document.hidden) {
-        feedback.reset();
-      }
-    },
-    {
-      signal: controller.signal,
-    },
-  );
+  installPointerListeners(state);
 
   return {
-    setEnabled: feedback.setEnabled,
-    destroy(): void {
-      controller.abort();
-      feedback.destroy();
-    },
+    setEnabled: setPointerSoundEnabled.bind(null, state),
+    destroy: destroyPointerSound.bind(null, state),
   };
 }

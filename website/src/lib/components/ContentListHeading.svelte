@@ -9,7 +9,11 @@
     level?: 2 | 3 | 4;
   } = $props();
 
-  const title = $derived(requiredText(label, 'listing.heading'));
+  const getTitle = (): string => {
+    return requiredText(label, 'listing.heading');
+  };
+
+  const title = $derived.by(getTitle);
 </script>
 
 <header class="content-list-heading">

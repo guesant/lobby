@@ -1,7 +1,6 @@
 <script lang="ts">
   import manifest from '../../assets/icons/manifest.json';
-
-  export type IconName = keyof typeof manifest.icons;
+  import { resolveIcon } from './resolve-icon.model.ts';
 
   const {
     name = 'link',
@@ -11,24 +10,22 @@
     optical?: boolean;
   } = $props();
 
-  function isIconName(value: string): value is IconName {
-    return Object.hasOwn(manifest.icons, value);
-  }
+  const getIcon = (): ReturnType<typeof resolveIcon> => {
+    return resolveIcon(name);
+  };
 
-  function resolveIcon(value: string): IconName {
-    if (isIconName(value)) {
-      return value;
-    }
-
-    return 'link';
-  }
-
-  const icon = $derived(resolveIcon(name));
+  const icon = $derived.by(getIcon);
 
   const metadata = $derived(manifest.icons[icon]);
 
+  const columnCount = String(manifest.count);
+
+  const position = String(metadata.position);
+
+  const opticalScale = String(metadata.opticalScale);
+
   const style = $derived(
-    `--icon-columns: ${String(manifest.count)}; --icon-position: ${String(metadata.position)}%; --icon-optical-scale: ${String(metadata.opticalScale)}`,
+    `--icon-columns: ${columnCount}; --icon-position: ${position}%; --icon-optical-scale: ${opticalScale}`,
   );
 </script>
 

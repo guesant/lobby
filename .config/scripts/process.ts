@@ -1,3 +1,5 @@
+import { processError } from './process-error.ts';
+import { processExit } from './process-exit.ts';
 import { spawn } from 'node:child_process';
 
 export type CommandOptions = {
@@ -10,25 +12,31 @@ export async function runCommand(
   args: string[] = [],
   options: CommandOptions = {},
 ): Promise<void> {
-  await new Promise<void>((accept, reject): void => {
-    const child = spawn(name, args, {
-      cwd: options.cwd ?? process.cwd(),
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        ...options.environment,
-      },
-    });
+  const completion = Promise.withResolvers<undefined>();
 
-    child.on('error', reject);
-    child.on('exit', (code, signal): void => {
-      if (code === 0) {
-        accept();
+  const workingDirectory = options.cwd ?? process.cwd();
 
-        return;
-      }
-
-      reject(new Error(`${name} failed: ${String(code ?? signal)}`));
-    });
+  const child = spawn(name, args, {
+    cwd: workingDirectory,
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      ...options.environment,
+    },
   });
+
+  const state = {
+    name,
+    resolve: completion.resolve,
+    reject: completion.reject,
+  };
+
+  const handleError = processError.bind(null, state);
+
+  const handleExit = processExit.bind(null, state);
+
+  child.on('error', handleError);
+  child.on('exit', handleExit);
+
+  return completion.promise;
 }

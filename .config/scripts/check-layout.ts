@@ -1,5 +1,5 @@
 import { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
-import { textOr } from '../../website/src/lib/features/content/text.model.ts';
+import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { activateElement } from './browser-dom.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import { checkProgressiveScene } from './check-progressive-scene.ts';

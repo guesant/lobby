@@ -1,20 +1,15 @@
 <script lang="ts">
-  import type { BrowserEnvironment } from '#lib/browser/environment.ts';
-  import {
-    installBrowserEnvironment,
-    updateVisibility,
-  } from '#lib/browser/environment.ts';
-  import {
-    createBrowserNavigation,
-    selectedLanguageID,
-    updatePageChrome,
-  } from '#lib/browser/navigation.ts';
-  import type { LanguageNavigation } from '#lib/features/navigation/language.controller.ts';
-  import { navigationPresentation } from '#lib/features/navigation/navigation.viewmodel.ts';
+  import { updateVisibility } from '#lib/browser/environment.ts';
+  import { afterLayoutNavigation } from '#lib/features/navigation/after-layout-navigation.ts';
+  import { beforeLayoutNavigation } from '#lib/features/navigation/before-layout-navigation.ts';
+  import { changeLayoutLanguage } from '#lib/features/navigation/change-layout-language.ts';
+  import type { LayoutRuntime } from '#lib/features/navigation/layout-runtime.types.ts';
+  import { mountLayout } from '#lib/features/navigation/mount-layout.ts';
+  import { toggleSearchDialog } from '#lib/features/navigation/toggle-search-dialog.ts';
+  import { updateLayoutEnvironment } from '#lib/features/navigation/update-layout-environment.ts';
   import { createPreferenceController } from '#lib/features/preferences/preferences.controller.ts';
   import { provideInterfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
   import { afterNavigate, beforeNavigate } from '$app/navigation';
-  import { page } from '$app/state';
   import type { Snippet } from 'svelte';
   import { onMount } from 'svelte';
 
@@ -28,67 +23,36 @@
 
   const preferences = createPreferenceController(controls);
 
-  const presentation = $derived(navigationPresentation(page.data, page.status));
-
-  let navigation: LanguageNavigation | undefined;
-
-  let environment = $state.raw<BrowserEnvironment>();
-
-  onMount((): (() => void) => {
-    preferences.restore();
-    environment = installBrowserEnvironment(controls);
-    navigation = createBrowserNavigation((): typeof presentation => {
-      return presentation;
-    });
-
-    return (): void => {
-      navigation?.destroy();
-      environment?.destroy();
-    };
+  const runtime = $state<LayoutRuntime>({
+    navigation: undefined,
+    environment: undefined,
   });
 
-  $effect((): void => {
-    environment?.update(controls);
-  });
+  const mount = mountLayout.bind(null, runtime, controls, preferences);
 
-  function keydown(event: KeyboardEvent): void {
-    if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k') {
-      return;
-    }
+  const updateEnvironment = updateLayoutEnvironment.bind(
+    null,
+    runtime,
+    controls,
+  );
 
-    event.preventDefault();
+  const beforeNavigation = beforeLayoutNavigation.bind(null, runtime);
 
-    if (controls.dialog === 'search') {
-      controls.dialog = 'none';
+  const afterNavigation = afterLayoutNavigation.bind(null, runtime);
 
-      return;
-    }
+  const updateLanguage = changeLayoutLanguage.bind(null, runtime);
 
-    controls.dialog = 'search';
-  }
+  const openSearch = toggleSearchDialog.bind(null, controls);
 
-  function changeLanguage(event: Event): void {
-    const id = selectedLanguageID(event);
-
-    if (id) {
-      void navigation?.select(id);
-    }
-  }
-
-  beforeNavigate((event): void => {
-    navigation?.beforeNavigate(event.to?.url ?? null);
-  });
-  afterNavigate((): void => {
-    updatePageChrome(presentation);
-    queueMicrotask((): void => {
-      void navigation?.normalize();
-    });
-  });
+  onMount(mount);
+  $effect(updateEnvironment);
+  beforeNavigate(beforeNavigation);
+  afterNavigate(afterNavigation);
 </script>
 
 <svelte:document
-  onchange={changeLanguage}
+  onchange={updateLanguage}
   onvisibilitychange={updateVisibility}
 />
-<svelte:window onkeydown={keydown} onstorage={preferences.restore} />
+<svelte:window onkeydown={openSearch} onstorage={preferences.restore} />
 {@render children()}

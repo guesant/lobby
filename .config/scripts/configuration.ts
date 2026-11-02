@@ -8,7 +8,9 @@ import { parse } from 'yaml';
 function readConfiguration(
   path: string = resolve(websiteRoot, 'src/data/links.yaml'),
 ): LinkDocument {
-  const data: unknown = parse(fs.readFileSync(path, 'utf8'));
+  const source = fs.readFileSync(path, 'utf8');
+
+  const data: unknown = parse(source);
 
   return linkDocumentFromUnknown(data);
 }

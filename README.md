@@ -2,9 +2,19 @@
 
 Meu site pessoal em [guesant.net](https://guesant.net/).
 
-[![CI](https://github.com/guesant/lobby/actions/workflows/ci.yml/badge.svg)](https://github.com/guesant/lobby/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/guesant/lobby/badge)](https://scorecard.dev/viewer/?uri=github.com/guesant/lobby)
-[![Licença](https://img.shields.io/github/license/guesant/lobby)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/guesant/lobby/ci.yml?branch=main&label=CI&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/guesant/lobby/actions/workflows/ci.yml)
+[![Site](https://img.shields.io/badge/site-guesant.net-2563eb?style=for-the-badge&labelColor=0b1120&logo=firefoxbrowser&logoColor=white)](https://guesant.net)
+[![Licença](https://img.shields.io/github/license/guesant/lobby?style=for-the-badge&labelColor=0b1120&logo=gnu&logoColor=white)](LICENSE)
+
+[![Última execução do CI](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fguesant%2Flobby%2Factions%2Fworkflows%2Fci.yml%2Fruns%3Fper_page%3D1&query=%24.workflow_runs%5B0%5D.updated_at&label=última%20execução%20do%20CI&style=flat-square&labelColor=0b1120&color=2563eb&logo=githubactions&logoColor=white)](https://github.com/guesant/lobby/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/guesant/lobby?label=OpenSSF%20Scorecard&style=flat-square&labelColor=0b1120&color=2563eb)](https://scorecard.dev/viewer/?uri=github.com/guesant/lobby)
+[![Último commit](https://img.shields.io/github/last-commit/guesant/lobby/main?label=último%20commit&style=flat-square&labelColor=0b1120&color=b45309&logo=git&logoColor=white)](https://github.com/guesant/lobby/commits/main)
+[![Commits por mês](https://img.shields.io/github/commit-activity/m/guesant/lobby?label=commits%2Fmês&style=flat-square&labelColor=0b1120&color=b45309&logo=git&logoColor=white)](https://github.com/guesant/lobby/graphs/commit-activity)
+[![PRs abertas](https://img.shields.io/github/issues-pr/guesant/lobby?label=PRs%20abertas&style=flat-square&labelColor=0b1120&color=b45309&logo=github&logoColor=white)](https://github.com/guesant/lobby/pulls)
+[![Issues abertas](https://img.shields.io/github/issues/guesant/lobby?label=issues%20abertas&style=flat-square&labelColor=0b1120&color=b45309&logo=github&logoColor=white)](https://github.com/guesant/lobby/issues)
+[![Issues fechadas](https://img.shields.io/github/issues-closed/guesant/lobby?label=issues%20fechadas&style=flat-square&labelColor=0b1120&color=b45309&logo=github&logoColor=white)](https://github.com/guesant/lobby/issues?q=is%3Aissue+is%3Aclosed)
+[![Forks](https://img.shields.io/github/forks/guesant/lobby?style=flat-square&labelColor=0b1120&color=b45309&logo=github&logoColor=white)](https://github.com/guesant/lobby/forks)
+[![Feito no Brasil](https://img.shields.io/badge/feito_no-Brasil-009440?style=flat-square&labelColor=0b1120)](https://pt.wikipedia.org/wiki/Brasil)
 
 - [Aplicação](website/src/) e [conteúdo](website/src/data/)
 - [Comandos](justfile) e [ambiente Docker](.config/compose.yaml)

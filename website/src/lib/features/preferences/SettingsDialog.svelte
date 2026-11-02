@@ -2,7 +2,10 @@
   import type { PageLoadData } from '../content/content.types.ts';
   import { createPreferenceController } from './preferences.controller.ts';
   import { settingsPresentation } from './settings.viewmodel.ts';
-  import { dialogBackdrop, showDialog } from '#lib/browser/dialog.ts';
+  import { settingsDialogClosed } from './settings-dialog-closed.ts';
+  import { syncSettingsDialog } from './sync-settings-dialog.ts';
+  import { updateSettings } from './update-settings.ts';
+  import { dialogBackdrop } from '#lib/browser/dialog.ts';
   import { createBrowserInterfaceController } from '#lib/browser/interface-navigation.ts';
   import IconButton from '#lib/components/IconButton.svelte';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
@@ -19,7 +22,13 @@
 
   const preferences = createPreferenceController(controls);
 
-  const model = $derived(settingsPresentation(data));
+  const getSettingsPresentation = (): ReturnType<
+    typeof settingsPresentation
+  > => {
+    return settingsPresentation(data);
+  };
+
+  const model = $derived.by(getSettingsPresentation);
 
   const terminal = $derived(model.terminal);
 
@@ -27,30 +36,32 @@
 
   const locale = $derived(data.locale);
 
-  let settingsDialog = $state<HTMLDialogElement>();
+  const interfaceActions = createBrowserInterfaceController(controls);
 
-  const interfaceActions = createBrowserInterfaceController(
-    (): PageLoadData => {
-      return data;
-    },
-    (): void => {
-      controls.dialog = 'none';
-    },
-  );
+  const settingsActions = {
+    preferences,
+    interfaceActions,
+  };
 
-  $effect((): void => {
-    showDialog(settingsDialog, controls.dialog === 'settings');
+  const closeDialog = settingsDialogClosed.bind(null, controls);
+
+  const changeSettings = updateSettings.bind(null, settingsActions);
+
+  const dialogContext = $state<{
+    dialog: HTMLDialogElement | undefined;
+  }>({
+    dialog: undefined,
   });
+
+  const syncDialog = syncSettingsDialog.bind(null, dialogContext, controls);
+
+  $effect(syncDialog);
 </script>
 
 <dialog
-  bind:this={settingsDialog}
+  bind:this={dialogContext.dialog}
   onclick={dialogBackdrop}
-  onclose={(): void => {
-    if (!settingsDialog?.open && controls.dialog === 'settings') {
-      controls.dialog = 'none';
-    }
-  }}
+  onclose={closeDialog}
   class="app-dialog settings-dialog"
   id="settings-dialog"
   aria-labelledby="settings-dialog-title"
@@ -89,10 +100,9 @@
             id="sound-on"
             value="on"
             data-sound-option
+            data-setting="sound"
             checked={controls.sound === 'on'}
-            onchange={(event): void => {
-              preferences.set('sound', event.currentTarget.value);
-            }}
+            onchange={changeSettings}
           />
           <label class="toggle-button" for="sound-on">
             {editorialUI['sound_on']}
@@ -104,10 +114,9 @@
             id="sound-off"
             value="off"
             data-sound-option
+            data-setting="sound"
             checked={controls.sound === 'off'}
-            onchange={(event): void => {
-              preferences.set('sound', event.currentTarget.value);
-            }}
+            onchange={changeSettings}
           />
           <label class="toggle-button" for="sound-off">
             {editorialUI['sound_off']}
@@ -130,11 +139,10 @@
             id="interface-minecraft"
             value="minecraft"
             data-interface-option
+            data-setting="interface"
             data-interface-url={data.standardPageURL}
             checked={!terminal}
-            onchange={(event): void => {
-              void interfaceActions.select(event.currentTarget.value);
-            }}
+            onchange={updateSettings.bind(null, settingsActions)}
           />
           <label class="toggle-button" for="interface-minecraft">
             Minecraft
@@ -146,11 +154,10 @@
             id="interface-terminal"
             value="terminal"
             data-interface-option
+            data-setting="interface"
             data-interface-url={data.terminalPageURL}
             checked={terminal}
-            onchange={(event): void => {
-              void interfaceActions.select(event.currentTarget.value);
-            }}
+            onchange={updateSettings.bind(null, settingsActions)}
           />
           <label class="toggle-button" for="interface-terminal">Terminal</label>
         </div>
@@ -198,10 +205,9 @@
               id="theme-{theme.value}"
               value={theme.value}
               data-theme-option
+              data-setting="theme"
               checked={theme.value === controls.theme}
-              onchange={(event): void => {
-                preferences.set('theme', event.currentTarget.value);
-              }}
+              onchange={changeSettings}
             />
             <label class="toggle-button" for="theme-{theme.value}">
               {theme.label}
@@ -225,10 +231,9 @@
             id="motion-on"
             value="on"
             data-motion-option
+            data-setting="motion"
             checked={controls.motion === 'on'}
-            onchange={(event): void => {
-              preferences.set('motion', event.currentTarget.value);
-            }}
+            onchange={changeSettings}
           />
           <label class="toggle-button" for="motion-on">
             {localized.ui['animations_enabled']}
@@ -240,10 +245,9 @@
             id="motion-off"
             value="off"
             data-motion-option
+            data-setting="motion"
             checked={controls.motion === 'off'}
-            onchange={(event): void => {
-              preferences.set('motion', event.currentTarget.value);
-            }}
+            onchange={changeSettings}
           />
           <label class="toggle-button" for="motion-off">
             {localized.ui['animations_disabled']}

@@ -5,7 +5,11 @@ import { errorLocales } from '#lib/features/navigation/not-found.model.ts';
 export async function load(): Promise<{
   errorPresentation: ErrorLocale[];
 }> {
+  const data = await getSiteData();
+
+  const errorPresentation = errorLocales(data);
+
   return {
-    errorPresentation: errorLocales(await getSiteData()),
+    errorPresentation,
   };
 }

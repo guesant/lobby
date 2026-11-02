@@ -7,7 +7,11 @@ export const prerender = true;
 export const trailingSlash = 'never';
 
 export async function GET(): Promise<Awaited<ReturnType<RequestHandler>>> {
-  return new Response(sitemap(await getSiteData()), {
+  const data = await getSiteData();
+
+  const document = sitemap(data);
+
+  return new Response(document, {
     headers: {
       'content-type': 'application/xml; charset=utf-8',
     },

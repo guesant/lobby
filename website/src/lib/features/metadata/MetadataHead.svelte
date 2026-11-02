@@ -9,7 +9,11 @@
     data: PageLoadData;
   } = $props();
 
-  const metadata = $derived(pageMetadata(data));
+  const getMetadata = (): ReturnType<typeof pageMetadata> => {
+    return pageMetadata(data);
+  };
+
+  const metadata = $derived.by(getMetadata);
 </script>
 
 <svelte:head>

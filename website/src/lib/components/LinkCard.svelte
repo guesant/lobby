@@ -3,6 +3,8 @@
   import ActionRow from '#lib/components/ActionRow.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import IconButton from '#lib/components/IconButton.svelte';
+  import { linkActionClass } from '#lib/components/link-action-class.model.ts';
+  import { previewLinkID } from '#lib/components/preview-link-id.model.ts';
   import type { ListingDestination } from '#lib/features/listings/listing.model.ts';
 
   const {
@@ -17,23 +19,19 @@
     destination: ListingDestination;
   } = $props();
 
-  const target = $derived(destination(item));
+  const createPresentation = (): {
+    target: ReturnType<typeof destination>;
+    actionClass: string;
+    previewID: ReturnType<typeof previewLinkID>;
+  } => {
+    return {
+      target: destination(item),
+      actionClass: linkActionClass(preview),
+      previewID: previewLinkID(preview, item.id),
+    };
+  };
 
-  const actionClass = $derived.by((): string => {
-    if (preview) {
-      return 'link-button category-preview-link';
-    }
-
-    return 'link-button';
-  });
-
-  const previewID = $derived.by((): string | undefined => {
-    if (preview) {
-      return item.id;
-    }
-
-    return undefined;
-  });
+  const presentation = $derived.by(createPresentation);
 </script>
 
 <article class="link-card">
@@ -43,18 +41,18 @@
   <span class="frame-rivet frame-rivet-bottom-end" aria-hidden="true"></span>
   <ActionRow
     title={item.title}
-    action={target}
+    action={presentation.target}
     {thirdPartyLabel}
     interfaceName="minecraft"
     icon={item.icon}
-    className={actionClass}
+    className={presentation.actionClass}
     linkID={item.id}
-    {previewID}
+    previewID={presentation.previewID}
   />
   <div class="link-card-details">
     <span class="link-url">
       <span class="link-url-icon"><Icon name="link" /></span>
-      <span class="link-url-text">{target.display}</span>
+      <span class="link-url-text">{presentation.target.display}</span>
     </span>
     {#if item.description}
       <span class="link-description">

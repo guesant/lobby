@@ -1,55 +1,31 @@
-import { nextSearchResult } from '../features/search/search.model.ts';
+import { activateSearchResult } from './activate-search-result.ts';
+import { focusSearchResult } from './focus-search-result.ts';
+import { searchResultNavigation } from './search-result-navigation.model.ts';
 
-type SearchElements = {
-  dialog: HTMLDialogElement | undefined;
-  input: HTMLInputElement | undefined;
-};
-
-function resultLinks(
-  dialog: HTMLDialogElement | undefined,
-): HTMLAnchorElement[] {
-  if (!dialog) {
-    return [];
-  }
-
-  return [
-    ...dialog.querySelectorAll<HTMLAnchorElement>('#search-results a'),
-  ];
-}
-
-export function searchKeydown(
-  event: KeyboardEvent,
-  elements: SearchElements,
-): void {
+export function searchKeydown(event: KeyboardEvent): void {
   if (event.target instanceof HTMLSelectElement) {
     return;
   }
 
-  const links = resultLinks(elements.dialog);
+  const dialog = event.currentTarget;
 
-  if (event.key === 'Enter' && event.target === elements.input) {
-    links[0]?.click();
-
+  if (!(dialog instanceof HTMLDialogElement)) {
     return;
   }
 
-  if (!isResultNavigation(event.key, links.length)) {
+  const links = [
+    ...dialog.querySelectorAll<HTMLAnchorElement>('#search-results a'),
+  ];
+
+  const input = dialog.querySelector<HTMLInputElement>('#search-query');
+
+  if (activateSearchResult(event, input, links)) {
     return;
   }
 
-  const current = links.findIndex((link): boolean => {
-    return link === document.activeElement;
-  });
+  if (!searchResultNavigation(event.key, links.length)) {
+    return;
+  }
 
-  const next = nextSearchResult(current, event.key, links.length);
-
-  event.preventDefault();
-  links[next]?.focus();
-}
-
-function isResultNavigation(
-  key: string,
-  count: number,
-): key is 'ArrowDown' | 'ArrowUp' {
-  return count > 0 && (key === 'ArrowDown' || key === 'ArrowUp');
+  focusSearchResult(event, links);
 }

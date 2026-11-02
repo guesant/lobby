@@ -5,27 +5,17 @@ import type {
   LinkDocument,
   LinkRecord,
 } from './content.types.ts';
-import { textOr } from './text.model.ts';
-
-function thirdPartyURL(site: LinkDocument['site'], url: string): boolean {
-  if (!/^https?:/i.test(url)) {
-    return false;
-  }
-
-  const host = new URL(url).hostname.toLowerCase()
-    .replace(/\.$/, '');
-
-  return !site.first_party_domains.some((domain): boolean => {
-    return host === domain || host.endsWith(`.${domain}`);
-  });
-}
+import { textOr } from './text-or.model.ts';
+import { thirdPartyURL } from './third-party-url.model.ts';
 
 export function resolveDestination(
   site: LinkDocument['site'],
   item: Pick<LinkRecord, 'url' | 'target'>,
   origin: string = siteOrigin,
 ): LinkDestination {
-  const url = textOr(item.url?.trim(), '#');
+  const trimmedURL = item.url?.trim();
+
+  const url = textOr(trimmedURL, '#');
 
   const navigation = linkNavigation(url, origin);
 
