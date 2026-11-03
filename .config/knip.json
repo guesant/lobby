@@ -28,7 +28,6 @@
         "scripts/verify-links.ts",
         "scripts/check-raster-browser.ts",
         "scripts/*.test.ts",
-        "scripts/check-link-view.ts",
         "scripts/check-{federation,pointer-sound,stats,search}.ts"
       ],
       "project": [
