@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import test from 'node:test';
+import { test } from 'vitest';
 import { parse, stringify } from 'yaml';
 
 const source = '1'.repeat(40);
@@ -117,7 +117,7 @@ function fixture(
   };
 }
 
-void test('unchanged statistics return their source SHA without validation, commit or push', async (): Promise<void> => {
+test('unchanged statistics return their source SHA without validation, commit or push', async (): Promise<void> => {
   const {
     calls,
     options
@@ -163,7 +163,7 @@ for (const scenario of [
     message: /push rejected/,
   },
 ]) {
-  void test(`statistics publication rejects ${scenario.name}`, async (): Promise<void> => {
+  test(`statistics publication rejects ${scenario.name}`, async (): Promise<void> => {
     const {
       calls,
       options
@@ -182,7 +182,7 @@ for (const scenario of [
   });
 }
 
-void test('statistics-only commit preserves unrelated staged changes and pushes only to a local fixture remote', async (): Promise<void> => {
+test('statistics-only commit preserves unrelated staged changes and pushes only to a local fixture remote', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-statistics-publish-'));
 
   const remote = join(directory, 'remote.git');

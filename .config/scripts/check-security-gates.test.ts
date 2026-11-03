@@ -5,10 +5,10 @@ import {
 } from './check-renovate.ts';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import test from 'node:test';
+import { test } from 'vitest';
 import { parse } from 'yaml';
 
-void test('Corepack extraction must retain both the release and its exact checksum', (): void => {
+test('Corepack extraction must retain both the release and its exact checksum', (): void => {
   const dependency = {
     file: '.config/container/Dockerfile',
     manager: 'regex',
@@ -57,7 +57,7 @@ void test('Corepack extraction must retain both the release and its exact checks
   }, /interpretable/);
 });
 
-void test('CodeQL is manual, containerized, read-only and independent from publishing', async (): Promise<void> => {
+test('CodeQL is manual, containerized, read-only and independent from publishing', async (): Promise<void> => {
   const workflow = record(
     parse(await readFile('.github/workflows/ci.yml', 'utf8')) as unknown,
     'workflow',

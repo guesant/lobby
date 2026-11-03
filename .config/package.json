@@ -7,6 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "test": "cd .. && .config/node_modules/.bin/vitest run --config .config/vitest.config.ts --root .",
     "comments:test": "cd .. && ast-grep test --config .config/ast-grep/sgconfig.yml",
     "comments:scan": "cd .. && ast-grep scan --config .config/ast-grep/sgconfig.yml .",
     "markdown": "cd .. && markdownlint-cli2 --config .config/.markdownlint-cli2.jsonc README.md .github/SECURITY.md 'LICENSES/**/*.md'",
@@ -41,6 +42,7 @@
     "svelte-eslint-parser": "1.10.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.72.1",
+    "vitest": "5.1.0",
     "vite": "^8.3.5",
     "yaml": "^2.9.1"
   }

@@ -7,7 +7,7 @@ import {
 } from '../../website/src/lib/features/preferences/audio.types.ts';
 import type { FeedbackHarness } from './check-pointer-sound.types.ts';
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 
 function harness(enabled = true): FeedbackHarness {
   let now = 0;
@@ -92,7 +92,7 @@ const mouse: PointerInput = {
   button: 0,
 };
 
-void test('press plays immediately and a quick release waits without delaying press', (): void => {
+test('press plays immediately and a quick release waits without delaying press', (): void => {
   const h = harness();
 
   h.feedback.press(mouse);
@@ -112,7 +112,7 @@ void test('press plays immediately and a quick release waits without delaying pr
   ]);
 });
 
-void test('rapid clicks cancel an older pending release', (): void => {
+test('rapid clicks cancel an older pending release', (): void => {
   const h = harness();
 
   h.feedback.press(mouse);
@@ -125,7 +125,7 @@ void test('rapid clicks cancel an older pending release', (): void => {
   ]);
 });
 
-void test('touch, pen, secondary buttons and synthetic events are silent', (): void => {
+test('touch, pen, secondary buttons and synthetic events are silent', (): void => {
   const h = harness();
 
   for (const invalid of [
@@ -157,7 +157,7 @@ void test('touch, pen, secondary buttons and synthetic events are silent', (): v
   assert.deepEqual(h.sounds, []);
 });
 
-void test('cancellation, focus loss and visibility reset discard a pending release', (): void => {
+test('cancellation, focus loss and visibility reset discard a pending release', (): void => {
   for (const cancel of [
     'pointer',
     'reset',

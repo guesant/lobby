@@ -6,7 +6,7 @@ import { validateFeed } from './federation-validation.ts';
 import { websiteRoot } from './paths.ts';
 import * as fc from 'fast-check';
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 
 function fuzzOptions(): fc.Parameters<unknown> {
   const options: fc.Parameters<unknown> = {
@@ -49,7 +49,7 @@ function assertNonpublicFeed(feed: unknown, source: Source): void {
   }, /Nonpublic/);
 }
 
-void test(
+test(
   'fuzz: federated visibility cannot leak nonpublic entries or metadata',
   {
     timeout: 35000,
@@ -112,7 +112,7 @@ void test(
   },
 );
 
-void test(
+test(
   'fuzz: first-party domains do not accept suffix or prefix impersonation',
   {
     timeout: 35000,
@@ -149,7 +149,7 @@ void test(
   },
 );
 
-void test(
+test(
   'fuzz: structured data preserves JSON without allowing script termination',
   {
     timeout: 35000,

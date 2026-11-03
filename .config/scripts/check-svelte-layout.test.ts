@@ -2,9 +2,9 @@ import { blockDirectiveNewline } from '../eslint-rules/block-directive-newline.t
 import typescriptParser from '@typescript-eslint/parser';
 import { Linter } from 'eslint';
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { compile } from 'svelte/compiler';
 import svelteParser from 'svelte-eslint-parser';
+import { test } from 'vitest';
 
 const configuration: Linter.Config = {
   files: [
@@ -49,7 +49,7 @@ function renderedProgram(source: string): string {
   }).js.code;
 }
 
-void test('Svelte directives are standalone, idempotent and preserve rendering', (): void => {
+test('Svelte directives are standalone, idempotent and preserve rendering', (): void => {
   const source =
     '<div> {#if ready} <div>yes</div> {:else} <div>no</div> {/if} {#each items as item (item.id)} <div>{item.name}</div> {/each} {#await result} <div>wait</div> {:then value} <div>{value}</div> {:catch error} <div>{error.message}</div> {/await} {#key key} <div>key</div> {/key} {#snippet content()} <div>snippet</div> {/snippet} {@render content()} </div>';
 
@@ -63,7 +63,7 @@ void test('Svelte directives are standalone, idempotent and preserve rendering',
   assert.match(formatted.output, /\n\{\/snippet\}\n/);
 });
 
-void test('sensitive inline, pre and textarea whitespace is never autofixed', (): void => {
+test('sensitive inline, pre and textarea whitespace is never autofixed', (): void => {
   for (const source of [
     '<p>one {#if ready}<strong>two</strong>{:else}three{/if} four</p>',
     '<pre>  before{#if ready}\n  after{/if}</pre>',

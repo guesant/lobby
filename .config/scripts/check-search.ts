@@ -7,7 +7,7 @@ import {
 } from '../../website/src/lib/features/search/search.model.ts';
 import type { SearchItem } from '../../website/src/lib/features/search/search.types.ts';
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 
 const entries: SearchItem[] = [
   {
@@ -42,7 +42,7 @@ const entries: SearchItem[] = [
   },
 ];
 
-void test('search state is isolated and cancelled requests cannot publish late results', async (): Promise<void> => {
+test('search state is isolated and cancelled requests cannot publish late results', async (): Promise<void> => {
   const first = initialSearchState();
 
   const second = initialSearchState();
@@ -79,7 +79,7 @@ void test('search state is isolated and cancelled requests cannot publish late r
   assert.equal(second.phase, 'idle');
 });
 
-void test('search retains every match beyond the previous one hundred item limit', (): void => {
+test('search retains every match beyond the previous one hundred item limit', (): void => {
   const first = entries[0];
 
   assert.ok(first);
@@ -100,7 +100,7 @@ void test('search retains every match beyond the previous one hundred item limit
   assert.equal(many.length, 150);
 });
 
-void test('source, language and type filters combine without mutating the index', (): void => {
+test('source, language and type filters combine without mutating the index', (): void => {
   const matching = searchItems(entries, 'public');
 
   assert.equal(matching.length, 2);
@@ -131,7 +131,7 @@ void test('source, language and type filters combine without mutating the index'
   assert.equal(entries.length, 2);
 });
 
-void test('search validates unknown data and rejects unsafe or incomplete destinations', (): void => {
+test('search validates unknown data and rejects unsafe or incomplete destinations', (): void => {
   const first = entries[0];
 
   assert.ok(first);

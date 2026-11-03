@@ -2,9 +2,9 @@ import { canonicalFormat } from './quality.ts';
 import typescriptParser from '@typescript-eslint/parser';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
-import test from 'node:test';
 import { parseForESLint } from 'svelte-eslint-parser';
 import ts from 'typescript';
+import { test } from 'vitest';
 
 function tokens(source: string, component: boolean): string[] {
   let script = source;
@@ -76,7 +76,7 @@ const fixtures = [
 ];
 
 for (const fixture of fixtures) {
-  void test(
+  test(
     'formatter preserves tokens and reaches a fixed point in ' + fixture.file,
     async (): Promise<void> => {
       const path = resolve(fixture.file);

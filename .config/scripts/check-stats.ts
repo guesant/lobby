@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import test from 'node:test';
+import { test } from 'vitest';
 import { parse, stringify } from 'yaml';
 
 const source = readConfiguration();
@@ -150,7 +150,7 @@ function fetcher(url: string): Promise<Response> {
   );
 }
 
-void test('atomic cache updates and failure retention', async (): Promise<void> => {
+test('atomic cache updates and failure retention', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'links-statistics-'));
 
   try {
@@ -273,7 +273,7 @@ void test('atomic cache updates and failure retention', async (): Promise<void> 
     });
   }
 });
-void test('first failed collection does not fabricate a cache', async (): Promise<void> => {
+test('first failed collection does not fabricate a cache', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'links-statistics-'));
 
   try {

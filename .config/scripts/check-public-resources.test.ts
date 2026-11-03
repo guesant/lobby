@@ -5,10 +5,10 @@ import assert from 'node:assert/strict';
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import test from 'node:test';
+import { test } from 'vitest';
 import { parse, stringify } from 'yaml';
 
-void test('editorial cache is isolated by root and invalidates after a source change', async (): Promise<void> => {
+test('editorial cache is isolated by root and invalidates after a source change', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-content-'));
 
   try {

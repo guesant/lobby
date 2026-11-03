@@ -4,9 +4,9 @@ import {
   defaultPreferences,
 } from '../../website/src/lib/features/preferences/preferences.model.ts';
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 
-void test('preferences retain safe defaults and reject unknown persisted values', (): void => {
+test('preferences retain safe defaults and reject unknown persisted values', (): void => {
   const ui = defaultPreferences();
 
   assert.equal(assignPreference(ui, 'view', 'unknown'), false);
@@ -17,7 +17,7 @@ void test('preferences retain safe defaults and reject unknown persisted values'
   assert.equal(ui.theme, 'light');
 });
 
-void test('view and sound preferences persist independently and survive route changes', (): void => {
+test('view and sound preferences persist independently and survive route changes', (): void => {
   const entries = new Map<string, string>();
 
   const storage = {
@@ -49,7 +49,7 @@ void test('view and sound preferences persist independently and survive route ch
   assert.equal(next.theme, 'system');
 });
 
-void test('storage failures do not prevent an explicit choice', (): void => {
+test('storage failures do not prevent an explicit choice', (): void => {
   const ui = defaultPreferences();
 
   function blocked(): never {

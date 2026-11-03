@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import test from 'node:test';
+import { test } from 'vitest';
 
 function remoteFeed(value: TestFeed): Promise<{
   ok: true;
@@ -26,7 +26,7 @@ const source = {
   url: 'https://blog.guesant.net/lobby.json',
 };
 
-void test('cache reuse and local sources never renew a remote success timestamp', async (): Promise<void> => {
+test('cache reuse and local sources never renew a remote success timestamp', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-freshness-'));
 
   const timestamp = '2026-10-01T03:00:00.000Z';
@@ -133,7 +133,7 @@ function feed(
   };
 }
 
-void test('federation keeps only public allowlisted fields', (): void => {
+test('federation keeps only public allowlisted fields', (): void => {
   const result = validateFeed(
     feed([
       {
@@ -168,7 +168,7 @@ void test('federation keeps only public allowlisted fields', (): void => {
   assert.equal(requiredValueValue.metadata['date'], '2026-01-01');
   assert.deepEqual(validateFeed(feed([]), source).items, []);
 });
-void test('resume projects retain only safe declared public platform URLs', (): void => {
+test('resume projects retain only safe declared public platform URLs', (): void => {
   const resume = {
     id: 'resume',
     origin: 'https://curriculum.guesant.net',
@@ -290,7 +290,7 @@ for (const [
   string,
   (value: TestFeed) => void,
 ][]) {
-  void test(`federation rejects ${name}`, (): void => {
+  test(`federation rejects ${name}`, (): void => {
     const value = structuredClone(feed());
 
     modify(value);
@@ -300,7 +300,7 @@ for (const [
   });
 }
 
-void test('federation uses valid cache only for network failures', async (): Promise<void> => {
+test('federation uses valid cache only for network failures', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-feed-'));
 
   try {
@@ -356,7 +356,7 @@ void test('federation uses valid cache only for network failures', async (): Pro
     });
   }
 });
-void test('federation fails without usable cache and supports local generated inputs', async (): Promise<void> => {
+test('federation fails without usable cache and supports local generated inputs', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-feed-'));
 
   try {

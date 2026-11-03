@@ -1,12 +1,12 @@
 import { deploymentStatus, resolveRun } from './ci-policy.ts';
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 
 const sha = '1'.repeat(40);
 
 const newer = '2'.repeat(40);
 
-void test('publication operations reject other branches and malformed inputs', (): void => {
+test('publication operations reject other branches and malformed inputs', (): void => {
   for (const operation of [
     'publish',
     'statistics',
@@ -38,7 +38,7 @@ void test('publication operations reject other branches and malformed inputs', (
   }, /SHA/);
 });
 
-void test('deployment fails closed and skips an obsolete main snapshot', async (): Promise<void> => {
+test('deployment fails closed and skips an obsolete main snapshot', async (): Promise<void> => {
   const result = await deploymentStatus({
     sha,
     repository: 'guesant/lobby',

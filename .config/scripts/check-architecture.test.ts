@@ -2,9 +2,9 @@ import { moduleCycles } from './module-boundaries.ts';
 import { moduleDependencies } from './module-dependencies.ts';
 import { dependencyViolations } from './module-policy.ts';
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 
-void test('architecture distinguishes type contracts from forbidden visual integrations', (): void => {
+test('architecture distinguishes type contracts from forbidden visual integrations', (): void => {
   const dependencies = moduleDependencies(
     '<script lang="ts">import type { Value } from "./content.model.ts"; import Component from "./Card.svelte"; import { read } from "./data.server.ts";type Loaded = import("./lazy.model.ts").Value;</script><p>{label}</p>',
     true,
