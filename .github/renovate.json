@@ -13,6 +13,10 @@
   "prConcurrentLimit": 3,
   "prHourlyLimit": 2,
   "dependencyDashboard": true,
+  "minimumReleaseAge": "1 day",
+  "minimumReleaseAgeBuffer": "30 minutes",
+  "minimumReleaseAgeBehaviour": "timestamp-required",
+  "internalChecksFilter": "strict",
   "rangeStrategy": "bump",
   "lockFileMaintenance": {
     "enabled": true,
@@ -22,6 +26,7 @@
   },
   "vulnerabilityAlerts": {
     "enabled": true,
+    "minimumReleaseAge": null,
     "schedule": [
       "at any time"
     ],
@@ -65,6 +70,19 @@
         "digest"
       ],
       "groupName": "github actions"
+    },
+    {
+      "matchPackageNames": [
+        "/^vitest$/",
+        "/^@vitest\\//"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "groupName": "vitest tooling"
     },
     {
       "matchDatasources": [
