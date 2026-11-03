@@ -1,10 +1,5 @@
 import { siteOrigin } from './features/navigation/origin.model.ts';
-
-export type LinkNavigation = {
-  external: boolean;
-  target: '_blank' | '_self';
-  rel?: string;
-};
+import type { LinkNavigation } from './link-navigation.types.ts';
 
 export function linkNavigation(
   href: string,

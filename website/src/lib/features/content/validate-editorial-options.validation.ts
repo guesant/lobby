@@ -1,5 +1,5 @@
 import { validateEditorialFlags } from './validate-editorial-flags.validation.ts';
-import type { UnknownRecord } from './validation.model.ts';
+import type { UnknownRecord } from './validation.types.ts';
 
 export function validateEditorialOptions(
   item: UnknownRecord,

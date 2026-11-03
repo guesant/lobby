@@ -1,11 +1,6 @@
+import type { BrowserError } from './check-browser-errors.types.ts';
 import assert from 'node:assert/strict';
 import type { Browser, Page, Target } from 'puppeteer-core';
-
-type BrowserError = {
-  url: string;
-  message: string;
-  stack: string | undefined;
-};
 
 function browserError(page: Page, error: unknown): BrowserError {
   if (error instanceof Error) {

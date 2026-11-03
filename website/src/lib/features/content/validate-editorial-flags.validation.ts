@@ -1,4 +1,4 @@
-import type { UnknownRecord } from './validation.model.ts';
+import type { UnknownRecord } from './validation.types.ts';
 
 export function validateEditorialFlags(
   item: UnknownRecord,

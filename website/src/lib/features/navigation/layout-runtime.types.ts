@@ -1,5 +1,5 @@
-import type { BrowserEnvironment } from '../../browser/environment.ts';
-import type { LanguageNavigation } from './language.controller.ts';
+import type { BrowserEnvironment } from '../../browser/browser-environment.types.ts';
+import type { LanguageNavigation } from './language-controller.types.ts';
 
 export type LayoutRuntime = {
   navigation: LanguageNavigation | undefined;

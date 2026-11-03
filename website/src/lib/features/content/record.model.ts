@@ -1,4 +1,4 @@
-import type { UnknownRecord } from './unknown-record.model.ts';
+import type { UnknownRecord } from './unknown-record.types.ts';
 
 export function record(value: unknown, label: string): UnknownRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {

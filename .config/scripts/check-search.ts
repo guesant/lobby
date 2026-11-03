@@ -3,9 +3,9 @@ import {
   filterSearchItems,
   initialSearchState,
   isSearchItem,
-  type SearchItem,
   searchItems,
 } from '../../website/src/lib/features/search/search.model.ts';
+import type { SearchItem } from '../../website/src/lib/features/search/search.types.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 

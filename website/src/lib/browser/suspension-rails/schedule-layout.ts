@@ -1,4 +1,4 @@
-import type { RailLayoutState } from './rail-layout.model.ts';
+import type { RailLayoutState } from './rail-layout.types.ts';
 import { runScheduledLayout } from './run-scheduled-layout.ts';
 
 export function scheduleLayout(state: RailLayoutState): void {

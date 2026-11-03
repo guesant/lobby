@@ -1405,6 +1405,14 @@ locales:
       credits_close: Close credits
       settings_label: Settings
       settings_close: Close settings
+      privacy_policy: Privacy Policy
+      analytics_consent_title: Analytics Consent
+      analytics_consent_description: Allow this site to use Google Analytics to understand page visits and selected interactions. No analytics data is sent before you choose to accept.
+      analytics_consent_accept: Accept Analytics
+      analytics_consent_reject: Reject
+      analytics_consent_details: What will be measured?
+      analytics_consent_details_text: If enabled, Google Analytics may measure page views, scrolling, outbound links, downloads, embedded video engagement and form interactions. Search terms are excluded. You can change this choice later in Settings.
+      analytics_consent_manage: Privacy and Analytics Settings
       home_sections_label: Explore the Sections
       navigation_label: Navigation
       navigation_sections: Sections
@@ -1471,6 +1479,14 @@ locales:
       credits_close: Fechar créditos
       settings_label: Configurações
       settings_close: Fechar configurações
+      privacy_policy: Política de Privacidade
+      analytics_consent_title: Consentimento para Analytics
+      analytics_consent_description: Permita que este site use o Google Analytics para entender as visitas às páginas e algumas interações. Nenhum dado de Analytics será enviado antes da sua escolha.
+      analytics_consent_accept: Aceitar Analytics
+      analytics_consent_reject: Rejeitar
+      analytics_consent_details: O que será medido?
+      analytics_consent_details_text: Quando ativado, o Google Analytics poderá medir visualizações de páginas, rolagem, links externos, downloads, interação com vídeos incorporados e interações com formulários. Os termos de busca não serão enviados. Você poderá mudar essa escolha nas Configurações.
+      analytics_consent_manage: Configurações de Privacidade e Analytics
       home_sections_label: Explore as Seções
       navigation_label: Navegação
       navigation_sections: Seções
@@ -1538,6 +1554,19 @@ locales:
       credits_close: Fermer les crédits
       settings_label: Réglages
       settings_close: Fermer les réglages
+      privacy_policy: Politique de Confidentialité
+      analytics_consent_title: Consentement à la Mesure d’Audience
+      analytics_consent_description: Autorisez ce site à utiliser Google Analytics pour comprendre les visites et certaines interactions. Aucune donnée Analytics ne sera envoyée avant votre choix.
+      analytics_consent_accept: Accepter Analytics
+      analytics_consent_reject: Refuser
+      analytics_consent_details: Que sera-t-il mesuré ?
+      analytics_consent_details_text: >-
+        Si la mesure est activée, Google Analytics peut mesurer les pages vues,
+        le défilement, les liens externes, les téléchargements, l’engagement
+        avec les vidéos intégrées et les interactions avec les formulaires. Les
+        termes de recherche sont exclus. Vous pourrez modifier ce choix dans les
+        réglages.
+      analytics_consent_manage: Réglages de Confidentialité et Analytics
       home_sections_label: Explorer les Rubriques
       navigation_label: Navigation
       navigation_sections: Rubriques
@@ -1605,6 +1634,14 @@ locales:
       credits_close: Cerrar créditos
       settings_label: Ajustes
       settings_close: Cerrar ajustes
+      privacy_policy: Política de Privacidad
+      analytics_consent_title: Consentimiento de Analytics
+      analytics_consent_description: Permite que este sitio use Google Analytics para entender las visitas a las páginas y algunas interacciones. No se enviarán datos de Analytics antes de que elijas aceptar.
+      analytics_consent_accept: Aceptar Analytics
+      analytics_consent_reject: Rechazar
+      analytics_consent_details: ¿Qué se medirá?
+      analytics_consent_details_text: Si se activa, Google Analytics puede medir páginas vistas, desplazamiento, enlaces externos, descargas, interacción con vídeos incrustados e interacciones con formularios. Se excluyen los términos de búsqueda. Puedes cambiar esta elección en Ajustes.
+      analytics_consent_manage: Ajustes de Privacidad y Analytics
       home_sections_label: Explora las Secciones
       navigation_label: Navegación
       navigation_sections: Secciones
@@ -1672,6 +1709,14 @@ locales:
       credits_close: Chiudi i crediti
       settings_label: Impostazioni
       settings_close: Chiudi le impostazioni
+      privacy_policy: Informativa sulla Privacy
+      analytics_consent_title: Consenso ad Analytics
+      analytics_consent_description: Consenti a questo sito di usare Google Analytics per comprendere le visite alle pagine e alcune interazioni. Nessun dato Analytics verrà inviato prima della tua scelta.
+      analytics_consent_accept: Accetta Analytics
+      analytics_consent_reject: Rifiuta
+      analytics_consent_details: Che cosa verrà misurato?
+      analytics_consent_details_text: Se attivato, Google Analytics può misurare le visualizzazioni di pagina, lo scorrimento, i link esterni, i download, l’interazione con i video incorporati e le interazioni con i moduli. I termini di ricerca sono esclusi. Puoi modificare questa scelta nelle Impostazioni.
+      analytics_consent_manage: Impostazioni di Privacy e Analytics
       home_sections_label: Esplora le Sezioni
       navigation_label: Navigazione
       navigation_sections: Sezioni
@@ -1739,6 +1784,14 @@ locales:
       credits_close: 关闭致谢
       settings_label: 设置
       settings_close: 关闭设置
+      privacy_policy: 隐私政策
+      analytics_consent_title: Analytics 使用同意
+      analytics_consent_description: 允许本网站使用 Google Analytics 了解页面访问和部分互动。在你选择同意之前，不会向 Google 发送 Analytics 数据。
+      analytics_consent_accept: 同意 Analytics
+      analytics_consent_reject: 拒绝
+      analytics_consent_details: 会收集哪些数据？
+      analytics_consent_details_text: 启用后，Google Analytics 可能会测量页面浏览、滚动、外部链接、下载、嵌入视频互动和表单互动。搜索词不会发送。你可以稍后在设置中更改此选择。
+      analytics_consent_manage: 隐私与 Analytics 设置
       home_sections_label: 浏览各个栏目
       navigation_label: 导航
       navigation_sections: 栏目

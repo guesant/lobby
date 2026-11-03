@@ -5,7 +5,7 @@
   import IconButton from '#lib/components/IconButton.svelte';
   import { linkActionClass } from '#lib/components/link-action-class.model.ts';
   import { previewLinkID } from '#lib/components/preview-link-id.model.ts';
-  import type { ListingDestination } from '#lib/features/listings/listing.model.ts';
+  import type { ListingDestination } from '#lib/features/listings/listing.types.ts';
 
   const {
     item,

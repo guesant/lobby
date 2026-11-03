@@ -1,4 +1,4 @@
-import type { LighthouseResult } from '../lighthouse-audit.ts';
+import type { LighthouseResult } from '../lighthouse-audit.types.ts';
 import { compareScores } from './compare-scores.ts';
 import { medianScore } from './median-score.ts';
 

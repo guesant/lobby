@@ -6,6 +6,11 @@ import { encodeXML } from 'entities';
 export function sitemap(data: SiteData, locale?: string): string {
   const paths = new Set(routeEntries(data));
 
+  for (const language of data.links.language_options) {
+    paths.add(`${language.id}/privacy`);
+    paths.add(`${language.id}/terminal/privacy`);
+  }
+
   const urls: string[] = [];
 
   for (const path of paths) {

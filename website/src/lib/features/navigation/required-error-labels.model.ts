@@ -1,13 +1,5 @@
 import { requiredErrorLabel } from './required-error-label.model.ts';
-
-export type RequiredLabels = {
-  not_found_title: string;
-  not_found_description: string;
-  not_found_home: string;
-  not_found_languages: string;
-  error_title: string;
-  error_description: string;
-};
+import type { RequiredLabels } from './required-error-labels.types.ts';
 
 export function requiredErrorLabels(
   ui: Record<string, string>,

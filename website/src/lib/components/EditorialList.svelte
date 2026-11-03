@@ -5,11 +5,11 @@
   import ContentListHeading from '#lib/components/ContentListHeading.svelte';
   import EditorialEntry from '#lib/components/EditorialEntry.svelte';
   import { editorialListPresentation } from '#lib/features/listings/editorial.viewmodel.ts';
-  import {
-    type EmptyAction,
-    itemHeadingLevel,
-    type ListingDestination,
-  } from '#lib/features/listings/listing.model.ts';
+  import { itemHeadingLevel } from '#lib/features/listings/listing.model.ts';
+  import type {
+    EmptyAction,
+    ListingDestination,
+  } from '#lib/features/listings/listing.types.ts';
 
   const {
     items,

@@ -1,4 +1,4 @@
-import type { InterfaceState } from '../preferences/preferences.model.ts';
+import type { InterfaceState } from '../preferences/preferences.types.ts';
 import type { LayoutRuntime } from './layout-runtime.types.ts';
 
 export function updateLayoutEnvironment(

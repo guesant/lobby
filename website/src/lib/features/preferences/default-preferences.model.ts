@@ -8,5 +8,7 @@ export function defaultPreferences(): InterfaceState {
     sound: 'on',
     dialog: 'none',
     reducedMotion: false,
+    analyticsConsent: 'unknown',
+    analyticsConsentLoaded: false,
   };
 }

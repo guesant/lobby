@@ -1,4 +1,4 @@
-import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.model.ts';
+import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.types.ts';
 import { createBrowserAudit } from './browser-presentation.ts';
 import { pagesFor } from './configuration.ts';
 import assert from 'node:assert/strict';

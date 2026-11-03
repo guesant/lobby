@@ -1,5 +1,5 @@
-import type { SearchItem } from '../search/search.model.ts';
-import type { InterfaceName } from './resources.server.ts';
+import type { SearchItem } from '../search/search.types.ts';
+import type { InterfaceName } from './resource.types.ts';
 
 export type InterfaceURLs = Partial<Record<InterfaceName, string>>;
 

@@ -1,5 +1,5 @@
 import type { PageLoadData } from '../content/content.types.ts';
-import type { Appearance } from './preferences.model.ts';
+import type { Appearance } from './preferences.types.ts';
 
 export type SettingsViewModel = {
   terminal: boolean;

@@ -1,12 +1,4 @@
-export type PreviewRecord = {
-  id: string | undefined;
-  href: string;
-};
-
-export type CategoryPreviews = {
-  id: string | undefined;
-  previews: PreviewRecord[];
-};
+import type { CategoryPreviews } from './layout-helpers.types.ts';
 
 export function installLayoutHelpers(): void {
   window.lobbyLayout = {

@@ -3,20 +3,13 @@ import {
   record,
   requiredText,
 } from '../../website/src/lib/features/content/validation.model.ts';
-import {
-  dependencyInventory,
-  type ManagedDependency,
-} from './dependency-inventory.ts';
+import type { ExtractedDependency } from './check-renovate.types.ts';
+import { dependencyInventory } from './dependency-inventory.ts';
+import type { ManagedDependency } from './dependency-inventory.types.ts';
 import { execFileSync, spawn } from 'node:child_process';
 import { cp, lstat, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-
-type ExtractedDependency = {
-  name: string;
-  version: string | undefined;
-  digest: string | undefined;
-};
 
 function extractedValue(
   dependency: Record<string, unknown>,

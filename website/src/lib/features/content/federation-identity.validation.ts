@@ -1,7 +1,7 @@
 import { federationType } from './federation-type.validation.ts';
 import type { FederationIdentity } from './federation-validation.types.ts';
-import type { UnknownRecord } from './validation.model.ts';
 import { requiredText } from './validation.model.ts';
+import type { UnknownRecord } from './validation.types.ts';
 
 export function federationIdentity(
   item: UnknownRecord,

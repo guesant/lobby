@@ -2,7 +2,7 @@ import type {
   EditorialRecord,
   LinkDestination,
 } from '../content/content.types.ts';
-import type { EmptyAction, ListingDestination } from './listing.model.ts';
+import type { EmptyAction, ListingDestination } from './listing.types.ts';
 
 export type EditorialGroup = {
   type: string;

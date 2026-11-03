@@ -1,5 +1,5 @@
-import type { ErrorLocale } from '../features/navigation/not-found.model.ts';
 import { errorAppearance } from '../features/navigation/not-found.model.ts';
+import type { ErrorLocale } from '../features/navigation/not-found.types.ts';
 import { browserPreferenceStorage } from './preference-storage.ts';
 
 export function initializeErrorPage(locales: ErrorLocale[]): {

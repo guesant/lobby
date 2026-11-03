@@ -1,5 +1,5 @@
-import type { LighthouseResult } from '../lighthouse-audit.ts';
 import { assertLighthouse, runLighthouse } from '../lighthouse-audit.ts';
+import type { LighthouseResult } from '../lighthouse-audit.types.ts';
 import { medianResult } from './median-result.ts';
 import { resolve } from 'node:path';
 

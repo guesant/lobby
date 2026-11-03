@@ -1,10 +1,4 @@
-import type { InterfaceController } from '../navigation/interface.controller.ts';
-import type { PreferenceController } from './preferences.controller.ts';
-
-type SettingsActions = {
-  preferences: PreferenceController;
-  interfaceActions: InterfaceController;
-};
+import type { SettingsActions } from './update-settings.types.ts';
 
 export function updateSettings(actions: SettingsActions, event: Event): void {
   const input = event.currentTarget;

@@ -1,4 +1,4 @@
-import type { InterfaceState } from '../features/preferences/preferences.model.ts';
+import type { InterfaceState } from '../features/preferences/preferences.types.ts';
 
 export function applyBrowserPreferences(state: InterfaceState): void {
   const attributes = document.documentElement.dataset;

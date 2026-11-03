@@ -1,5 +1,5 @@
 import type { PointerSound } from '../features/preferences/audio.types.ts';
-import type { InterfaceState } from '../features/preferences/preferences.model.ts';
+import type { InterfaceState } from '../features/preferences/preferences.types.ts';
 
 export type BrowserEnvironment = {
   update: (state: InterfaceState) => void;

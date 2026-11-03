@@ -1,15 +1,8 @@
 import { createAuditPage } from './browser-fixture.ts';
+import type { BrowserAudit } from './browser-presentation.types.ts';
 import { readConfiguration } from './configuration.ts';
-import type { Browser, BrowserContext, Page } from 'puppeteer-core';
+import type { Browser, Page } from 'puppeteer-core';
 import puppeteer from 'puppeteer-core';
-
-type BrowserAudit = {
-  context: BrowserContext;
-  page: Page;
-  config: ReturnType<typeof readConfiguration>;
-  checks: Record<string, unknown>[];
-  errors: string[];
-};
 
 export async function createBrowserAudit(
   browser: Browser,

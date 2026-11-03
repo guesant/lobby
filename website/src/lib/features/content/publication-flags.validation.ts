@@ -1,6 +1,6 @@
 import type { LinkRecord } from './content.types.ts';
-import type { UnknownRecord } from './validation.model.ts';
 import { optionalBoolean } from './validation.model.ts';
+import type { UnknownRecord } from './validation.types.ts';
 
 export function publicationFlags(
   source: UnknownRecord,

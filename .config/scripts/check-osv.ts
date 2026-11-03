@@ -4,17 +4,11 @@ import {
   requiredText,
   strings,
 } from '../../website/src/lib/features/content/validation.model.ts';
+import type { Advisory } from './check-osv.types.ts';
 import { dependencySBOMs } from './security-inputs.ts';
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
-type Advisory = {
-  name: string;
-  version: string;
-  ids: string[];
-  severity: string | number;
-};
 
 const levels = [
   'LOW',

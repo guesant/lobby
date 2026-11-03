@@ -1,8 +1,4 @@
-type FormattingResult = {
-  fatalErrorCount: number;
-  messages: unknown[];
-  output: string | undefined;
-};
+import type { FormattingResult } from './formatting-output.types.ts';
 
 export function formattingOutput(
   result: FormattingResult | undefined,

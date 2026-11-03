@@ -8,30 +8,16 @@ import {
   useBrowserLanguages,
   withBrowser,
 } from './browser-presentation.ts';
+import type {
+  RowSnapshot,
+  RowStates,
+  StateName,
+} from './check-listing-browser.types.ts';
 import { readConfiguration } from './configuration.ts';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Browser, CDPSession, ElementHandle, Page } from 'puppeteer-core';
-
-type RowSnapshot = {
-  color: string;
-  background: string;
-  outline: string;
-  shadow: string;
-  padding: [
-    string,
-    string,
-    string,
-    string,
-  ];
-  height: number;
-  width: number;
-};
-
-type StateName = 'normal' | 'hover' | 'focus' | 'active';
-
-type RowStates = Record<StateName, RowSnapshot>;
 
 const families = {
   platform: '.action-row[data-link-id]',

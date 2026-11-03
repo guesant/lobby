@@ -1,5 +1,5 @@
 import pa11yDefaults from '../pa11yci.json' with { type: 'json' };
-import { type AccessibilityAudit } from './accessibility-viewports.ts';
+import type { AccessibilityAudit } from './accessibility-viewports.types.ts';
 import * as configuration from './configuration.ts';
 
 const config = configuration.readConfiguration();

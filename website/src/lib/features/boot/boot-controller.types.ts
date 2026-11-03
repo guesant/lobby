@@ -1,5 +1,5 @@
-import type { InterfaceState } from '../preferences/preferences.model.ts';
-import type { BootState } from './boot.model.ts';
+import type { InterfaceState } from '../preferences/preferences.types.ts';
+import type { BootState } from './boot.types.ts';
 
 export type BootControllerState = {
   model: BootState;

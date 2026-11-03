@@ -1,4 +1,4 @@
-import type { InterfaceName } from './resources.server.ts';
+import type { InterfaceName } from './resources.types.ts';
 
 export const interfaceNames: InterfaceName[] = [
   'minecraft',

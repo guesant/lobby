@@ -1,5 +1,5 @@
 import type { RouteContext } from './catalog.types.ts';
-import type { ConfiguredPage } from './routes.model.ts';
+import type { ConfiguredPage } from './routes.types.ts';
 
 export function pageURLs(
   page: ConfiguredPage,

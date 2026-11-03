@@ -1,5 +1,5 @@
 import type { SiteData } from '../content/content.types.ts';
-import type { InterfaceName } from '../metadata/resources.server.ts';
+import type { InterfaceName } from '../metadata/resources.types.ts';
 import { pagesFor } from '../navigation/catalog.model.ts';
 import { indexActivity } from './index-activity.server.ts';
 import { indexPage } from './index-page.server.ts';

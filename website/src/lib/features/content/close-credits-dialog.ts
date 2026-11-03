@@ -1,4 +1,4 @@
-import type { InterfaceState } from '../preferences/preferences.model.ts';
+import type { InterfaceState } from '../preferences/preferences.types.ts';
 
 export function closeCreditsDialog(state: InterfaceState, event: Event): void {
   const dialog = event.currentTarget;

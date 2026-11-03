@@ -1,24 +1,13 @@
 import { createPointerFeedback } from '../../website/src/lib/features/preferences/audio.controller.ts';
 import {
-  type PointerFeedback,
   type PointerInput,
   type SoundKind,
   type SoundPlayer,
   type SoundTiming,
 } from '../../website/src/lib/features/preferences/audio.types.ts';
+import type { FeedbackHarness } from './check-pointer-sound.types.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-
-type FeedbackHarness = {
-  feedback: PointerFeedback;
-  sounds: SoundKind[];
-  timers: Set<() => void>;
-  setReady(value: boolean): void;
-  elapsed(value: number): void;
-  flush(): void;
-  prepared(): number;
-  destroyed(): boolean;
-};
 
 function harness(enabled = true): FeedbackHarness {
   let now = 0;

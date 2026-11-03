@@ -1,8 +1,3 @@
-export type BootState = {
-  step: number;
-  running: boolean;
-};
-
 export const bootModules = [
   'Navigation',
   'Content index',

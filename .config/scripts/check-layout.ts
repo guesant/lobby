@@ -4,6 +4,7 @@ import { activateElement } from './browser-dom.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import { checkProgressiveScene } from './check-progressive-scene.ts';
 import { pagesFor, readConfiguration, visibleLinks } from './configuration.ts';
+import type { LayoutRoute } from './layout.types.ts';
 import { measureMaterialContrast } from './layout-contrast.ts';
 import { verifyDialogs } from './layout-dialogs.ts';
 import { verifyRouteMetadata } from './layout-metadata.ts';
@@ -11,9 +12,8 @@ import {
   inspectHomeCategories,
   inspectLayoutViewport,
   inspectStatistics,
-  type LayoutContext,
 } from './layout-pages.ts';
-import type { LayoutRoute } from './layout-types.ts';
+import type { LayoutContext } from './layout-pages.types.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { resolve } from 'node:path';

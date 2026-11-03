@@ -1,4 +1,4 @@
-import type { PreferenceStorage } from '../preferences/preferences.model.ts';
+import type { PreferenceStorage } from '../preferences/preferences.types.ts';
 import type { LanguagePage } from './language.types.ts';
 
 export type LanguageDependencies = {

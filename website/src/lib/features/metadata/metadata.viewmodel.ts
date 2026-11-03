@@ -8,8 +8,6 @@ import { pageDescription } from './page-description.model.ts';
 import { pageTitle } from './page-title.model.ts';
 import { structuredData } from './structured-data.model.ts';
 
-export type { PageMetadata } from './metadata.types.ts';
-
 export function pageMetadata(page: PageLoadData): PageMetadata {
   const alternates = alternateRoutes(page);
 

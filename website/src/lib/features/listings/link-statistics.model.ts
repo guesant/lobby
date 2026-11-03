@@ -1,13 +1,7 @@
-import type { DisplayLinkRecord, SiteData } from '../content/content.types.ts';
+import type { DisplayLinkRecord } from '../content/content.types.ts';
 import { localizedText } from '../content/localized-text.model.ts';
-import type { ConfiguredLink } from './links.types.ts';
+import type { LinkStatisticsContext } from './link-statistics.types.ts';
 import { metricPresentation } from './metric-presentation.model.ts';
-
-type LinkStatisticsContext = {
-  data: SiteData;
-  item: ConfiguredLink;
-  locale: string;
-};
 
 export function linkStatistics(
   context: LinkStatisticsContext,

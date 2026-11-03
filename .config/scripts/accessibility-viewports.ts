@@ -1,18 +1,10 @@
+import type {
+  AccessibilityAudit,
+  AccessibilityDefaults,
+} from './accessibility-viewports.types.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import type { Page } from 'puppeteer-core';
-import puppeteer, { type LaunchOptions, type Viewport } from 'puppeteer-core';
-
-export type AccessibilityAudit = {
-  url: string;
-  actions?: string[];
-  rootElement?: string;
-  viewport?: Viewport;
-};
-
-export type AccessibilityDefaults = {
-  chromeLaunchConfig: LaunchOptions;
-  viewport: Viewport;
-};
+import puppeteer from 'puppeteer-core';
 
 function accessibilityView(audit: AccessibilityAudit): 'compact' | 'detailed' {
   if (

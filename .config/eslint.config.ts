@@ -4,6 +4,7 @@ import noNarrativeComments from './eslint-rules/no-narrative-comments.ts';
 import noNestedCallArguments from './eslint-rules/no-nested-call-arguments.ts';
 import oneFunctionPerFile from './eslint-rules/one-function-per-file.ts';
 import statementSpacing from './eslint-rules/statement-spacing.ts';
+import typesOnly from './eslint-rules/types-only.ts';
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
@@ -102,6 +103,7 @@ export default [
           'no-narrative-comments': noNarrativeComments,
           ...noNestedCallArguments.rules,
           ...oneFunctionPerFile.rules,
+          'types-only': typesOnly,
           'multiline-structures': multilineStructures,
           'block-directive-newline': blockDirectiveNewline,
         },
@@ -350,6 +352,19 @@ export default [
           allowArrowFunctions: true,
         },
       ],
+    },
+  },
+  {
+    files: [
+      'website/src/**/*.{ts,mts,cts,svelte}',
+      '.config/scripts/**/*.{ts,mts,cts}',
+    ],
+    ignores: [
+      '**/*.test.*',
+      '**/fixtures/**',
+    ],
+    rules: {
+      'lobby/types-only': 'error',
     },
   },
   {

@@ -1,6 +1,6 @@
 import type { SiteData } from '../content/content.types.ts';
 import { pagesFor } from '../navigation/catalog.model.ts';
-import type { InterfaceName } from './resources.server.ts';
+import type { InterfaceName } from './resources.types.ts';
 
 export function availableCatalogPages(
   data: SiteData,

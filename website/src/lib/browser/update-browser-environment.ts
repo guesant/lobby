@@ -1,4 +1,4 @@
-import type { InterfaceState } from '../features/preferences/preferences.model.ts';
+import type { InterfaceState } from '../features/preferences/preferences.types.ts';
 import { applyBrowserPreferences } from './apply-browser-preferences.ts';
 import type { BrowserEnvironmentState } from './browser-environment.types.ts';
 

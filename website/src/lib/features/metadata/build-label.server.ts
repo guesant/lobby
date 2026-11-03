@@ -1,12 +1,5 @@
-import type { SiteData } from '../content/content.types.ts';
 import { requiredText } from '../content/required-text.model.ts';
-
-type BuildLabelContext = {
-  locale: string;
-  localized: SiteData['links']['locales'][string]['ui'];
-  runID: string;
-  runNumber: string;
-};
+import type { BuildLabelContext } from './build-label.types.ts';
 
 export function buildLabel(context: BuildLabelContext): string {
   if (context.runID) {

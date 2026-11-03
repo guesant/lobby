@@ -1,7 +1,5 @@
-import {
-  type FederationStatus,
-  federationStatuses,
-} from './federation-status.model.ts';
+import { federationStatuses } from './federation-status.model.ts';
+import type { FederationStatus } from './federation-status.types.ts';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 

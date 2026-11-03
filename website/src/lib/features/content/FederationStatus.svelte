@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FederationStatus } from '#lib/features/content/federation-status.model.ts';
+  import type { FederationStatus } from '#lib/features/content/federation-status.types.ts';
 
   const {
     sources,

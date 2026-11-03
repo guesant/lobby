@@ -1,20 +1,11 @@
 import type { PageLoadData } from '../content/content.types.ts';
 import { siteOrigin } from '../navigation/origin.model.ts';
 import { lanternCount } from './lantern-count.viewmodel.ts';
-import type { ListingDestination } from './listing.model.ts';
 import { navigationPages } from './navigation-pages.viewmodel.ts';
 import { nowActivities } from './now-activities.viewmodel.ts';
+import type { PagePresentation } from './page.types.ts';
 import { pagesForNavigation } from './pages-for-navigation.viewmodel.ts';
 import { destinationFor } from './presentation.model.ts';
-
-export type PagePresentation = {
-  navigationPages: ReturnType<typeof navigationPages>;
-  nowPages: ReturnType<typeof pagesForNavigation>;
-  nowActivities: ReturnType<typeof nowActivities>;
-  lanternCount: number;
-  promptPath: string;
-  destination: ListingDestination;
-};
 
 export function pagePresentation(
   data: PageLoadData,

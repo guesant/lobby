@@ -1,16 +1,9 @@
 import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
+import type { BuildDependencies } from './build-task.types.ts';
 import * as configuration from './configuration.ts';
 import { syncFederation } from './federation.ts';
 import { runCommand as command } from './process.ts';
 import { resolve } from 'node:path';
-
-export type Command = typeof command;
-
-export type BuildDependencies = {
-  command: Command;
-  sync(): Promise<unknown>;
-  environment: NodeJS.ProcessEnv;
-};
 
 export async function build(
   destination = '.local/build/site',

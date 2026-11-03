@@ -1,12 +1,5 @@
+import type { CreditEntry } from './validate-credit-entry.types.ts';
 import { record, requiredText } from './validation.model.ts';
-
-export type CreditEntry = {
-  id: string;
-  name: string;
-  authors: string;
-  license: string;
-  official_url: string;
-};
 
 export function validateCreditEntry(
   rawEntry: unknown,

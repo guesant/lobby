@@ -6,7 +6,7 @@
   import { selectedErrorLocale } from './selected-error-locale.viewmodel.ts';
   import { syncErrorPage } from './sync-error-page.ts';
   import NavigationLink from '#lib/components/NavigationLink.svelte';
-  import type { ErrorLocale } from '#lib/features/navigation/not-found.model.ts';
+  import type { ErrorLocale } from '#lib/features/navigation/not-found.types.ts';
 
   const {
     locales,

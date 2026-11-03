@@ -1,4 +1,4 @@
-import type { RailLayoutState } from './rail-layout.model.ts';
+import type { RailLayoutState } from './rail-layout.types.ts';
 
 export function destroyLayout(state: RailLayoutState): void {
   state.controller.abort();

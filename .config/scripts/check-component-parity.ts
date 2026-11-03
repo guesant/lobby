@@ -2,25 +2,16 @@ import type { LinkDocument } from '../../website/src/lib/features/content/conten
 import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import { applyLinkPresentation, withBrowser } from './browser-presentation.ts';
+import type {
+  BadgeExpectation,
+  ParityRoute,
+} from './check-component-parity.types.ts';
 import { readConfiguration } from './configuration.ts';
 import { inspectControlReadiness } from './fixtures/control-readiness.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Browser, Page } from 'puppeteer-core';
-
-type BadgeExpectation = {
-  label: string;
-  domains: string[];
-};
-
-type ParityRoute = {
-  path: string;
-  language: string;
-  minecraft: boolean;
-  id: string;
-  expected: BadgeExpectation;
-};
 
 const widths = [
   320,

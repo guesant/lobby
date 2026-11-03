@@ -14,6 +14,7 @@ export async function tests(): Promise<void> {
     '.config/scripts/check-code-spacing.test.ts',
     '.config/scripts/check-one-function-per-file.test.ts',
     '.config/scripts/check-no-nested-call-arguments.test.ts',
+    '.config/scripts/check-types-only-rule.test.ts',
     '.config/scripts/check-svelte-layout.test.ts',
     '.config/scripts/check-architecture.test.ts',
     '.config/scripts/check-ci.test.ts',

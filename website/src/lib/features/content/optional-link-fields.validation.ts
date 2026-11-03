@@ -3,8 +3,8 @@ import { linkStats } from './link-stats.validation.ts';
 import { linkVisual } from './link-visual.validation.ts';
 import { optionalProperty } from './object-fields.model.ts';
 import { optionalStrings } from './optional-strings.validation.ts';
-import type { UnknownRecord } from './validation.model.ts';
 import { optionalString } from './validation.model.ts';
+import type { UnknownRecord } from './validation.types.ts';
 
 export function optionalLinkFields(
   source: UnknownRecord,

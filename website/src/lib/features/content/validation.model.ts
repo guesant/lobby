@@ -5,5 +5,4 @@ export { record } from './record.model.ts';
 export { requiredBoolean } from './required-boolean.model.ts';
 export { requiredText } from './required-text.model.ts';
 export { strings } from './strings.model.ts';
-export type { UnknownRecord } from './unknown-record.model.ts';
 export { validateTextMap } from './validate-text-map.model.ts';

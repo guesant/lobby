@@ -1,10 +1,7 @@
 import { showDialog } from '../../browser/dialog.ts';
-import type { SearchController } from './search.controller.ts';
+import type { SearchController } from './search-controller.types.ts';
 import type { SearchDialogContext } from './search-dialog-context.types.ts';
-
-type SearchDialogState = {
-  dialog: string;
-};
+import type { SearchDialogState } from './sync-search-dialog.types.ts';
 
 export function syncSearchDialog(
   context: SearchDialogContext,

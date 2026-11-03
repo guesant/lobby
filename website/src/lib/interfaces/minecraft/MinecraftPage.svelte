@@ -19,6 +19,7 @@
   import NavigationLinks from '#lib/components/NavigationLinks.svelte';
   import NowActivity from '#lib/components/NowActivity.svelte';
   import OrnamentLabel from '#lib/components/OrnamentLabel.svelte';
+  import PageIntroduction from '#lib/components/PageIntroduction.svelte';
   import SectionCard from '#lib/components/SectionCard.svelte';
   import SuspensionRails from '#lib/components/SuspensionRails.svelte';
   import { reboot } from '#lib/features/boot/reboot.controller.ts';
@@ -29,6 +30,7 @@
   import { profileInitials } from '#lib/features/listings/presentation.model.ts';
   import { openDialog } from '#lib/features/preferences/open-dialog.controller.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
+  import PrivacyPolicy from '#lib/features/privacy/PrivacyPolicy.svelte';
 
   const state = interfaceState();
 
@@ -270,23 +272,19 @@
               <NowActivity entries={nowActivities} labels={data.editorialUI} />
             {/if}
           </article>
+        {:else if data.page.type === 'privacy-page'}
+          <PageIntroduction
+            title={data.page.title}
+            description={data.page.description}
+            titleID="privacy-policy-title"
+          />
+          <PrivacyPolicy {data} />
         {:else}
-          <section
-            class="presentation-group page-introduction"
-            aria-labelledby="page-title"
-          >
-            <header class="section-toolbar">
-              <h1 class="section-toolbar-title" id="page-title">
-                {data.page.title}
-              </h1>
-            </header>
-            <div
-              class="presentation page-introduction-content"
-              data-rail-anchor
-            >
-              <p class="presentation-intro">{data.page.description}</p>
-            </div>
-          </section>
+          <PageIntroduction
+            title={data.page.title}
+            description={data.page.description}
+            titleID="page-title"
+          />
           <section class="link-sections" aria-labelledby="page-title">
             <section class="link-section" id={data.page.id}>
               <LinkView
@@ -343,6 +341,13 @@
           currentID={data.page.id}
           placement="footer"
         />
+        <ul class="navigation-links footer-navigation-links">
+          <li>
+            <NavigationLink class="footer-privacy-link" href={data.privacyURL}>
+              {data.localized.ui['privacy_policy']}
+            </NavigationLink>
+          </li>
+        </ul>
       </nav>
       <nav
         class="site-footer-content"

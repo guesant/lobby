@@ -7,7 +7,7 @@ import type {
   EditorialEntryContext,
   EditorialEntryPresentation,
 } from './editorial-presentation.types.ts';
-import type { ListingDestination } from './listing.model.ts';
+import type { ListingDestination } from './listing.types.ts';
 import { visibleEditorialMetadata } from './visible-editorial-metadata.viewmodel.ts';
 
 export function editorialEntryPresentation(

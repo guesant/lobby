@@ -1,4 +1,3 @@
-export type { IconManifest } from './asset-data/asset-data.types.ts';
 export { cursorCatalog } from './asset-data/cursor-catalog.ts';
 export { iconCatalog } from './asset-data/icon-catalog.ts';
 export { iconGeometry } from './asset-data/icon-geometry.ts';

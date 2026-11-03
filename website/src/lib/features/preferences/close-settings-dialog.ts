@@ -1,4 +1,4 @@
-import type { InterfaceState } from './preferences.model.ts';
+import type { InterfaceState } from './preferences.types.ts';
 
 export function closeSettingsDialog(controls: InterfaceState): void {
   controls.dialog = 'none';

@@ -2,8 +2,8 @@ import type { SiteData } from '../content/content.types.ts';
 import type { RouteContext } from './catalog.types.ts';
 import { languagePath } from './language-path.model.ts';
 import { presentedPage } from './presented-page.model.ts';
-import type { ConfiguredPage } from './routes.model.ts';
 import { pagesFor as configuredPages } from './routes.model.ts';
+import type { ConfiguredPage } from './routes.types.ts';
 
 export function pagesFor(
   data: SiteData,

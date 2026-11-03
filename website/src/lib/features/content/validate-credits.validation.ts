@@ -1,6 +1,6 @@
 import type { SiteData } from './content.types.ts';
 import { creditLicenses } from './credit-licenses.validation.ts';
-import type { CreditEntry } from './validate-credit-entry.validation.ts';
+import type { CreditEntry } from './validate-credit-entry.types.ts';
 import { validateCreditEntry } from './validate-credit-entry.validation.ts';
 import { array, record } from './validation.model.ts';
 

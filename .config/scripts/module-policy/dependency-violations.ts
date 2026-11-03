@@ -1,4 +1,4 @@
-import type { Dependency } from '../module-dependencies.ts';
+import type { Dependency } from '../module-dependencies.types.ts';
 import { dependencyViolation } from './dependency-violation.ts';
 
 export function dependencyViolations(

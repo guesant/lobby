@@ -1,5 +1,5 @@
 import type { PageLoadData } from '../content/content.types.ts';
-import type { LanguagePageData } from './language.model.ts';
+import type { LanguagePageData } from './language.types.ts';
 
 export function languagePageData(
   data: Partial<PageLoadData>,

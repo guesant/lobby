@@ -1,4 +1,4 @@
-import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.model.ts';
+import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.types.ts';
 import { anchorURLs, animationFrames, inputIsChecked } from './browser-dom.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import {
@@ -8,26 +8,11 @@ import {
   responsiveWidths,
   useBrowserLanguages,
 } from './browser-presentation.ts';
+import type { ViewSnapshot } from './check-link-view-browser.types.ts';
 import { pagesFor, readConfiguration } from './configuration.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import type { Browser, Page } from 'puppeteer-core';
-
-type ViewSnapshot = {
-  overflow: boolean;
-  stableLinks: boolean;
-  checked: string;
-  contentFits: boolean;
-  details: boolean;
-  columns: boolean;
-  fullWidth: boolean;
-  categoryHeaderLayout: boolean;
-  linksIndependent: boolean;
-  editorialBorders: boolean;
-  editorialSummaries: boolean;
-  numericFit: boolean;
-  rails: boolean;
-};
 
 export default async function checkLinkViewBrowser(
   browser: Browser,

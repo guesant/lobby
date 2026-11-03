@@ -1,9 +1,6 @@
 import type { PageRecord } from '../content/content.types.ts';
 import { navigationDirectory } from './navigation-directory.model.ts';
-
-export type NavigationPage = PageRecord & {
-  directory: string;
-};
+import type { NavigationPage } from './navigation-pages.types.ts';
 
 export function navigationPages(pages: PageRecord[]): NavigationPage[] {
   const output: NavigationPage[] = [];

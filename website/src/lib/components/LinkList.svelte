@@ -2,7 +2,7 @@
   import type { DisplayLinkRecord } from '../features/content/content.types.ts';
   import ContentListHeading from '#lib/components/ContentListHeading.svelte';
   import LinkCard from '#lib/components/LinkCard.svelte';
-  import type { ListingDestination } from '#lib/features/listings/listing.model.ts';
+  import type { ListingDestination } from '#lib/features/listings/listing.types.ts';
 
   const {
     items,

@@ -1,5 +1,5 @@
-import type { SearchItem } from './search.model.ts';
 import { isSearchItem } from './search.model.ts';
+import type { SearchItem } from './search.types.ts';
 
 export async function readSearchIndex(
   url: string,

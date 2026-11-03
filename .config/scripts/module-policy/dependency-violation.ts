@@ -1,4 +1,4 @@
-import type { Dependency } from '../module-dependencies.ts';
+import type { Dependency } from '../module-dependencies.types.ts';
 import { isBrowserDependency } from './is-browser-dependency.ts';
 import { isModelModule } from './is-model-module.ts';
 import { visualBoundaryViolation } from './visual-boundary-violation.ts';

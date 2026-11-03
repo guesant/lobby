@@ -1,6 +1,8 @@
 export type Appearance = 'system' | 'dark' | 'light';
 
-export type DialogName = 'none' | 'search' | 'credits' | 'settings';
+export type DialogName = 'none' | 'search' | 'credits' | 'settings' | 'consent';
+
+export type AnalyticsConsent = 'unknown' | 'granted' | 'denied';
 
 export type Preferences = {
   theme: Appearance;
@@ -12,6 +14,8 @@ export type Preferences = {
 export type InterfaceState = Preferences & {
   dialog: DialogName;
   reducedMotion: boolean;
+  analyticsConsent: AnalyticsConsent;
+  analyticsConsentLoaded: boolean;
 };
 
 export type PreferenceStorage = {

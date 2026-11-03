@@ -1,4 +1,4 @@
-import type { LighthouseResult } from '../lighthouse-audit.ts';
+import type { LighthouseResult } from '../lighthouse-audit.types.ts';
 import { withStaticServer } from '../static-server.ts';
 import { runMeasurements } from './run-measurements.ts';
 import { writeFile } from 'node:fs/promises';

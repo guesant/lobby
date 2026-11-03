@@ -1,4 +1,4 @@
-import type { InterfaceState } from '../preferences/preferences.model.ts';
+import type { InterfaceState } from '../preferences/preferences.types.ts';
 import type { BootControllerState } from './boot-controller.types.ts';
 
 export function syncBootDialog(

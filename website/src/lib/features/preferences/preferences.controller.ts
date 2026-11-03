@@ -4,8 +4,6 @@ import type { Preferences, StorageAccess } from './preferences.types.ts';
 import { restorePreferences } from './restore-preferences.ts';
 import { setPreference } from './set-preference.ts';
 
-export type { PreferenceController } from './preference-controller.types.ts';
-
 export function createPreferenceController(
   controls: Preferences,
   access: StorageAccess = browserPreferenceStorage,

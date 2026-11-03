@@ -1,6 +1,5 @@
 import { runCli } from './ci-policy/run-cli.ts';
 
-export type { RunPlan } from './ci-policy/ci-policy.types.ts';
 export { deploymentStatus } from './ci-policy/deployment-status.ts';
 export { resolveRun } from './ci-policy/resolve-run.ts';
 export { validateRepository } from './ci-policy/validate-repository.ts';

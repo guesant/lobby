@@ -1,13 +1,7 @@
-import type { DisplayLinkRecord, SiteData } from '../content/content.types.ts';
+import type { DisplayLinkRecord } from '../content/content.types.ts';
 import { localizedText } from '../content/localized-text.model.ts';
 import { optionalProperty } from '../content/object-fields.model.ts';
-
-type MetricPresentationContext = {
-  data: SiteData;
-  snapshot: SiteData['statistics'][string];
-  id: string;
-  locale: string;
-};
+import type { MetricPresentationContext } from './metric-presentation.types.ts';
 
 export function metricPresentation(
   context: MetricPresentationContext,

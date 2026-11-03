@@ -1,4 +1,4 @@
-import type { PreferenceController } from '#lib/features/preferences/preferences.controller.ts';
+import type { PreferenceController } from '#lib/features/preferences/preference-controller.types.ts';
 
 export function changeLinkView(
   preferences: PreferenceController,

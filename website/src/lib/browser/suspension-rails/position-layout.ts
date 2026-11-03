@@ -1,5 +1,5 @@
 import { positionLanterns } from './position-lanterns.ts';
-import type { RailLayoutState } from './rail-layout.model.ts';
+import type { RailLayoutState } from './rail-layout.types.ts';
 
 export function positionLayout(state: RailLayoutState): void {
   state.frame = null;

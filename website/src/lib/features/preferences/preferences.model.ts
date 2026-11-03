@@ -4,9 +4,3 @@ export {
   preferenceKeys,
   preferenceOptions,
 } from './preference-options.model.ts';
-export type {
-  Appearance,
-  DialogName,
-  InterfaceState,
-  PreferenceStorage,
-} from './preferences.types.ts';

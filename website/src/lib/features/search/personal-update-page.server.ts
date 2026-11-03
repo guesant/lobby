@@ -1,5 +1,5 @@
 import type { PageRecord, SiteData } from '../content/content.types.ts';
-import type { InterfaceName } from '../metadata/resources.server.ts';
+import type { InterfaceName } from '../metadata/resources.types.ts';
 import { pagesFor } from '../navigation/catalog.model.ts';
 
 export function personalUpdatePage(

@@ -1,12 +1,8 @@
 import { showDialog } from '../../browser/dialog.ts';
-
-type SettingsDialogContext = {
-  dialog: HTMLDialogElement | undefined;
-};
-
-type SettingsState = {
-  dialog: string;
-};
+import type {
+  SettingsDialogContext,
+  SettingsState,
+} from './sync-settings-dialog.types.ts';
 
 export function syncSettingsDialog(
   context: SettingsDialogContext,

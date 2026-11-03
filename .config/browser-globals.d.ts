@@ -1,8 +1,8 @@
 import type {
   CategoryPreviews,
   PreviewRecord,
-} from './scripts/layout-helpers.ts';
-import type { RasterPixels } from './scripts/raster-helpers.ts';
+} from './scripts/layout-helpers.types.ts';
+import type { RasterPixels } from './scripts/raster-pixels.types.ts';
 
 declare global {
   interface Window {

@@ -1,5 +1,5 @@
 import './layout-helpers.ts';
-import type { LayoutSnapshot } from './layout-types.ts';
+import type { LayoutSnapshot } from './layout.types.ts';
 
 export function measureIconography(): Pick<
   LayoutSnapshot,

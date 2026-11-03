@@ -1,5 +1,5 @@
 import type { SiteData } from '../content/content.types.ts';
-import type { InterfaceName } from '../metadata/resources.server.ts';
+import type { InterfaceName } from '../metadata/resource.types.ts';
 
 export type SearchContext = {
   data: SiteData;

@@ -1,5 +1,5 @@
 import type { LinkDestination } from '../content/content.types.ts';
-import type { ListingDestination } from './listing.model.ts';
+import type { ListingDestination } from './listing.types.ts';
 
 export function editorialEntryAction(
   url: string | undefined,

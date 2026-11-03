@@ -1,5 +1,5 @@
 import { sectionLinks } from '../listings/links.model.ts';
-import type { PageContext } from '../navigation/page.model.ts';
+import type { PageContext } from '../navigation/page.types.ts';
 import type { SiteData } from './content.types.ts';
 import { editorialItems } from './editorial.model.ts';
 

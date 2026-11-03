@@ -1,13 +1,7 @@
-import type { DisplayLinkRecord, SiteData } from '../content/content.types.ts';
+import type { DisplayLinkRecord } from '../content/content.types.ts';
 import { textOr } from '../content/text-or.model.ts';
+import type { DisplayLinkContext } from './display-link.types.ts';
 import { displayLinkOptionalFields } from './display-link-optional-fields.model.ts';
-import type { ConfiguredLink } from './links.types.ts';
-
-type DisplayLinkContext = {
-  data: SiteData;
-  item: ConfiguredLink;
-  locale: string;
-};
 
 export function displayLink(context: DisplayLinkContext): DisplayLinkRecord {
   const {

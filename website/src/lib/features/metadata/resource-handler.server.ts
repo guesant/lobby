@@ -1,12 +1,6 @@
 import { loadResource } from './load-resource.server.ts';
 import type { ResourcePresenter } from './resource.types.ts';
-import type { RequestHandler } from '@sveltejs/kit';
-
-type ResourceEvent = Parameters<
-  RequestHandler<{
-    index: string;
-  }>
->[0];
+import type { ResourceEvent } from './resource-handler.types.ts';
 
 export async function resourceHandler(
   present: ResourcePresenter,

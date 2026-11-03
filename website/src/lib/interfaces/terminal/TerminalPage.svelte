@@ -22,8 +22,9 @@
   import { currentPage } from '#lib/features/listings/presentation.model.ts';
   import { openDialog } from '#lib/features/preferences/open-dialog.controller.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
+  import PrivacyPolicy from '#lib/features/privacy/PrivacyPolicy.svelte';
 
-  const state = interfaceState();
+  const preferencesState = interfaceState();
 
   const data: PageLoadData = $props();
 
@@ -73,7 +74,7 @@
       class="terminal-window-search"
       type="button"
       data-search-open
-      onclick={openDialog.bind(null, state, 'search')}
+      onclick={openDialog.bind(null, preferencesState, 'search')}
       aria-label={data.editorialUI['search']}
     >
       <span aria-hidden="true">$</span>
@@ -85,7 +86,7 @@
       type="button"
       data-dialog-open="settings-dialog"
       data-settings-open
-      onclick={openDialog.bind(null, state, 'settings')}
+      onclick={openDialog.bind(null, preferencesState, 'settings')}
       aria-label={data.localized.ui['settings_label']}
     >
       <span aria-hidden="true">$</span>
@@ -250,6 +251,13 @@
       {#if nowActivities.length}
         <NowActivity entries={nowActivities} labels={data.editorialUI} />
       {/if}
+    {:else if data.page.type === 'privacy-page'}
+      <header class="terminal-section-heading">
+        <p class="terminal-prompt">cat ~/privacy/policy.txt</p>
+        <h1>{data.page.title}</h1>
+        <p>{data.page.description}</p>
+      </header>
+      <PrivacyPolicy {data} />
     {:else}
       <header class="terminal-section-heading">
         <p class="terminal-prompt">cd ~/{data.page.id}/</p>
@@ -307,11 +315,14 @@
       >
         {data.localized.ui['footer_repository']}
       </NavigationLink>
+      <NavigationLink href={data.privacyURL}>
+        {data.localized.ui['privacy_policy']}
+      </NavigationLink>
       <button
         type="button"
         data-dialog-open="credits-dialog"
         data-credits-open
-        onclick={openDialog.bind(null, state, 'credits')}
+        onclick={openDialog.bind(null, preferencesState, 'credits')}
       >
         {data.localized.ui['credits']}
       </button>
@@ -319,7 +330,7 @@
         type="button"
         data-dialog-open="settings-dialog"
         data-settings-open
-        onclick={openDialog.bind(null, state, 'settings')}
+        onclick={openDialog.bind(null, preferencesState, 'settings')}
       >
         {data.localized.ui['settings_label']}
       </button>

@@ -8,10 +8,8 @@
   import EditorialList from '#lib/components/EditorialList.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import LinkList from '#lib/components/LinkList.svelte';
-  import {
-    emptyActionFor,
-    type ListingDestination,
-  } from '#lib/features/listings/listing.model.ts';
+  import { emptyActionFor } from '#lib/features/listings/listing.model.ts';
+  import type { ListingDestination } from '#lib/features/listings/listing.types.ts';
   import { enabledAttribute } from '#lib/features/listings/presentation.model.ts';
 
   const {

@@ -1,11 +1,6 @@
 import { normalizeSearchText } from './normalize-search-text.model.ts';
-import type { SearchItem } from './search.types.ts';
 import { searchItemMatches } from './search-item-matches.model.ts';
-
-type SearchableItem = Pick<
-  SearchItem,
-  'title' | 'summary' | 'tags' | 'metadata'
->;
+import type { SearchableItem } from './search-items.types.ts';
 
 export function searchItems<T extends SearchableItem>(
   index: T[],

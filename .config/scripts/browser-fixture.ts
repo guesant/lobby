@@ -1,8 +1,5 @@
+import type { PageFactory } from './browser-fixture.types.ts';
 import type { Page } from 'puppeteer-core';
-
-type PageFactory = {
-  newPage(): Promise<Page>;
-};
 
 function installAssertions(): void {
   window.lobbyAssertions = {

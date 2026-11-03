@@ -8,8 +8,6 @@ import type {
 import { normalizeLanguage } from './normalize-language.ts';
 import { selectLanguage } from './select-language.ts';
 
-export type { LanguageNavigation } from './language-controller.types.ts';
-
 export function createLanguageNavigation(
   dependencies: LanguageDependencies,
 ): LanguageNavigation {

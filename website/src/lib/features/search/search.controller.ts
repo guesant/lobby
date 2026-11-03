@@ -1,4 +1,4 @@
-import type { SearchState } from './search.model.ts';
+import type { SearchState } from './search.types.ts';
 import { searchClearFilters } from './search-clear-filters.ts';
 import { searchClose } from './search-close.ts';
 import type {
@@ -9,8 +9,6 @@ import type {
 import { searchDestroy } from './search-destroy.ts';
 import { searchLoad } from './search-load.ts';
 import { searchPrepare } from './search-prepare.ts';
-
-export type { SearchController } from './search-controller.types.ts';
 
 export function createSearchController(
   state: SearchState,

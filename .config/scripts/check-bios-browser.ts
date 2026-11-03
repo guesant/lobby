@@ -1,6 +1,11 @@
 import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { dialogIsOpen, waitForBoot } from './browser-dom.ts';
 import { createAuditPage } from './browser-fixture.ts';
+import type {
+  BiosRoute,
+  BootPresentation,
+  BootStyle,
+} from './check-bios-browser.types.ts';
 import { readConfiguration } from './configuration.ts';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -33,34 +38,6 @@ const viewports = [
     height: 390,
   },
 ];
-
-type BootStyle = {
-  fontFamily: string;
-  fontSize: string;
-  fontWeight: string;
-  color: string;
-  backgroundColor: string;
-  backgroundImage: string;
-  borderImageSource: string;
-  boxShadow: string;
-  textShadow: string;
-  cursor: string;
-};
-
-type BootPresentation = {
-  styles: BootStyle[];
-  fullscreen: boolean;
-  covered: boolean;
-  backdrop: string;
-  hiddenStatus: boolean;
-  horizontalOverflow: boolean;
-};
-
-type BiosRoute = {
-  language: string;
-  interfaceName: string;
-  url: string;
-};
 
 async function bootPresentation(
   page: Page,

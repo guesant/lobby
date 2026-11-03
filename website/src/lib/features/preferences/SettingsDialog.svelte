@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageLoadData } from '../content/content.types.ts';
+  import { openDialog } from './open-dialog.controller.ts';
   import { createPreferenceController } from './preferences.controller.ts';
   import { settingsPresentation } from './settings.viewmodel.ts';
   import { settingsDialogClosed } from './settings-dialog-closed.ts';
@@ -8,6 +9,8 @@
   import { dialogBackdrop } from '#lib/browser/dialog.ts';
   import { createBrowserInterfaceController } from '#lib/browser/interface-navigation.ts';
   import IconButton from '#lib/components/IconButton.svelte';
+  import NavigationLink from '#lib/components/NavigationLink.svelte';
+  import { measurementID } from '#lib/features/analytics/analytics.config.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
 
   const {
@@ -255,5 +258,17 @@
         </div>
       </div>
     </div>
+    {#if measurementID}
+      <button
+        class="ui-button consent-settings-button"
+        type="button"
+        onclick={openDialog.bind(null, controls, 'consent')}
+      >
+        {localized.ui['analytics_consent_manage']}
+      </button>
+    {/if}
+    <NavigationLink class="settings-privacy-link" href={data.privacyURL}>
+      {localized.ui['privacy_policy']}
+    </NavigationLink>
   </div>
 </dialog>

@@ -1,4 +1,4 @@
-import type { IconManifest } from '../asset-data.ts';
+import type { IconManifest } from '../asset-data.types.ts';
 import type { ManifestContext } from './icon-generation.types.ts';
 
 export function createManifest(context: ManifestContext): IconManifest {

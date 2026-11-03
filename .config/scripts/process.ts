@@ -1,11 +1,7 @@
+import type { CommandOptions } from './process.types.ts';
 import { processError } from './process-error.ts';
 import { processExit } from './process-exit.ts';
 import { spawn } from 'node:child_process';
-
-export type CommandOptions = {
-  environment?: NodeJS.ProcessEnv;
-  cwd?: string;
-};
 
 export async function runCommand(
   name: string,

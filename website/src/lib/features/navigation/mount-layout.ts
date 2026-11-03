@@ -1,7 +1,7 @@
 import { installBrowserEnvironment } from '../../browser/environment.ts';
 import { createBrowserNavigation } from '../../browser/navigation.ts';
-import type { PreferenceController } from '../preferences/preferences.controller.ts';
-import type { InterfaceState } from '../preferences/preferences.model.ts';
+import type { PreferenceController } from '../preferences/preference-controller.types.ts';
+import type { InterfaceState } from '../preferences/preferences.types.ts';
 import { cleanupLayout } from './cleanup-layout.ts';
 import type { LayoutRuntime } from './layout-runtime.types.ts';
 

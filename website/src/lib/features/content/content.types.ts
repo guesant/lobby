@@ -1,4 +1,5 @@
-import type { FederationStatus } from './federation-status.model.ts';
+import type { PrivacyPolicyContent } from '../privacy/privacy.types.ts';
+import type { FederationStatus } from './federation-status.types.ts';
 
 type LinkLabel = {
   title: string;
@@ -223,6 +224,8 @@ export type PageLoadData = {
   standardHomeURL: string;
   standardPageURL: string;
   terminalPageURL: string;
+  privacyURL: string;
+  privacyPolicy?: PrivacyPolicyContent;
   homeSections: {
     page: PageRecord;
     links: DisplayLinkRecord[];

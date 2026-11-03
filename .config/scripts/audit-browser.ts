@@ -3,23 +3,10 @@ import {
   record,
   requiredText,
 } from '../../website/src/lib/features/content/validation.model.ts';
+import type { AccessibilityOptions } from './audit-browser.types.ts';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { Browser, Page } from 'puppeteer-core';
-
-type AccessibilityOptions = {
-  browser: Browser;
-  page: Page;
-  ignoreUrl: boolean;
-  runners: string[];
-  standard: string;
-  levelCapWhenNeedsReview: string;
-  viewport: {
-    width: number;
-    height: number;
-  };
-};
 
 export async function pa11y(
   url: string,

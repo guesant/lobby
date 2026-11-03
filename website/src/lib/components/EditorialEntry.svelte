@@ -3,7 +3,7 @@
   import { textOr } from '../features/content/text-or.model.ts';
   import ActionRow from '#lib/components/ActionRow.svelte';
   import { editorialEntryPresentation } from '#lib/features/listings/editorial.viewmodel.ts';
-  import type { ListingDestination } from '#lib/features/listings/listing.model.ts';
+  import type { ListingDestination } from '#lib/features/listings/listing.types.ts';
 
   const {
     item,

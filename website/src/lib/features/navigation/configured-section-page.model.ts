@@ -1,15 +1,9 @@
-import type { LinkDocument, SectionRecord } from '../content/content.types.ts';
+import type { SectionRecord } from '../content/content.types.ts';
 import { textOr } from '../content/text-or.model.ts';
+import type { SectionPageContext } from './configured-section-page.types.ts';
 import { isPublished } from './is-published.model.ts';
 import { linksForSection } from './links-for-section.model.ts';
 import type { ConfiguredPage } from './routes.types.ts';
-
-type SectionPageContext = {
-  configuration: LinkDocument;
-  language: string;
-  path: string;
-  id: string;
-};
 
 export function configuredSectionPage(
   context: SectionPageContext,

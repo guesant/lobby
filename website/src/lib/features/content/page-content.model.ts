@@ -1,21 +1,17 @@
 import { quickLinks } from '../listings/quick-links.model.ts';
-import type { PageContext } from '../navigation/page.model.ts';
+import type { PageContext } from '../navigation/page.types.ts';
 import {
   interfaceDestinations,
   languageRoutes,
 } from '../navigation/translations.model.ts';
+import { privacyPageURL } from '../privacy/privacy-page-url.model.ts';
 import { clientConfiguration } from './client-configuration.model.ts';
-import type { PageLoadData } from './content.types.ts';
 import type { SiteData } from './content.types.ts';
 import { homeSectionContents } from './home-section-contents.model.ts';
+import type { PageContent } from './page-content.types.ts';
 import { pageListings } from './page-listings.model.ts';
 import { summarizePage } from './summarize-page.model.ts';
 import { summarizePages } from './summarize-pages.model.ts';
-
-type PageContent = Omit<
-  PageLoadData,
-  'isLanguageEntry' | 'federationStatus' | 'build'
->;
 
 export function pageContent(data: SiteData, context: PageContext): PageContent {
   const locale = context.locale;
@@ -46,6 +42,7 @@ export function pageContent(data: SiteData, context: PageContext): PageContent {
     pages,
     languageRoutes: languageRoutes(data, context.page.id),
     ...interfaceDestinations(context),
+    privacyURL: privacyPageURL(locale, context.interfaceName),
     homeSections: homeSectionContents(data, context),
     quickLinks: quickLinks(data, locale),
     links: listings.links,

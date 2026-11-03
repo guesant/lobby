@@ -3,7 +3,7 @@ import { optionalProperty } from '../content/object-fields.model.ts';
 import type { RouteContext } from './catalog.types.ts';
 import { pageSection } from './page-section.model.ts';
 import { pageURLs } from './page-urls.model.ts';
-import type { ConfiguredPage } from './routes.model.ts';
+import type { ConfiguredPage } from './routes.types.ts';
 
 export function presentedPage(
   data: SiteData,

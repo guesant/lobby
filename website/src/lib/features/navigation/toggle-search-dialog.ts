@@ -1,4 +1,4 @@
-import type { InterfaceState } from '../preferences/preferences.model.ts';
+import type { InterfaceState } from '../preferences/preferences.types.ts';
 
 export function toggleSearchDialog(
   controls: InterfaceState,

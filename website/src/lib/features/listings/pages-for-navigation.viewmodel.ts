@@ -1,9 +1,6 @@
-import type { PageLoadData, PageRecord } from '../content/content.types.ts';
+import type { PageLoadData } from '../content/content.types.ts';
 import { nowLinks } from './now-links.viewmodel.ts';
-
-export type UpdatePage = PageRecord & {
-  nowLinks: ReturnType<typeof nowLinks>;
-};
+import type { UpdatePage } from './pages-for-navigation.types.ts';
 
 export function pagesForNavigation(data: PageLoadData): UpdatePage[] {
   const output: UpdatePage[] = [];

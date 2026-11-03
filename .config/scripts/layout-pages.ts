@@ -1,27 +1,18 @@
-import type { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
+import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.types.ts';
 import { waitForLandscape } from './check-progressive-scene.ts';
-import type { readConfiguration } from './configuration.ts';
-import {
-  type ConfiguredPage,
-  localizedURL,
-  pagesFor,
-} from './configuration.ts';
+import { localizedURL, pagesFor } from './configuration.ts';
+import type { LayoutRoute } from './layout.types.ts';
 import { measureContent } from './layout-content.ts';
 import { measureGeometry } from './layout-geometry.ts';
-import type { CategoryPreviews, PreviewRecord } from './layout-helpers.ts';
 import { installLayoutHelpers } from './layout-helpers.ts';
+import type {
+  CategoryPreviews,
+  PreviewRecord,
+} from './layout-helpers.types.ts';
 import { measureIconography } from './layout-iconography.ts';
-import type { LayoutRoute } from './layout-types.ts';
+import type { LayoutContext } from './layout-pages.types.ts';
 import assert from 'node:assert/strict';
 import type { ElementHandle, Page } from 'puppeteer-core';
-
-export type LayoutContext = {
-  config: ReturnType<typeof readConfiguration>;
-  href: (path: string) => string;
-  checks: Record<string, unknown>[];
-  snapshots: ReturnType<typeof validateStatistics>;
-  reportDirectory: string;
-};
 
 export async function inspectStatistics(
   route: LayoutRoute,

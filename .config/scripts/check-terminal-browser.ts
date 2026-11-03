@@ -1,11 +1,11 @@
 import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
+import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.types.ts';
 import { pa11y } from './audit-browser.ts';
 import { animationFrames, dialogIsOpen, waitForBoot } from './browser-dom.ts';
 import {
   createBrowserAudit,
   editorialDestinations,
 } from './browser-presentation.ts';
-import type { ConfiguredPage } from './configuration.ts';
 import { pagesFor } from './configuration.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

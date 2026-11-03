@@ -1,6 +1,6 @@
 import pointerPress from '../../assets/audio/mouse-press.wav';
 import pointerRelease from '../../assets/audio/mouse-release.wav';
-import type { InterfaceState } from '../features/preferences/preferences.model.ts';
+import type { InterfaceState } from '../features/preferences/preferences.types.ts';
 import type { BrowserEnvironment } from './browser-environment.types.ts';
 import type { BrowserEnvironmentState } from './browser-environment.types.ts';
 import { destroyBrowserEnvironment } from './destroy-browser-environment.ts';

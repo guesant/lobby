@@ -1,8 +1,8 @@
 import type { SectionRecord } from './content.types.ts';
 import { optionalStrings, publicationFlags } from './link-fields.validation.ts';
 import { optionalProperty } from './object-fields.model.ts';
-import type { UnknownRecord } from './validation.model.ts';
 import { optionalBoolean } from './validation.model.ts';
+import type { UnknownRecord } from './validation.types.ts';
 
 export function sectionOptionalProperties(
   source: UnknownRecord,
