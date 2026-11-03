@@ -2543,7 +2543,8 @@
       100% - var(--section-toolbar-terminal-width) * 2 - var(--space-2) * 2
     );
     margin: var(--space-0);
-    padding: var(--space-2) var(--space-3);
+    padding-block: var(--space-2) var(--space-3);
+    padding-inline: var(--space-3);
     border: var(--pixel-border) solid var(--color-wood-border);
     border-image-source: var(--ornament-oak-frame);
     border-image-slice: var(--profile-frame-slice);
