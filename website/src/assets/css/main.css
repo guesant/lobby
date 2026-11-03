@@ -151,6 +151,7 @@
     --panel-padding: 0.75rem;
     --section-gap: 0.5rem;
     --page-block-gap: calc(var(--space-7) + var(--space-6));
+    --header-content-gap: calc(var(--section-gap) + var(--space-3));
     --summary-gap: var(--space-3);
     --divider-gap: var(--space-4);
     --divider-width: 0.0625rem;
@@ -343,7 +344,7 @@
   .site-shell {
     width: var(--size-full);
     grid-template-columns: var(--grid-columns-1);
-    gap: var(--page-block-gap);
+    gap: var(--header-content-gap);
     container: shell / inline-size;
   }
 
@@ -353,6 +354,7 @@
     grid-template-columns: var(--grid-columns-1);
     gap: var(--page-block-gap);
     margin-inline: auto;
+    margin-block-end: calc(var(--page-block-gap) - var(--header-content-gap));
     padding-inline: var(--rail-content-inset);
   }
 
