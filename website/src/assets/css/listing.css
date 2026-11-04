@@ -171,18 +171,18 @@
   gap: var(--space-0);
 }
 
-:root[data-interface='minecraft'][data-link-view='detailed'] .link-card {
+:root[data-interface='voxel'][data-link-view='detailed'] .link-card {
   --listing-icon-size: var(--icon-frame-size);
 }
 
-:root[data-interface='minecraft'][data-link-view='detailed']
+:root[data-interface='voxel'][data-link-view='detailed']
   .link-card
   > .action-row {
   font-family: var(--font-pixel);
   font-size: var(--font-size-title);
 }
 
-:root[data-interface='minecraft'][data-link-view='detailed']
+:root[data-interface='voxel'][data-link-view='detailed']
   .link-card
   .action-row-icon {
   border: var(--pixel-border) solid var(--color-border-light);
@@ -190,7 +190,7 @@
   box-shadow: var(--shadow-bevel);
 }
 
-:root[data-interface='minecraft'][data-link-view='detailed']
+:root[data-interface='voxel'][data-link-view='detailed']
   .link-card
   .action-row-icon
   .site-icon {
@@ -285,7 +285,7 @@
   display: none;
 }
 
-:root[data-interface='minecraft'][data-link-view='compact']
+:root[data-interface='voxel'][data-link-view='compact']
   .editorial-entry:is(
     [data-editorial-type='project'],
     [data-editorial-type='skill']
@@ -294,7 +294,7 @@
   display: grid;
 }
 
-:root[data-interface='minecraft'][data-link-view='compact']
+:root[data-interface='voxel'][data-link-view='compact']
   .editorial-entry:is(
     [data-editorial-type='project'],
     [data-editorial-type='skill']

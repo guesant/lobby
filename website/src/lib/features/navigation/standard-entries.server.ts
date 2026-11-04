@@ -1,11 +1,11 @@
 import { getSiteData } from '../content/content.server.ts';
 import { routeEntries } from './catalog.model.ts';
-import type { MinecraftEntry } from './entries.types.ts';
+import type { StandardEntry } from './entries.types.ts';
 
-export async function minecraftEntries(): Promise<MinecraftEntry[]> {
+export async function standardEntries(): Promise<StandardEntry[]> {
   const data = await getSiteData();
 
-  const entries: MinecraftEntry[] = [];
+  const entries: StandardEntry[] = [];
 
   for (const path of [
     '',

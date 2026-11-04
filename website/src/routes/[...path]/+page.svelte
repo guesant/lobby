@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import SitePage from '#lib/app/SitePage.svelte';
-  import MinecraftPage from '#lib/interfaces/minecraft/MinecraftPage.svelte';
+  import VoxelPage from '#lib/interfaces/voxel/VoxelPage.svelte';
 
   const {
     data,
@@ -18,4 +18,4 @@
   {/if}
 </svelte:head>
 
-<SitePage {data}><MinecraftPage {...data} /></SitePage>
+<SitePage {data}><VoxelPage {...data} /></SitePage>

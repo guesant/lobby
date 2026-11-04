@@ -43,7 +43,7 @@
     title={item.title}
     action={presentation.target}
     {thirdPartyLabel}
-    interfaceName="minecraft"
+    interfaceName="voxel"
     icon={item.icon}
     className={presentation.actionClass}
     linkID={item.id}

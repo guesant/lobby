@@ -6,7 +6,7 @@ export type BadgeExpectation = {
 export type ParityRoute = {
   path: string;
   language: string;
-  minecraft: boolean;
+  voxel: boolean;
   id: string;
   expected: BadgeExpectation;
 };

@@ -46,7 +46,7 @@
     U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-@scope (:root[data-interface="minecraft"]) {
+@scope (:root[data-interface="voxel"]) {
   :scope {
     color-scheme: dark;
     scrollbar-gutter: stable;
@@ -487,6 +487,15 @@
 
   .page-content > .presentation-group {
     margin-block-end: calc(var(--page-block-gap) - var(--section-gap));
+  }
+
+  .page-content > .home-context-group {
+    gap: var(--space-5);
+    margin-block-end: calc((var(--page-block-gap) - var(--section-gap)) / 2);
+  }
+
+  .page-content > .home-sections-toolbar {
+    margin-block-end: calc((var(--page-block-gap) - var(--section-gap)) / 2);
   }
 
   .world-scene {
@@ -2626,7 +2635,7 @@
       100% - var(--section-toolbar-terminal-width) * 2 - var(--space-2) * 2
     );
     margin: var(--space-0);
-    padding-block: var(--space-2) var(--space-3);
+    padding-block: var(--space-3);
     padding-inline: var(--space-3);
     border: var(--pixel-border) solid var(--color-wood-border);
     border-image-source: var(--ornament-oak-frame);

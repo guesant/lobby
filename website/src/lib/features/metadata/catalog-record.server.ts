@@ -4,11 +4,7 @@ import { preferredCatalogVariant } from './preferred-catalog-variant.server.ts';
 
 export function catalogRecord(candidate: CatalogCandidate): SearchItem {
   const primary =
-    preferredCatalogVariant(
-      candidate.variants,
-      'minecraft',
-      candidate.language,
-    ) ??
+    preferredCatalogVariant(candidate.variants, 'voxel', candidate.language) ??
     preferredCatalogVariant(candidate.variants, 'terminal', candidate.language);
 
   if (!primary) {

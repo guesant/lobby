@@ -19,7 +19,7 @@
     ui: Record<string, string>;
     thirdPartyLabel: string;
     locale: string;
-    interfaceName: 'minecraft' | 'terminal';
+    interfaceName: 'voxel' | 'terminal';
     sectionID: string;
     destination: ListingDestination;
     headingLevel: 3 | 4 | 5;

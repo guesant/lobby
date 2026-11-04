@@ -81,9 +81,9 @@ async function inspectInterfaceNavigation(page: Page): Promise<void> {
 
   for (const target of [
     'terminal',
-    'minecraft',
+    'voxel',
     'terminal',
-    'minecraft',
+    'voxel',
   ]) {
     await page.click('[data-settings-open]');
     await page.waitForSelector('#settings-dialog[open]', {

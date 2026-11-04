@@ -139,17 +139,15 @@
             class="toggle-input"
             type="radio"
             name="interface"
-            id="interface-minecraft"
-            value="minecraft"
+            id="interface-voxel"
+            value="voxel"
             data-interface-option
             data-setting="interface"
             data-interface-url={data.standardPageURL}
             checked={!terminal}
             onchange={updateSettings.bind(null, settingsActions)}
           />
-          <label class="toggle-button" for="interface-minecraft">
-            Minecraft
-          </label>
+          <label class="toggle-button" for="interface-voxel">Minecraft</label>
           <input
             class="toggle-input"
             type="radio"

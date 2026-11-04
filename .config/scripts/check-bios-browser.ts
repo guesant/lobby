@@ -267,7 +267,7 @@ function biosRoutes(baseURL: string): {
         } => {
           return {
             language: language.id,
-            interfaceName: textOr(prefix.replace('/', ''), 'minecraft'),
+            interfaceName: textOr(prefix.replace('/', ''), 'voxel'),
             url: new URL(`${language.path.slice(1)}${prefix}career/`, baseURL)
               .href,
           };

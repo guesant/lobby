@@ -4,6 +4,6 @@ import type { PrivacyPolicyContent } from './privacy.types.ts';
 export type PrivacyPageDataInput = {
   base: PageLoadData;
   locale: string;
-  interfaceName: 'minecraft' | 'terminal';
+  interfaceName: 'voxel' | 'terminal';
   privacyPolicy: PrivacyPolicyContent;
 };

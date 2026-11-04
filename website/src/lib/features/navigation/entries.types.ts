@@ -1,4 +1,4 @@
-export type MinecraftEntry = {
+export type StandardEntry = {
   path: string;
 };
 

@@ -82,7 +82,7 @@ function controlGeometry(element: Element): ControlGeometry {
 export async function inspectControlReadiness(
   context: BrowserContext,
   baseURL: string,
-  minecraft: boolean,
+  voxel: boolean,
 ): Promise<void> {
   const page = await createAuditPage(context);
 
@@ -97,7 +97,7 @@ export async function inspectControlReadiness(
     const gate = holdScripts(page);
 
     function resolveNavigation(): '' | 'terminal/' {
-      if (minecraft) {
+      if (voxel) {
         return '';
       }
 

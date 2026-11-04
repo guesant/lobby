@@ -28,7 +28,7 @@
     thirdPartyLabel: string;
     sectionID: string;
     locale: string;
-    interfaceName: 'minecraft' | 'terminal';
+    interfaceName: 'voxel' | 'terminal';
     destination: ListingDestination;
     emptyAction?: EmptyAction | undefined;
     headingLevel?: 2 | 3 | 4;

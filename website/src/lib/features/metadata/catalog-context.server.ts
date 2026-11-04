@@ -1,7 +1,7 @@
 import type { InterfaceName } from './resources.types.ts';
 
 export const interfaceNames: InterfaceName[] = [
-  'minecraft',
+  'voxel',
   'terminal',
 ];
 

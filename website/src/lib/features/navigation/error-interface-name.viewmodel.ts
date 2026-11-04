@@ -6,7 +6,7 @@ export function errorInterfaceName(state: ErrorPageState): string {
   }
 
   if (state.selected) {
-    return 'minecraft';
+    return 'voxel';
   }
 
   return 'neutral';

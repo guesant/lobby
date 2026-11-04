@@ -5,12 +5,12 @@ export function routeEntries(data: SiteData): string[] {
   const output: string[] = [];
 
   for (const language of data.links.language_options) {
-    const minecraft = pagesFor(data, language.id, 'minecraft');
+    const voxel = pagesFor(data, language.id, 'voxel');
 
     const terminal = pagesFor(data, language.id, 'terminal');
 
     for (const page of [
-      ...minecraft,
+      ...voxel,
       ...terminal,
     ]) {
       if (!page.fallback) {

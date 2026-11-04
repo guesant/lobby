@@ -8,7 +8,7 @@ import { privacyPolicyContent } from './privacy-policy-content.model.ts';
 
 export async function loadPrivacyPageData(
   locale: string,
-  interfaceName: 'minecraft' | 'terminal',
+  interfaceName: 'voxel' | 'terminal',
 ): Promise<PageLoadData> {
   const route = privacyPageRoute(locale, interfaceName);
 

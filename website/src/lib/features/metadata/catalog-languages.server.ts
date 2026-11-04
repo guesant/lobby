@@ -19,7 +19,7 @@ export function catalogLanguages(data: SiteData): CatalogLanguage[] {
     const terminalURL = absoluteURL(terminalPath);
 
     const homeURLs = {
-      minecraft: homeURL,
+      voxel: homeURL,
       terminal: terminalURL,
     };
 

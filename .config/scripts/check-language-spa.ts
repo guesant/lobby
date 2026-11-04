@@ -378,12 +378,12 @@ async function inspectMenu(input: {
         },
       );
 
-      function resolveInterface(): 'minecraft' | 'terminal' {
+      function resolveInterface(): 'voxel' | 'terminal' {
         if (terminal) {
           return 'terminal';
         }
 
-        return 'minecraft';
+        return 'voxel';
       }
 
       assert.deepEqual(state, {

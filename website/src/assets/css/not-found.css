@@ -70,7 +70,7 @@
   color: var(--error-accent);
 }
 
-.not-found[data-error-interface='minecraft'] {
+.not-found[data-error-interface='voxel'] {
   --error-border-color: #a7a075;
   --error-accent: light-dark(#245119, #e7dfb5);
 

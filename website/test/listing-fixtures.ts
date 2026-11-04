@@ -44,7 +44,7 @@ function informativeProps(
 
   if (
     !localized ||
-    (interfaceName !== 'minecraft' && interfaceName !== 'terminal')
+    (interfaceName !== 'voxel' && interfaceName !== 'terminal')
   ) {
     throw new Error('Invalid listing fixture locale or interface');
   }

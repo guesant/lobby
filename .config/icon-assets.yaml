@@ -30,7 +30,7 @@ icons:
   playstation: { source: simple-icons, key: playstation }
   steam: { source: simple-icons, key: steam }
   xbox: { source: font-awesome, key: xbox }
-  minecraft: { source: original, key: voxel-block }
+  game-profile: { source: original, key: voxel-block }
   academic: { source: original, key: graduation-cap }
   orcid: { source: simple-icons, key: orcid }
   leetcode: { source: simple-icons, key: leetcode }

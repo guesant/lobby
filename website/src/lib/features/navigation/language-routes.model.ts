@@ -9,7 +9,7 @@ export function languageRoutes(
   const routes: PageLoadData['languageRoutes'] = [];
 
   for (const option of data.links.language_options) {
-    const standard = pagesFor(data, option.id, 'minecraft');
+    const standard = pagesFor(data, option.id, 'voxel');
 
     const terminal = pagesFor(data, option.id, 'terminal');
 

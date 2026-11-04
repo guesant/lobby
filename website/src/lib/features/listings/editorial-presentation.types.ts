@@ -35,6 +35,6 @@ export type EditorialEntryPresentation = {
 
 export type EditorialEntryContext = {
   locale: string;
-  interfaceName: 'minecraft' | 'terminal';
+  interfaceName: 'voxel' | 'terminal';
   languageLabel: string;
 };

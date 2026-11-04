@@ -1,6 +1,6 @@
 export function privacyPageRoute(
   locale: string,
-  interfaceName: 'minecraft' | 'terminal',
+  interfaceName: 'voxel' | 'terminal',
 ): string {
   let route = locale;
 

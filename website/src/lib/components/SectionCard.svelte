@@ -82,7 +82,7 @@
         {thirdPartyLabel}
         sectionID={page.id}
         {locale}
-        interfaceName="minecraft"
+        interfaceName="voxel"
         {destination}
         emptyAction={emptyActionFor({
           home: true,

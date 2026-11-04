@@ -16,7 +16,7 @@
     title: string;
     action: LinkDestination;
     thirdPartyLabel: string;
-    interfaceName: 'minecraft' | 'terminal';
+    interfaceName: 'voxel' | 'terminal';
     icon?: string | undefined;
     className?: string;
     linkID?: string;
@@ -28,7 +28,7 @@
   class={[
     'action-row',
     className,
-    Boolean(icon) && interfaceName === 'minecraft' && 'action-row-with-icon',
+    Boolean(icon) && interfaceName === 'voxel' && 'action-row-with-icon',
   ]}
   href={action.href}
   target={action.target}
@@ -36,7 +36,7 @@
   data-link-id={linkID}
   data-preview-id={previewID}
 >
-  {#if icon && interfaceName === 'minecraft'}
+  {#if icon && interfaceName === 'voxel'}
     <span class="action-row-icon link-icon" aria-hidden="true">
       <Icon name={icon} optical />
     </span>

@@ -3,7 +3,7 @@ import type { LinkDocument, LinkRecord } from '../content/content.types.ts';
 export type DestinationContext = {
   config: Pick<LinkDocument, 'site'>;
   locale: string;
-  interfaceName: 'minecraft' | 'terminal';
+  interfaceName: 'voxel' | 'terminal';
   origin?: string;
 };
 

@@ -1,6 +1,6 @@
 export function privacyPageURL(
   locale: string,
-  interfaceName: 'minecraft' | 'terminal',
+  interfaceName: 'voxel' | 'terminal',
 ): string {
   let prefix = `/${locale}/`;
 

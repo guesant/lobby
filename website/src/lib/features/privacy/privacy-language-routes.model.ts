@@ -7,7 +7,7 @@ export function privacyLanguageRoutes(
   const languageRoutes: PageLoadData['languageRoutes'] = [];
 
   for (const route of routes) {
-    const standardURL = privacyPageURL(route.id, 'minecraft');
+    const standardURL = privacyPageURL(route.id, 'voxel');
 
     const terminalURL = privacyPageURL(route.id, 'terminal');
 

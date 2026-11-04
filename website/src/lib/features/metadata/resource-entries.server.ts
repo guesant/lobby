@@ -9,7 +9,7 @@ export function resourceEntries(data: SiteData): {
 
   for (const language of data.links.language_options) {
     output.push({
-      index: `${language.id}-minecraft`,
+      index: `${language.id}-voxel`,
     });
     output.push({
       index: `${language.id}-terminal`,

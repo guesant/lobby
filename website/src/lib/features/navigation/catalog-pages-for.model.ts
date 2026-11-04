@@ -8,7 +8,7 @@ import type { ConfiguredPage } from './routes.types.ts';
 export function pagesFor(
   data: SiteData,
   locale: string,
-  interfaceName = 'minecraft',
+  interfaceName = 'voxel',
 ): ReturnType<typeof presentedPage>[] {
   const localePath = languagePath(data, locale);
 

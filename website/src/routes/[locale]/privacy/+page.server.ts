@@ -7,5 +7,5 @@ export { privacyEntries as entries } from '../../../lib/features/privacy/privacy
 export async function load(event: PageServerLoadEvent): Promise<PageLoadData> {
   const locale = event.params.locale;
 
-  return loadPrivacyPageData(locale, 'minecraft');
+  return loadPrivacyPageData(locale, 'voxel');
 }

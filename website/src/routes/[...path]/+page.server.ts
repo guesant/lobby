@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit';
 import { getSiteData } from '#lib/features/content/content.server.ts';
 import { loadPageData } from '#lib/features/content/page.controller.server.ts';
 
-export { minecraftEntries as entries } from '#lib/features/navigation/entries.server.ts';
+export { standardEntries as entries } from '#lib/features/navigation/entries.server.ts';
 
 export async function load(event: PageServerLoadEvent): Promise<PageLoadData> {
   const params = event.params;

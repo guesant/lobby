@@ -12,7 +12,7 @@ profile:
     - orcid
 
 theme:
-  preset: minecraft
+  preset: voxel
   appearance: system
   background: default
   animations_enabled: true
@@ -1032,9 +1032,9 @@ sections:
           zh:
             title: Xbox
             description: 查找与玩家代号 C Ch5331 关联的 Xbox 资料。
-      - id: minecraft
+      - id: game-profile
         url: https://namemc.com/profile/Briel_Rodriguess
-        icon: minecraft
+        icon: game-profile
         enabled: true
         audiences: [friends, family]
         labels:

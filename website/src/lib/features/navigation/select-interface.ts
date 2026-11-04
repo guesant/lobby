@@ -9,7 +9,7 @@ export async function selectInterface(
 
   if (
     selected === page.interfaceName ||
-    (selected !== 'minecraft' && selected !== 'terminal')
+    (selected !== 'voxel' && selected !== 'terminal')
   ) {
     return;
   }

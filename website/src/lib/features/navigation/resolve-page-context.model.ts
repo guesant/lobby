@@ -21,7 +21,7 @@ export function resolvePageContext(
     return undefined;
   }
 
-  let interfaceName: PageContext['interfaceName'] = 'minecraft';
+  let interfaceName: PageContext['interfaceName'] = 'voxel';
 
   if (parts[1] === 'terminal') {
     interfaceName = 'terminal';
@@ -42,7 +42,7 @@ export function resolvePageContext(
     interfaceName,
     page,
     pages,
-    standardPages: pagesFor(data, locale, 'minecraft'),
+    standardPages: pagesFor(data, locale, 'voxel'),
     terminalPages: pagesFor(data, locale, 'terminal'),
   };
 }

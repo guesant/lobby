@@ -24,7 +24,7 @@ const widths = [
 async function inspectComponents(
   page: Page,
   expected: BadgeExpectation,
-  minecraft: boolean,
+  voxel: boolean,
 ): Promise<void> {
   const actual = await page.evaluate(
     (
@@ -73,7 +73,7 @@ async function inspectComponents(
       } => {
       const {
         expected,
-        minecraft
+        voxel
       } = input;
 
       const badges = [
@@ -115,7 +115,7 @@ async function inspectComponents(
         );
       });
 
-      if (!minecraft) {
+      if (!voxel) {
         return {
           badgesCorrect,
           ownershipCorrect,
@@ -312,19 +312,15 @@ async function inspectComponents(
     },
     {
       expected,
-      minecraft,
+      voxel,
     },
   );
 
   assert.equal(actual.badgesCorrect, true, 'translated text in every badge');
   assert.equal(actual.ownershipCorrect, true, 'badges match domain ownership');
 
-  if (!minecraft) {
-    assert.equal(
-      actual.independent,
-      true,
-      'Terminal has no Minecraft structure',
-    );
+  if (!voxel) {
+    assert.equal(actual.independent, true, 'Terminal has no voxel structure');
 
     return;
   }
@@ -476,11 +472,11 @@ async function inspectRoute(input: {
     width: number,
   ): Promise<void> {
     await setPresentation(page, theme, view);
-    await inspectComponents(page, expected, route.minecraft);
+    await inspectComponents(page, expected, route.voxel);
 
-    function resolveName(): 'minecraft' | 'terminal' {
-      if (route.minecraft) {
-        return 'minecraft';
+    function resolveName(): 'voxel' | 'terminal' {
+      if (route.voxel) {
+        return 'voxel';
       }
 
       return 'terminal';
@@ -499,18 +495,18 @@ async function inspectRoute(input: {
 async function inspectNavigation(input: {
   page: Page;
   baseURL: string;
-  minecraft: boolean;
+  voxel: boolean;
   expected: BadgeExpectation;
 }): Promise<void> {
   const {
     page,
     baseURL,
-    minecraft,
+    voxel,
     expected
   } = input;
 
   function resolvePrefix(): '' | 'terminal/' {
-    if (minecraft) {
+    if (voxel) {
       return '';
     }
 
@@ -529,7 +525,7 @@ async function inspectNavigation(input: {
   function resolveSelector():
     | '.header-navigation-links a[data-navigation-page="career"]'
     | '.terminal-navigation a[href$="/career/"]' {
-    if (minecraft) {
+    if (voxel) {
       return '.header-navigation-links a[data-navigation-page="career"]';
     }
 
@@ -549,7 +545,7 @@ async function inspectNavigation(input: {
     true,
     'internal navigation stays client-side',
   );
-  await inspectComponents(page, expected, minecraft);
+  await inspectComponents(page, expected, voxel);
 }
 
 function componentRoutes(config: LinkDocument): ParityRoute[] {
@@ -559,17 +555,17 @@ function componentRoutes(config: LinkDocument): ParityRoute[] {
     ): {
       path: string;
       language: string;
-      minecraft: boolean;
+      voxel: boolean;
       id: string;
       expected: {
         label: string;
         domains: string[];
       };
     }[] => {
-      function interfaceRoutes(minecraft: boolean): {
+      function interfaceRoutes(voxel: boolean): {
         path: string;
         language: string;
-        minecraft: boolean;
+        voxel: boolean;
         id: string;
         expected: {
           label: string;
@@ -586,7 +582,7 @@ function componentRoutes(config: LinkDocument): ParityRoute[] {
           ): {
             path: string;
             language: string;
-            minecraft: boolean;
+            voxel: boolean;
             id: string;
             expected: {
               label: string;
@@ -594,7 +590,7 @@ function componentRoutes(config: LinkDocument): ParityRoute[] {
             };
           } => {
             function resolvePath(): '' | 'terminal/' {
-              if (minecraft) {
+              if (voxel) {
                 return '';
               }
 
@@ -614,7 +610,7 @@ function componentRoutes(config: LinkDocument): ParityRoute[] {
                 1,
               )}${resolvePath()}${resolvePath1()}`,
               language: language.id,
-              minecraft,
+              voxel,
               id,
               expected: {
                 label: config.locales[language.id]?.ui.third_party ?? '',
@@ -659,11 +655,11 @@ async function checkComponentParity(input: {
   const checks = [];
 
   try {
-    for (const minecraft of [
+    for (const voxel of [
       true,
       false,
     ]) {
-      await inspectControlReadiness(context, baseURL, minecraft);
+      await inspectControlReadiness(context, baseURL, voxel);
     }
 
     const page = await createAuditPage(context);
@@ -689,7 +685,7 @@ async function checkComponentParity(input: {
       );
     }
 
-    for (const minecraft of [
+    for (const voxel of [
       true,
       false,
     ]) {
@@ -702,7 +698,7 @@ async function checkComponentParity(input: {
       await inspectNavigation({
         page,
         baseURL,
-        minecraft,
+        voxel,
         expected: {
           label: requiredValue.ui.third_party,
           domains: config.site.first_party_domains,
@@ -712,12 +708,12 @@ async function checkComponentParity(input: {
 
     await page.setJavaScriptEnabled(false);
 
-    for (const minecraft of [
+    for (const voxel of [
       true,
       false,
     ]) {
       function interfaceSegment(): '' | 'terminal/' {
-        if (minecraft) {
+        if (voxel) {
           return '';
         }
 
@@ -736,7 +732,7 @@ async function checkComponentParity(input: {
           label: 'Terceiros',
           domains: config.site.first_party_domains,
         },
-        minecraft,
+        voxel,
       );
     }
 

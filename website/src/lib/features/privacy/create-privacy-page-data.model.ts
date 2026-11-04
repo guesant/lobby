@@ -14,7 +14,7 @@ export function createPrivacyPageData(
 
   const privacyPolicy = input.privacyPolicy;
 
-  const standardURL = privacyPageURL(locale, 'minecraft');
+  const standardURL = privacyPageURL(locale, 'voxel');
 
   const terminalURL = privacyPageURL(locale, 'terminal');
 

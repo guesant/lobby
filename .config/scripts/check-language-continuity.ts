@@ -125,15 +125,15 @@ async function searchAndHistory(
 
     const loaded = page.waitForResponse((response): boolean => {
       return response.url()
-        .endsWith('/search/en-minecraft.json');
+        .endsWith('/search/en-voxel.json');
     });
 
     await page.click('[data-search-open]');
     await loaded;
     await page.waitForFunction(searchIsReady);
     assert.deepEqual(indexes, [
-      '/search/pt-br-minecraft.json',
-      '/search/en-minecraft.json',
+      '/search/pt-br-voxel.json',
+      '/search/en-voxel.json',
     ]);
     await page.keyboard.press('Escape');
     await page.goBack({

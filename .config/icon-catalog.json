@@ -13,7 +13,7 @@
   "playstation": false,
   "steam": false,
   "xbox": true,
-  "minecraft": true,
+  "game-profile": true,
   "academic": true,
   "orcid": true,
   "leetcode": true,

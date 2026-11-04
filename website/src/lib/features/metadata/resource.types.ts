@@ -1,6 +1,6 @@
 import type { SiteData } from '../content/content.types.ts';
 
-export type InterfaceName = 'minecraft' | 'terminal';
+export type InterfaceName = 'voxel' | 'terminal';
 
 export type ResourceIdentity = {
   locale: string;

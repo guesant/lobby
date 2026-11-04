@@ -1,2 +1,2 @@
-export { minecraftEntries } from './minecraft-entries.server.ts';
+export { standardEntries } from './standard-entries.server.ts';
 export { terminalEntries } from './terminal-entries.server.ts';

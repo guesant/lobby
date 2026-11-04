@@ -7,5 +7,5 @@ export function interfaceBodyClass(
     return 'terminal-interface';
   }
 
-  return 'theme-minecraft appearance-system background-default';
+  return 'theme-voxel appearance-system background-default';
 }

@@ -208,7 +208,7 @@ export type PageLoadData = {
   };
   credits: SiteData['credits'];
   locale: string;
-  interfaceName: 'minecraft' | 'terminal';
+  interfaceName: 'voxel' | 'terminal';
   page: PageRecord;
   pages: PageRecord[];
   languageRoutes: {

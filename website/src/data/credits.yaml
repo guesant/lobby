@@ -313,7 +313,7 @@ entries:
     authors: Matthew Vakalyuk, via Pixabay
     license: pixabay-content
     official_url: https://pixabay.com/users/matthewvakaliuk73627-48347364/
-  - id: minecraft
+  - id: game-brand-guidelines
     name: Minecraft, visual reference
     authors: Mojang Studios / Microsoft
     license: reference-only
@@ -338,7 +338,7 @@ entries:
     authors: Anurag Hazra and contributors
     license: reference-only
     official_url: https://github.com/anuraghazra/github-readme-stats
-  - id: minecraft-clone-unity
+  - id: voxel-clone-unity-reference
     name: MinecraftClone-Unity, visual reference
     authors: stalomeow and contributors
     license: reference-only
@@ -363,7 +363,7 @@ entries:
     authors: Clapeysron and contributors
     license: reference-only
     official_url: https://github.com/Clapeysron/Mycraft
-  - id: minecraft-wiki
+  - id: voxel-community-wiki
     name: Minecraft Wiki, visual reference
     authors: Minecraft Wiki contributors
     license: reference-only

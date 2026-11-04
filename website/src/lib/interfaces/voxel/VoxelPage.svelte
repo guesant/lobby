@@ -152,7 +152,7 @@
       <SuspensionRails {lanternCount} />
       <main class="page-content" id="main-content">
         {#if home}
-          <section class="presentation-group">
+          <section class="presentation-group home-context-group">
             <header class="section-toolbar">
               <h2 class="section-toolbar-title" id="presentation-title">
                 {data.localized.presentation.title}
@@ -193,7 +193,7 @@
               </div>
             </section>
           </section>
-          <header class="section-toolbar">
+          <header class="section-toolbar home-sections-toolbar">
             <h2 class="section-toolbar-title" id="home-categories-title">
               {data.localized.ui['home_sections_label']}
             </h2>
@@ -303,7 +303,7 @@
                 thirdPartyLabel={data.localized.ui.third_party}
                 sectionID={data.page.id}
                 locale={data.locale}
-                interfaceName="minecraft"
+                interfaceName="voxel"
                 {destination}
                 headingLevel={2}
                 emptyAction={emptyActionFor({

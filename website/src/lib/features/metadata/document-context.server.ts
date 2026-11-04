@@ -15,7 +15,7 @@ export function documentContext(data: SiteData, url: URL): DocumentContext {
     }
   }
 
-  let interfaceName: DocumentContext['interfaceName'] = 'minecraft';
+  let interfaceName: DocumentContext['interfaceName'] = 'voxel';
 
   if (parts[1] === 'terminal') {
     interfaceName = 'terminal';
