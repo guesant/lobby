@@ -511,11 +511,6 @@ export default [
       '.config/scripts/check-compact-controls.ts',
       '.config/scripts/check-component-parity.ts',
       '.config/scripts/check-progressive-scene.ts',
-      '.config/scripts/check-link-view.ts',
-      '.config/scripts/check-pointer-sound.ts',
-      '.config/scripts/check-search.ts',
-      '.config/scripts/check-federation.ts',
-      '.config/scripts/check-stats.ts',
       '.config/scripts/layout-*.ts',
     ],
     rules: {

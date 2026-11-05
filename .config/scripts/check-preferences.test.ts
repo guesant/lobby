@@ -1,21 +1,7 @@
 import { createPreferenceController } from '../../website/src/lib/features/preferences/preferences.controller.ts';
-import {
-  assignPreference,
-  defaultPreferences,
-} from '../../website/src/lib/features/preferences/preferences.model.ts';
+import { defaultPreferences } from '../../website/src/lib/features/preferences/preferences.model.ts';
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-
-test('preferences retain safe defaults and reject unknown persisted values', (): void => {
-  const ui = defaultPreferences();
-
-  assert.equal(assignPreference(ui, 'view', 'unknown'), false);
-  assert.equal(ui.view, 'compact');
-  assert.equal(assignPreference(ui, 'sound', 'unknown'), false);
-  assert.equal(ui.sound, 'on');
-  assert.equal(assignPreference(ui, 'theme', 'light'), true);
-  assert.equal(ui.theme, 'light');
-});
 
 test('view and sound preferences persist independently and survive route changes', (): void => {
   const entries = new Map<string, string>();

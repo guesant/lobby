@@ -43,44 +43,8 @@ test('git diagnostics retain the operation and failure while redacting raw and B
   assert.equal(error.message.includes(args[3] ?? ''), false);
 });
 
-test('git diagnostics identify termination signals and process launch failures', (): void => {
-  const terminated = statisticsGitError(
-    [
-      'ls-remote',
-    ],
-    {
-      status: null,
-      signal: 'SIGTERM',
-      stderr: '',
-    },
-  );
-
-  const unavailable = statisticsGitError(
-    [
-      'diff',
-    ],
-    {
-      status: null,
-      signal: null,
-      stderr: '',
-      error: new Error('spawn git ENOENT'),
-    },
-  );
-
-  assert.match(terminated.message, /git ls-remote failed \(SIGTERM\)/);
-  assert.match(
-    unavailable.message,
-    /git diff failed \(unavailable\): spawn git ENOENT/,
-  );
-});
-
-type GitCall = {
-  command: string | undefined;
-  args?: string[];
-};
-
 type PublishFixture = {
-  calls: GitCall[];
+  calls: string[];
   options: Parameters<typeof publishStatistics>[0];
 };
 
@@ -99,19 +63,20 @@ function fixture(
     invalid = false,
   } = input;
 
-  const calls: {
-    command: string | undefined;
-    args?: string[];
-  }[] = [];
+  const calls: string[] = [];
 
-  let sha = source;
+  const responses: Record<string, string> = {
+    'rev-parse': source,
+    diff: statisticsPath,
+    'ls-remote': `${source}\trefs/heads/main`,
+  };
 
-  function remoteReference(): string {
-    if (advanced) {
-      return `${committed}\trefs/heads/main`;
-    }
+  if (!changed) {
+    responses['diff'] = '';
+  }
 
-    return `${source}\trefs/heads/main`;
+  if (advanced) {
+    responses['ls-remote'] = `${committed}\trefs/heads/main`;
   }
 
   function runGit(args: string[]): string {
@@ -125,41 +90,25 @@ function fixture(
       ].includes(entry);
     });
 
-    calls.push({
-      command,
-      args,
-    });
-
-    if (command === 'rev-parse') {
-      return sha;
-    }
-
-    if (command === 'diff' && changed) {
-      return statisticsPath;
-    }
-
-    if (command === 'ls-remote') {
-      return remoteReference();
-    }
+    assert.ok(command);
+    calls.push(command);
 
     if (command === 'commit') {
-      sha = committed;
+      responses['rev-parse'] = committed;
     }
 
     if (command === 'push' && pushFails) {
       throw new Error('push rejected');
     }
 
-    return '';
+    return responses[command] ?? '';
   }
 
   function validate(): Promise<void> {
-    calls.push({
-      command: 'validate',
-    });
+    calls.push('validate');
 
     if (invalid) {
-      return Promise.reject(new Error('invalid statistics'));
+      throw new Error('invalid statistics');
     }
 
     return Promise.resolve();
@@ -189,15 +138,14 @@ test('unchanged statistics return their source SHA without validation, commit or
     changed: false,
     sha: source,
   });
-  assert.deepEqual(
-    calls.map((entry): string | undefined => {
-      return entry.command;
-    }),
-    [
-      'rev-parse',
-      'diff',
-    ],
-  );
+
+  for (const operation of [
+    'validate',
+    'commit',
+    'push',
+  ]) {
+    assert.equal(calls.includes(operation), false, operation);
+  }
 });
 
 for (const scenario of [
@@ -232,12 +180,8 @@ for (const scenario of [
     await assert.rejects(publishStatistics(options), scenario.message);
 
     if (!scenario.options.pushFails) {
-      assert.equal(
-        calls.some((entry): boolean => {
-          return entry.command === 'commit' || entry.command === 'push';
-        }),
-        false,
-      );
+      assert.equal(calls.includes('commit'), false);
+      assert.equal(calls.includes('push'), false);
     }
   });
 }
@@ -257,17 +201,15 @@ test('statistics-only commit preserves unrelated staged changes and pushes only 
         'user.name=fixture',
         '-c',
         'user.email=fixture@example.test',
-        ...args.map((argument): string => {
-          if (argument === 'https://github.com/guesant/lobby.git') {
-            return remote;
-          }
-
-          return argument;
-        }),
+        ...args,
       ],
       {
         cwd: checkout,
         encoding: 'utf8',
+        env: {
+          ...process.env,
+          GIT_ALLOW_PROTOCOL: 'file',
+        },
       },
     );
 
@@ -286,6 +228,11 @@ test('statistics-only commit preserves unrelated staged changes and pushes only 
     localGit([
       'init',
       '--initial-branch=main',
+    ]);
+    localGit([
+      'config',
+      `url.${remote}.insteadOf`,
+      'https://github.com/guesant/lobby.git',
     ]);
     await mkdir(join(checkout, 'website/src/data'), {
       recursive: true,

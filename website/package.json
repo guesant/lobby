@@ -18,8 +18,7 @@
     "lint:fix": "cd .. && node .config/scripts/quality.ts lint-fix",
     "lighthouse:baseline": "cd .. && node .config/scripts/lighthouse-baseline.ts",
     "format": "cd .. && node .config/scripts/quality.ts format",
-    "format-fix": "cd .. && node .config/scripts/quality.ts format-fix",
-    "test:quality": "cd .. && .config/node_modules/.bin/vitest run --config .config/vitest.config.ts --root . .config/scripts/check-code-spacing.test.ts"
+    "format-fix": "cd .. && node .config/scripts/quality.ts format-fix"
   },
   "dependencies": {
     "entities": "^9.0.0",

@@ -16,13 +16,17 @@ const entries = source.sections.flatMap((section): LinkRecord[] => {
   return section.links;
 });
 
-const github = entries.find((entry): boolean => {
-  return entry.stats?.provider === 'github';
-});
+const github = required(
+  entries.find((entry): boolean => {
+    return entry.stats?.provider === 'github';
+  }),
+);
 
-const leetcode = entries.find((entry): boolean => {
-  return entry.stats?.provider === 'leetcode';
-});
+const leetcode = required(
+  entries.find((entry): boolean => {
+    return entry.stats?.provider === 'leetcode';
+  }),
+);
 
 function username(entry: LinkRecord): string {
   return required(
@@ -32,56 +36,23 @@ function username(entry: LinkRecord): string {
   );
 }
 
-function response(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-  });
-}
-
-function repository(id: number): {
-  id: number;
-  private: boolean;
-  owner: {
-    login: string;
-  };
-  stargazers_count: number;
-  forks_count: number;
-} {
+function repository(id: number): unknown {
   return {
     id,
     private: false,
     owner: {
-      login: username(required(github)),
+      login: username(github),
     },
     stargazers_count: 2,
     forks_count: 1,
   };
 }
 
-function leetData(): {
-  data: {
-    matchedUser: {
-      username: string | undefined;
-      profile: {
-        ranking: number;
-      };
-      submitStatsGlobal: {
-        acSubmissionNum: {
-          difficulty: string;
-          count: number;
-        }[];
-      };
-    };
-    allQuestionsCount: {
-      difficulty: string;
-      count: number;
-    }[];
-  };
-} {
+function leetData(): unknown {
   return {
     data: {
       matchedUser: {
-        username: username(required(leetcode)),
+        username: username(leetcode),
         profile: {
           ranking: 7,
         },
@@ -130,20 +101,20 @@ function leetData(): {
 
 function fetcher(url: string): Promise<Response> {
   if (url.startsWith('https://leetcode.com/')) {
-    return Promise.resolve(response(leetData()));
+    return Promise.resolve(Response.json(leetData()));
   }
 
   if (url.includes('/repos?')) {
     return Promise.resolve(
-      response([
+      Response.json([
         repository(1),
       ]),
     );
   }
 
   return Promise.resolve(
-    response({
-      login: username(required(github)),
+    Response.json({
+      login: username(github),
       followers: 4,
       public_repos: 1,
     }),
@@ -181,14 +152,18 @@ test('atomic cache updates and failure retention', async (): Promise<void> => {
 
     const cached = validateStatistics(parse(valid));
 
-    assert.equal(
-      required(cached[required(github).id]).profile_url,
-      required(github).url,
-    );
+    assert.equal(cached[github.id]?.profile_url, github.url);
 
     for (const failure of [
       (): Promise<Response> => {
-        return Promise.resolve(response({}, 429));
+        return Promise.resolve(
+          Response.json(
+            {},
+            {
+              status: 429,
+            },
+          ),
+        );
       },
       (): Promise<never> => {
         return Promise.reject(new Error('fixture-timeout'));
@@ -214,7 +189,12 @@ test('atomic cache updates and failure retention', async (): Promise<void> => {
       ...options,
       fetcher: async (url): Promise<Response> => {
         if (url.includes('leetcode.com')) {
-          return response({}, 503);
+          return Response.json(
+            {},
+            {
+              status: 503,
+            },
+          );
         }
 
         return fetcher(url);
@@ -228,43 +208,44 @@ test('atomic cache updates and failure retention', async (): Promise<void> => {
       parse(await readFile(outputPath, 'utf8')),
     );
 
-    assert.deepEqual(
-      partial[required(leetcode).id],
-      cached[required(leetcode).id],
-    );
+    assert.deepEqual(partial[leetcode.id], cached[leetcode.id]);
     assert.notEqual(
-      required(partial[required(github).id]).updated_at,
-      required(cached[required(github).id]).updated_at,
+      partial[github.id]?.updated_at,
+      cached[github.id]?.updated_at,
     );
 
     const changed = structuredClone(source);
 
-    required(
-      required(changed)
-        .sections.flatMap((section): LinkRecord[] => {
-          return section.links;
-        })
-        .find((entry): boolean => {
-          return entry.id === required(github).id;
-        }),
-    ).url = 'https://github.com/fixture-account';
+    const changedEntry = changed.sections
+      .flatMap((section): LinkRecord[] => {
+        return section.links;
+      })
+      .find((entry): boolean => {
+        return entry.id === github.id;
+      });
+
+    assert.ok(changedEntry);
+    changedEntry.url = 'https://github.com/fixture-account';
     await writeFile(configurationPath, stringify(changed));
 
     const changedResults = await updateStats({
       ...options,
       fetcher: (): Promise<Response> => {
-        return Promise.resolve(response({}, 503));
+        return Promise.resolve(
+          Response.json(
+            {},
+            {
+              status: 503,
+            },
+          ),
+        );
       },
     });
 
-    assert.equal(
-      required(
-        required(changedResults)
-          .find((item): boolean => {
-            return item.id === required(github).id;
-          }),
-      ).status,
-      'unavailable',
+    assert.ok(
+      changedResults.some((item): boolean => {
+        return item.id === github.id && item.status === 'unavailable';
+      }),
     );
   } finally {
     await rm(directory, {
@@ -282,7 +263,14 @@ test('first failed collection does not fabricate a cache', async (): Promise<voi
     const results = await updateStats({
       outputPath,
       fetcher: (): Promise<Response> => {
-        return Promise.resolve(response({}, 503));
+        return Promise.resolve(
+          Response.json(
+            {},
+            {
+              status: 503,
+            },
+          ),
+        );
       },
     });
 

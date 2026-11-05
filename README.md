@@ -22,12 +22,12 @@ Meu site pessoal em [guesant.net](https://guesant.net/).
 
 ## Desenvolvimento Local
 
-Requer Git, Docker e Docker Compose.
+Requer Git, Docker, Docker Compose e `just`.
 
 ```sh
 git clone https://github.com/guesant/lobby.git
 cd lobby
-docker compose --file .config/compose.yaml run --rm --build --service-ports workspace just dev
+just dev
 ```
 
 Acesse [localhost:4173](http://localhost:4173/). As ferramentas rodam no container.
