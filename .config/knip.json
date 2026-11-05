@@ -27,8 +27,7 @@
         "scripts/lighthouse-baseline.ts",
         "scripts/verify-links.ts",
         "scripts/check-raster-browser.ts",
-        "scripts/*.test.ts",
-        "scripts/check-{federation,pointer-sound,stats,search}.ts"
+        "scripts/*.test.ts"
       ],
       "project": [
         "**/*.ts"

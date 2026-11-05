@@ -19,7 +19,7 @@
     "lighthouse:baseline": "cd .. && node .config/scripts/lighthouse-baseline.ts",
     "format": "cd .. && node .config/scripts/quality.ts format",
     "format-fix": "cd .. && node .config/scripts/quality.ts format-fix",
-    "test:quality": "cd .. && .config/node_modules/.bin/vitest run --config .config/vitest.config.ts --root . .config/scripts/check-code-spacing.test.ts"
+    "test:quality": "cd .. && .config/node_modules/.bin/vitest run --config .config/vitest.config.ts --root . .config/scripts/check-formatting.test.ts"
   },
   "dependencies": {
     "entities": "^9.0.0",

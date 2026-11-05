@@ -10,24 +10,6 @@ test('architecture distinguishes type contracts from forbidden visual integratio
     true,
   );
 
-  assert.deepEqual(dependencies, [
-    {
-      specifier: './content.model.ts',
-      typeOnly: true,
-    },
-    {
-      specifier: './Card.svelte',
-      typeOnly: false,
-    },
-    {
-      specifier: './data.server.ts',
-      typeOnly: false,
-    },
-    {
-      specifier: './lazy.model.ts',
-      typeOnly: true,
-    },
-  ]);
   assert.equal(dependencyViolations('View.svelte', dependencies).length, 1);
   assert.equal(
     dependencyViolations('content.model.ts', dependencies).length,

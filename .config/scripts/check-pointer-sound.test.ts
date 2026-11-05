@@ -5,42 +5,37 @@ import {
   type SoundPlayer,
   type SoundTiming,
 } from '../../website/src/lib/features/preferences/audio.types.ts';
-import type { FeedbackHarness } from './check-pointer-sound.types.ts';
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-function harness(enabled = true): FeedbackHarness {
+function idle(): void {
+  return;
+}
+
+function harness(): {
+  feedback: ReturnType<typeof createPointerFeedback>;
+  sounds: SoundKind[];
+  timers: Set<() => void>;
+  elapsed(value: number): void;
+  flush(): void;
+} {
   let now = 0;
-
-  let ready = true;
-
-  let prepared = 0;
-
-  let destroyed = false;
 
   const sounds: SoundKind[] = [];
 
   const timers = new Set<() => void>();
 
   const player: SoundPlayer = {
-    prepare(): void {
-      prepared += 1;
-    },
-    resume(): void {
-      return;
-    },
+    prepare: idle,
+    resume: idle,
     ready(): boolean {
-      return ready;
+      return true;
     },
     play(kind): void {
       sounds.push(kind);
     },
-    stop(): void {
-      return;
-    },
-    destroy(): void {
-      destroyed = true;
-    },
+    stop: idle,
+    destroy: idle,
   };
 
   const timing: SoundTiming = {
@@ -56,15 +51,12 @@ function harness(enabled = true): FeedbackHarness {
     },
   };
 
-  const feedback = createPointerFeedback(player, enabled, timing);
+  const feedback = createPointerFeedback(player, true, timing);
 
   return {
     feedback,
     sounds,
     timers,
-    setReady(value: boolean): void {
-      ready = value;
-    },
     elapsed(value: number): void {
       now = value;
     },
@@ -75,12 +67,6 @@ function harness(enabled = true): FeedbackHarness {
         timers.delete(callback);
         callback();
       }
-    },
-    prepared(): number {
-      return prepared;
-    },
-    destroyed(): boolean {
-      return destroyed;
     },
   };
 }
