@@ -47,6 +47,6 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@github/dependency-submission-toolkit": "2.0.5"
+    "@github/dependency-submission-toolkit": "3.0.0"
   }
 }
