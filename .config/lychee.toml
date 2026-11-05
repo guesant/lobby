@@ -1,6 +1,6 @@
 root_dir = "../../.local/build/site"
 index_files = ["index.html"]
-accept = [200, 206, 301, 302, 403, 999]
+accept = [200, 202, 206, 301, 302, 403, 999]
 accept_timeouts = true
 max_concurrency = 8
 max_retries = 1
