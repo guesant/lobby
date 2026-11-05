@@ -8,15 +8,20 @@ export function workflowImageDependencies(
   const dependencies: ManagedDependency[] = [];
 
   for (const match of source.matchAll(
-    /\b(node):([\d.]+-bookworm(?:-slim)?)@(sha256:[a-f0-9]{64})/g,
+    /\b(node|ghcr\.io\/renovatebot\/renovate):([\d.]+(?:-bookworm(?:-slim)?|-full))@(sha256:[a-f0-9]{64})/g,
   )) {
+    const name = requiredText(match[1], 'inline image name');
+
     const version = requiredText(match[2], 'inline image version');
+
+    const digest = requiredText(match[3], 'inline image digest');
 
     dependencies.push({
       file,
       manager: 'regex',
-      name: 'node',
+      name,
       version,
+      digest,
     });
   }
 

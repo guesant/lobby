@@ -146,7 +146,7 @@
         "/^\\.github/workflows/.*\\.ya?ml$/"
       ],
       "matchStrings": [
-        "(?<depName>node):(?<currentValue>[0-9.]+-bookworm(?:-slim)?)@(?<currentDigest>sha256:[a-f0-9]{64})"
+        "(?<depName>node|ghcr\\.io/renovatebot/renovate):(?<currentValue>[0-9.]+(?:-bookworm(?:-slim)?|-full))@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
     },
