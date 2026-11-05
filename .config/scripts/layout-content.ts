@@ -344,7 +344,7 @@ export function measureContent(): Pick<
           navigation.getBoundingClientRect().top >=
             updates.getBoundingClientRect().bottom &&
           navigation.querySelectorAll<HTMLAnchorElement>(
-            '.footer-navigation-links a',
+            '.footer-navigation-links a[data-navigation-page]',
           ).length === 15
         );
       }
