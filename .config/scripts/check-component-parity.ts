@@ -244,7 +244,7 @@ async function inspectComponents(
           navigation.querySelectorAll<HTMLAnchorElement>('.navigation-links a')
             .length ===
             document.querySelectorAll<HTMLAnchorElement>(
-              '.footer-navigation-links a',
+              '.footer-navigation-links a[data-navigation-page]',
             ).length
         );
       }
