@@ -87,9 +87,9 @@ jobs:
       (github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.operation == 'statistics'))
     runs-on: ubuntu-latest
+    environment: renovate
     permissions:
       contents: write
-      pull-requests: write
     outputs:
       changed: ${{ steps.result.outputs.changed }}
       sha: ${{ steps.result.outputs.sha }}
@@ -124,7 +124,7 @@ jobs:
       - name: Create or update statistics pull request
         if: steps.result.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
           STATISTICS_BRANCH: automation/statistics
         run: |
           set -eu
