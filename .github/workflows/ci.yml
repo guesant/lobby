@@ -198,7 +198,7 @@ jobs:
     timeout-minutes: 10
     needs: [plan, build]
     if: >-
-      github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
       needs.plan.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
