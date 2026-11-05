@@ -148,7 +148,7 @@ function reportClassFindings(
   reportStandaloneFunctions(context, classes, functions);
 }
 
-export const oneClassPerFile: Rule.RuleModule = {
+const oneClassPerFile: Rule.RuleModule = {
   meta: {
     type: 'suggestion',
     docs: {
@@ -194,7 +194,7 @@ export const oneClassPerFile: Rule.RuleModule = {
   },
 };
 
-export const oneFunctionPerFile: Rule.RuleModule = {
+const oneFunctionPerFile: Rule.RuleModule = {
   meta: {
     type: 'suggestion',
     docs: {
