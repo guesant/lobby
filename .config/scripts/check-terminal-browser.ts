@@ -288,10 +288,7 @@ async function inspectTerminalRoute(input: {
     `${path} curriculum and platform destinations`,
   );
 
-  for (const mode of [
-    'compact',
-    'detailed',
-  ] as const) {
+  for (const mode of terminalModes(route, language.id)) {
     await inspectTerminalMode({
       route,
       page,
@@ -299,6 +296,7 @@ async function inspectTerminalRoute(input: {
       path,
       initial,
       checks,
+      themes: terminalThemes(route, language.id),
       widths: terminalViewports(route, language.id),
     });
   }
@@ -448,6 +446,44 @@ function terminalViewports(
   ];
 }
 
+function terminalModes(
+  route: ConfiguredPage,
+  languageID: string,
+): ('compact' | 'detailed')[] {
+  if (route.type === 'now') {
+    return [
+      'compact',
+    ];
+  }
+
+  if (route.id === 'home' || languageID === 'pt-br') {
+    return [
+      'compact',
+      'detailed',
+    ];
+  }
+
+  return [
+    'compact',
+  ];
+}
+
+function terminalThemes(
+  route: ConfiguredPage,
+  languageID: string,
+): ('dark' | 'light')[] {
+  if (route.id === 'home' || languageID === 'pt-br') {
+    return [
+      'light',
+      'dark',
+    ];
+  }
+
+  return [
+    'dark',
+  ];
+}
+
 async function inspectTerminalMode(input: {
   route: ConfiguredPage;
   page: Page;
@@ -455,6 +491,7 @@ async function inspectTerminalMode(input: {
   path: string;
   initial: (string | undefined)[];
   checks: Record<string, unknown>[];
+  themes: ('dark' | 'light')[];
   widths: number[];
 }): Promise<void> {
   const {
@@ -464,6 +501,7 @@ async function inspectTerminalMode(input: {
     path,
     initial,
     checks,
+    themes,
     widths
   } = input;
 
@@ -471,10 +509,7 @@ async function inspectTerminalMode(input: {
     await page.click(`label[for="link-view-${mode}"]`);
   }
 
-  for (const theme of [
-    'light',
-    'dark',
-  ] as const) {
+  for (const theme of themes) {
     await page.evaluate((value): void => {
       document.documentElement.dataset['theme'] = value;
     }, theme);

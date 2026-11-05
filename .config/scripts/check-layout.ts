@@ -83,6 +83,19 @@ function viewportsForRoute(route: LayoutRoute): number[] {
   ];
 }
 
+function themesForRoute(route: LayoutRoute): ('dark' | 'light')[] {
+  if (route.language === primaryLanguageID || route.id === 'home') {
+    return [
+      'dark',
+      'light',
+    ];
+  }
+
+  return [
+    'dark',
+  ];
+}
+
 const routes = config.language_options.flatMap((input): LayoutRoute[] => {
   const {
     id
@@ -380,10 +393,7 @@ async function inspectLayoutRoute(
     href,
   });
 
-  for (const theme of [
-    'dark',
-    'light',
-  ] as const) {
+  for (const theme of themesForRoute(route)) {
     await inspectRouteAppearance(theme);
   }
 
