@@ -5,6 +5,8 @@ import {
   strings,
 } from '../../website/src/lib/features/content/validation.model.ts';
 import type { Advisory } from './check-osv.types.ts';
+import { runSarifCommand } from './run-sarif-command.ts';
+import { annotateSarif } from './sarif.ts';
 import { dependencySBOMs } from './security-inputs.ts';
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -159,7 +161,7 @@ export function assertSourceCoverage(value: unknown, expected: string[]): void {
   }
 }
 
-function scannerArguments(paths: string[]): string[] {
+function scannerArguments(paths: string[], format: 'json' | 'sarif'): string[] {
   const files = [
     '.config/pnpm-lock.yaml',
     'website/pnpm-lock.yaml',
@@ -181,17 +183,15 @@ function scannerArguments(paths: string[]): string[] {
     }),
     '--all-packages',
     '--format',
-    'json',
+    format,
   ];
 }
 
-async function runScanner(): Promise<{
+async function runScanner(paths: string[]): Promise<{
   code: number;
   output: string;
   paths: string[];
 }> {
-  const paths = await dependencySBOMs();
-
   return new Promise<{
     code: number;
     output: string;
@@ -199,7 +199,7 @@ async function runScanner(): Promise<{
   }>((resolve, reject): void => {
     const output: Buffer[] = [];
 
-    const scanner = spawn('osv-scanner', scannerArguments(paths), {
+    const scanner = spawn('osv-scanner', scannerArguments(paths, 'json'), {
       stdio: [
         'ignore',
         'pipe',
@@ -229,7 +229,9 @@ async function runScanner(): Promise<{
 }
 
 async function main(): Promise<void> {
-  const result = await runScanner();
+  const paths = await dependencySBOMs();
+
+  const result = await runScanner(paths);
 
   if (result.code !== 0 && result.code !== 1) {
     throw new Error(`osv-scanner failed: ${String(result.code)}`);
@@ -243,6 +245,20 @@ async function main(): Promise<void> {
     recursive: true,
   });
   await writeFile('.local/reports/osv.json', result.output);
+
+  const sarifPath = '.local/reports/sarif/osv.sarif';
+
+  const sarifCode = await runSarifCommand(
+    'osv-scanner',
+    scannerArguments(paths, 'sarif'),
+    sarifPath,
+  );
+
+  if (sarifCode !== result.code) {
+    throw new Error('OSV JSON and SARIF scans returned different statuses');
+  }
+
+  await annotateSarif(sarifPath, 'osv/dependencies');
 
   const findings = blockingAdvisories(report);
 

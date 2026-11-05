@@ -19,6 +19,7 @@
         "scripts/check-layout.ts",
         "scripts/check-renovate.ts",
         "scripts/check-osv.ts",
+        "scripts/submit-dependency-sboms.ts",
         "scripts/check-comment-policy.ts",
         "scripts/module-boundaries.ts",
         "scripts/repository-quality.ts",

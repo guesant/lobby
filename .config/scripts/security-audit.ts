@@ -1,39 +1,28 @@
-import { runCommand as command } from './process.ts';
-import { scanFilesystem } from './scan-filesystem.ts';
-import { scanSBOM } from './scan-sbom.ts';
-import { dependencySBOMs } from './security-inputs.ts';
+import { runSecurityOperations } from './run-security-operations.ts';
+import type { SecurityOperation } from './security-operation.types.ts';
 
 export async function security(): Promise<void> {
-  await command('renovate-config-validator', [
-    '--strict',
-    '.github/renovate.json',
-  ]);
-  await command('node', [
-    '.config/scripts/check-renovate.ts',
-  ]);
-  await command('node', [
-    '.config/scripts/check-osv.ts',
-  ]);
-  await scanFilesystem();
+  const operations: SecurityOperation[] = [
+    {
+      kind: 'renovate',
+    },
+    {
+      kind: 'osv',
+    },
+    {
+      kind: 'filesystem',
+    },
+    {
+      kind: 'sbom-generation',
+    },
+    {
+      kind: 'semgrep',
+    },
+  ];
 
-  for (const path of await dependencySBOMs()) {
-    await scanSBOM(path);
+  const result = await runSecurityOperations(operations);
+
+  if (result.failures.length > 0) {
+    throw new AggregateError(result.failures, 'Security audit failed');
   }
-
-  await command('semgrep', [
-    'scan',
-    '--config',
-    'auto',
-    '--error',
-    '--exclude',
-    'website/node_modules/**',
-    '--exclude',
-    'website/.svelte-kit/**',
-    '--exclude',
-    '.cache/**',
-    '--exclude',
-    '.local/**',
-    'website/src',
-    '.config/scripts',
-  ]);
 }

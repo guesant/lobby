@@ -1,4 +1,5 @@
 import { runCommand as command } from '../process.ts';
+import { scanFastReports } from '../scan-fast-reports.ts';
 import { secretScan } from '../security-gates.ts';
 import type { FastDependencies } from './fast-gates.types.ts';
 import { tests } from './tests.ts';
@@ -10,6 +11,8 @@ export async function checkFast(
     tests,
   },
 ): Promise<void> {
+  await scanFastReports(dependencies);
+
   await dependencies.command('pnpm', [
     '--dir',
     'website',
@@ -33,10 +36,5 @@ export async function checkFast(
     'check',
   ]);
   await dependencies.command('actionlint');
-  await dependencies.command('zizmor', [
-    '--offline',
-    '.github/workflows',
-  ]);
-  await dependencies.secretScan();
   await dependencies.tests();
 }
