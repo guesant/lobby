@@ -1,5 +1,6 @@
 import { validateStatistics } from '../../website/src/lib/features/content/statistics.validation.ts';
 import { publishStatistics } from './publish-stats.ts';
+import { statisticsGitError } from './publish-stats/statistics-git-error.ts';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -13,6 +14,65 @@ const source = '1'.repeat(40);
 const committed = '2'.repeat(40);
 
 const statisticsPath = 'website/src/data/statistics.yaml';
+
+test('git diagnostics retain the operation and failure while redacting raw and Basic credentials', (): void => {
+  const token = 'schedule-fixture-token';
+
+  const encoded = Buffer.from(`x-access-token:${token}`)
+    .toString('base64');
+
+  const args = [
+    '-c',
+    `http.https://github.com/.extraheader=AUTHORIZATION: basic ${encoded}`,
+    'push',
+    'https://github.com/guesant/lobby.git',
+    'HEAD:refs/heads/main',
+  ];
+
+  const error = statisticsGitError(args, {
+    status: 128,
+    signal: null,
+    stderr: `remote: Authentication failed: ${token}; Authorization: basic ${encoded}`,
+  });
+
+  assert.match(error.message, /Statistics git push failed \(128\)/);
+  assert.match(error.message, /remote: Authentication failed/);
+  assert.match(error.message, /\[REDACTED\]/);
+  assert.equal(error.message.includes(token), false);
+  assert.equal(error.message.includes(encoded), false);
+  assert.equal(error.message.includes(args[3] ?? ''), false);
+});
+
+test('git diagnostics identify termination signals and process launch failures', (): void => {
+  const terminated = statisticsGitError(
+    [
+      'ls-remote',
+    ],
+    {
+      status: null,
+      signal: 'SIGTERM',
+      stderr: '',
+    },
+  );
+
+  const unavailable = statisticsGitError(
+    [
+      'diff',
+    ],
+    {
+      status: null,
+      signal: null,
+      stderr: '',
+      error: new Error('spawn git ENOENT'),
+    },
+  );
+
+  assert.match(terminated.message, /git ls-remote failed \(SIGTERM\)/);
+  assert.match(
+    unavailable.message,
+    /git diff failed \(unavailable\): spawn git ENOENT/,
+  );
+});
 
 type GitCall = {
   command: string | undefined;

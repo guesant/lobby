@@ -1,3 +1,4 @@
+import { statisticsGitError } from './statistics-git-error.ts';
 import { spawnSync } from 'node:child_process';
 
 export function git(args: string[]): string {
@@ -14,7 +15,7 @@ export function git(args: string[]): string {
   );
 
   if (result.error ?? result.status !== 0) {
-    throw new Error('Statistics git command failed');
+    throw statisticsGitError(args, result);
   }
 
   return result.stdout.trim();
