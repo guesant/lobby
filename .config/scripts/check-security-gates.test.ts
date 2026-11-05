@@ -53,6 +53,7 @@ test('Renovate runs on main with an isolated schedule, App token and manual dry-
   );
 
   assert.equal(job['if'], "github.ref == 'refs/heads/main'");
+  assert.equal(job['environment'], 'renovate');
   assert.equal(job['timeout-minutes'], 30);
   assert.ok(Array.isArray(job['steps']));
 
