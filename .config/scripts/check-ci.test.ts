@@ -38,6 +38,18 @@ test('publication operations reject other branches and malformed inputs', (): vo
   }, /SHA/);
 });
 
+test('statistics updates create a candidate without publishing directly', (): void => {
+  const result = resolveRun({
+    eventName: 'schedule',
+    ref: 'refs/heads/main',
+    sha,
+  });
+
+  assert.equal(result.operation, 'statistics');
+  assert.equal(result.update_statistics, true);
+  assert.equal(result.publish, false);
+});
+
 test('deployment fails closed and skips an obsolete main snapshot', async (): Promise<void> => {
   const result = await deploymentStatus({
     sha,

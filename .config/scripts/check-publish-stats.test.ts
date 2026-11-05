@@ -68,7 +68,8 @@ function fixture(
   const responses: Record<string, string> = {
     'rev-parse': source,
     diff: statisticsPath,
-    'ls-remote': `${source}\trefs/heads/main`,
+    main: `${source}\trefs/heads/main`,
+    branch: '',
   };
 
   if (!changed) {
@@ -76,7 +77,7 @@ function fixture(
   }
 
   if (advanced) {
-    responses['ls-remote'] = `${committed}\trefs/heads/main`;
+    responses['main'] = `${committed}\trefs/heads/main`;
   }
 
   function runGit(args: string[]): string {
@@ -91,6 +92,11 @@ function fixture(
     });
 
     assert.ok(command);
+
+    if (command === 'ls-remote') {
+      return fixtureRemoteLookup(args, calls, responses);
+    }
+
     calls.push(command);
 
     if (command === 'commit') {
@@ -124,6 +130,24 @@ function fixture(
       validate,
     },
   };
+}
+
+function fixtureRemoteLookup(
+  args: string[],
+  calls: string[],
+  responses: Record<string, string>,
+): string {
+  const ref = args.at(-1);
+
+  if (ref === 'refs/heads/main') {
+    calls.push('ls-remote-main');
+
+    return responses['main'] ?? '';
+  }
+
+  calls.push('ls-remote-branch');
+
+  return responses['branch'] ?? '';
 }
 
 test('unchanged statistics return their source SHA without validation, commit or push', async (): Promise<void> => {
@@ -186,7 +210,7 @@ for (const scenario of [
   });
 }
 
-test('statistics-only commit preserves unrelated staged changes and pushes only to a local fixture remote', async (): Promise<void> => {
+test('statistics-only commit preserves unrelated staged changes and pushes a local fixture branch', async (): Promise<void> => {
   const directory = await mkdtemp(join(tmpdir(), 'lobby-statistics-publish-'));
 
   const remote = join(directory, 'remote.git');
@@ -309,7 +333,7 @@ test('statistics-only commit preserves unrelated staged changes and pushes only 
       localGit([
         'ls-remote',
         remote,
-        'refs/heads/main',
+        'refs/heads/automation/statistics',
       ])
         .split(/\s+/)[0],
       result.sha,

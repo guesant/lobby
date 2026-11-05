@@ -89,6 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     outputs:
       changed: ${{ steps.result.outputs.changed }}
       sha: ${{ steps.result.outputs.sha }}
@@ -103,7 +104,7 @@ jobs:
         with:
           target: workspace-fast
           tag: lobby-workspace-fast
-      - name: Collect and commit statistics in Docker
+      - name: Collect and prepare statistics branch in Docker
         env:
           GITHUB_STATS_TOKEN: ${{ github.token }}
           CI_OUTPUT_PATH: .local/ci/statistics-output
@@ -120,6 +121,21 @@ jobs:
           set -eu
           cat .local/ci/statistics-output >> "$GITHUB_OUTPUT"
           cat .local/ci/statistics-summary >> "$GITHUB_STEP_SUMMARY"
+      - name: Create or update statistics pull request
+        if: steps.result.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATISTICS_BRANCH: automation/statistics
+        run: |
+          set -eu
+          pull_request=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$STATISTICS_BRANCH" --state open --json url --jq '.[0].url // ""')
+          if [ -z "$pull_request" ]; then
+            pull_request=$(gh pr create --repo "$GITHUB_REPOSITORY" --head "$STATISTICS_BRANCH" --base main \
+              --title 'chore(stats): refresh public statistics' \
+              --body 'Automated refresh of validated public statistics. The scheduled workflow validates this commit before it can be merged.')
+          fi
+          echo "pull_request=$pull_request" >> "$GITHUB_OUTPUT"
+          echo "Statistics pull request: $pull_request" >> "$GITHUB_STEP_SUMMARY"
 
   build:
     timeout-minutes: 15
@@ -168,6 +184,7 @@ jobs:
       - name: Upload native SARIF reports
         if: >-
           always() && hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
+          needs.plan.outputs.operation != 'statistics' &&
           (github.ref == 'refs/heads/main' ||
           (github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository))
@@ -199,6 +216,7 @@ jobs:
     needs: [plan, build]
     if: >-
       always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      needs.plan.outputs.operation != 'statistics' &&
       needs.plan.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -416,8 +434,8 @@ jobs:
             test "$STATISTICS_RESULT" = success
             if [ "$STATISTICS_CHANGED" = true ]; then
               test "$BUILD_RESULT" = success
-              test "$SBOM_RESULT" = success
-              test "$DEPLOY_RESULT" = success
+              test "$SBOM_RESULT" = skipped
+              test "$DEPLOY_RESULT" = skipped
               exit 0
             fi
             test "$STATISTICS_CHANGED" = false
