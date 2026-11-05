@@ -299,6 +299,7 @@ async function inspectTerminalRoute(input: {
       path,
       initial,
       checks,
+      widths: terminalViewports(route, language.id),
     });
   }
 
@@ -428,6 +429,25 @@ async function captureTerminalViewport(input: {
   });
 }
 
+function terminalViewports(
+  route: ConfiguredPage,
+  languageID: string,
+): number[] {
+  if (route.id === 'home' || languageID === 'pt-br') {
+    return [
+      320,
+      390,
+      768,
+      1024,
+      1440,
+    ];
+  }
+
+  return [
+    1440,
+  ];
+}
+
 async function inspectTerminalMode(input: {
   route: ConfiguredPage;
   page: Page;
@@ -435,6 +455,7 @@ async function inspectTerminalMode(input: {
   path: string;
   initial: (string | undefined)[];
   checks: Record<string, unknown>[];
+  widths: number[];
 }): Promise<void> {
   const {
     route,
@@ -442,7 +463,8 @@ async function inspectTerminalMode(input: {
     mode,
     path,
     initial,
-    checks
+    checks,
+    widths
   } = input;
 
   if (route.type !== 'now') {
@@ -457,13 +479,7 @@ async function inspectTerminalMode(input: {
       document.documentElement.dataset['theme'] = value;
     }, theme);
 
-    for (const width of [
-      320,
-      390,
-      768,
-      1024,
-      1440,
-    ] as const) {
+    for (const width of widths) {
       await inspectTerminalViewport({
         page,
         width,

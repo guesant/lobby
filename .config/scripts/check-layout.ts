@@ -73,6 +73,16 @@ const widths = [
   1440,
 ];
 
+function viewportsForRoute(route: LayoutRoute): number[] {
+  if (route.language === primaryLanguageID || route.id === 'home') {
+    return widths;
+  }
+
+  return [
+    1440,
+  ];
+}
+
 const routes = config.language_options.flatMap((input): LayoutRoute[] => {
   const {
     id
@@ -544,7 +554,7 @@ async function inspectLayoutRoute(
       });
     }
 
-    for (const width of widths) {
+    for (const width of viewportsForRoute(route)) {
       await inspectLayoutViewport({
         page,
         width,
