@@ -1,4 +1,4 @@
-import { check } from '../audit-task.ts';
+import { check, checkAuditStage } from '../audit-task.ts';
 import { build } from '../build-task.ts';
 import { checkFast, tests } from '../fast-gates.ts';
 import { reportTaskError } from './report-task-error.ts';
@@ -15,6 +15,7 @@ const tasks: Record<string, () => Promise<void>> = {
   preview: runPreview,
   test: tests,
   check,
+  'check-audit-stage': checkAuditStage,
   'check-fast': checkFast,
   ci: runCI,
   format: runFormat,

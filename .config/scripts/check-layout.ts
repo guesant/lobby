@@ -14,6 +14,7 @@ import {
   inspectStatistics,
 } from './layout-pages.ts';
 import type { LayoutContext } from './layout-pages.types.ts';
+import { runParallelLayoutAudits } from './run-parallel-layout-audits.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { resolve } from 'node:path';
@@ -284,41 +285,9 @@ const layoutContext: LayoutContext = {
       'light',
     );
     assert.deepEqual(errors, []);
-    await (
-      await import('./check-navigation-browser.ts')
-    ).default({
-      browser,
-      baseURL: base.href,
-      reportDirectory,
-    });
-    await (
-      await import('./check-language-browser.ts')
-    ).default(browser, base.href);
-    await (
-      await import('./check-listing-browser.ts')
-    ).default(browser, base.href, reportDirectory);
-    await (
-      await import('./check-component-parity.ts')
-    ).default({
-      browser,
-      baseURL: base.href,
-      reportDirectory,
-    });
-    await (
-      await import('./check-link-view-browser.ts')
-    ).default(browser, base.href, reportDirectory);
-    await (
-      await import('./check-compact-controls.ts')
-    ).default(browser, base.href, reportDirectory);
-    await (
-      await import('./check-terminal-browser.ts')
-    ).default(browser, base.href, reportDirectory);
-    await (
-      await import('./check-bios-browser.ts')
-    ).default(browser, base.href, reportDirectory);
-    await (
-      await import('./check-native-runtime-browser.ts')
-    ).default(browser, base.href);
+
+    await runParallelLayoutAudits(browser, base.href, reportDirectory);
+
     fs.writeFileSync(
       `${reportDirectory}/layout-checks.json`,
       JSON.stringify(

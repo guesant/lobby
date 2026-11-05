@@ -1,7 +1,7 @@
-import { build } from '../build-task.ts';
-import { runCommand as command } from '../process.ts';
-import { runBrowserAudits } from './run-browser-audits.ts';
+import { runBrowserAuditStage } from './run-browser-audit-stage.ts';
 import { runCoreAudits } from './run-core-audits.ts';
+import { runLighthouseAuditStage } from './run-lighthouse-audit-stage.ts';
+import { runLinksAuditStage } from './run-links-audit-stage.ts';
 
 export async function check(): Promise<void> {
   if (process.env['TOOLING_PROFILE'] !== 'audit') {
@@ -10,20 +10,9 @@ export async function check(): Promise<void> {
 
   const failures = await runCoreAudits();
 
-  await command('node', [
-    '--test',
-    '.config/scripts/check-raster-browser.ts',
-  ]);
-  await build('.local/build/qa');
-  await runBrowserAudits();
-  await build('.local/build/lighthouse');
-  await command('node', [
-    '.config/scripts/lighthouse-audit.ts',
-  ]);
-  await build();
-  await command('node', [
-    '.config/scripts/verify-links.ts',
-  ]);
+  await runBrowserAuditStage();
+  await runLighthouseAuditStage();
+  await runLinksAuditStage();
 
   if (failures.length > 0) {
     throw new AggregateError(failures, 'Quality audit failed');

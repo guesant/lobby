@@ -1,5 +1,6 @@
 import type { FastDependencies } from './fast-gates/fast-gates.types.ts';
 import { scanZizmor } from './scan-zizmor.ts';
+import { throwOnRejected } from './throw-on-rejected.ts';
 
 export async function scanFastReports(
   dependencies: FastDependencies,
@@ -15,15 +16,5 @@ export async function scanFastReports(
 
   const results = await Promise.allSettled(reportScans);
 
-  const failures: unknown[] = [];
-
-  for (const result of results) {
-    if (result.status === 'rejected') {
-      failures.push(result.reason);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new AggregateError(failures, 'Fast SARIF scanners failed');
-  }
+  throwOnRejected(results, 'Fast SARIF scanners failed');
 }
