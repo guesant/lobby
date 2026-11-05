@@ -231,6 +231,7 @@ jobs:
           name: dependency-snapshots
           path: .local/reports/sbom
           if-no-files-found: ignore
+          include-hidden-files: true
 
   audit:
     timeout-minutes: 60
