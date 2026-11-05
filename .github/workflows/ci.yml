@@ -284,7 +284,7 @@ jobs:
           docker run --rm --volume "$GITHUB_WORKSPACE:/workspace" --workdir /workspace \
             --env GITHUB_REPOSITORY --env GITHUB_SERVER_URL --env GITHUB_SHA \
             --env GITHUB_RUN_ID --env GITHUB_RUN_NUMBER lobby-workspace-audit \
-            sh -lc 'git config --global --add safe.directory /workspace && just check'
+            sh -c 'git config --global --add safe.directory /workspace && just check'
       - name: Upload native SARIF reports
         if: >-
           always() && hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
