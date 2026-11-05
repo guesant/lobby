@@ -199,6 +199,7 @@ jobs:
           path: |
             .local/reports
             .cache/lighthouseci
+          include-hidden-files: true
           if-no-files-found: ignore
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
@@ -282,7 +283,8 @@ jobs:
           set -eu
           docker run --rm --volume "$GITHUB_WORKSPACE:/workspace" --workdir /workspace \
             --env GITHUB_REPOSITORY --env GITHUB_SERVER_URL --env GITHUB_SHA \
-            --env GITHUB_RUN_ID --env GITHUB_RUN_NUMBER lobby-workspace-audit just check
+            --env GITHUB_RUN_ID --env GITHUB_RUN_NUMBER lobby-workspace-audit \
+            sh -lc 'git config --global --add safe.directory /workspace && just check'
       - name: Upload native SARIF reports
         if: >-
           always() && hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
@@ -300,6 +302,7 @@ jobs:
           path: |
             .local/reports
             .cache/lighthouseci
+          include-hidden-files: true
           if-no-files-found: ignore
 
   codeql:
