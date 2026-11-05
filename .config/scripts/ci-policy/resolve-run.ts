@@ -35,12 +35,9 @@ export function resolveRun(input: {
     throw new Error('Unsupported CI operation or event');
   }
 
-  const publish = [
-    'publish',
-    'statistics',
-  ].includes(selected);
+  const publish = selected === 'publish';
 
-  if (publish && ref !== 'refs/heads/main') {
+  if ((publish || selected === 'statistics') && ref !== 'refs/heads/main') {
     throw new Error('Publication and statistics require the main branch');
   }
 

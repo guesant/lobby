@@ -19,10 +19,10 @@ export async function main(): Promise<void> {
   const result = await publishStatistics(options);
 
   let summary =
-    'Statistics unchanged; no commit, build or deployment requested.';
+    'Statistics unchanged; no commit, pull request or build requested.';
 
   if (result.changed) {
-    summary = `Statistics committed at ${result.sha}; validation and build will use this SHA.`;
+    summary = `Statistics branch updated at ${result.sha}; the workflow will validate it before the pull request is merged.`;
   }
 
   await writeCiOutputs(result, summary);

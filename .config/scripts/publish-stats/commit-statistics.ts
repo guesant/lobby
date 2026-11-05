@@ -1,6 +1,7 @@
 import { validateSha } from '../ci-policy.ts';
-import { commitArguments } from './constants.ts';
+import { commitArguments, statisticsBranch } from './constants.ts';
 import type { GitCommand } from './publish-stats.types.ts';
+import { statisticsBranchLease } from './statistics-branch-lease.ts';
 
 export function commitStatistics(
   runGit: GitCommand,
@@ -37,12 +38,17 @@ export function commitStatistics(
     );
   }
 
+  const branchRef = `refs/heads/${statisticsBranch}`;
+
+  const branchLease = statisticsBranchLease(runGit, credentials, remote);
+
   runGit(commitArguments);
   runGit([
     ...credentials,
     'push',
+    branchLease,
     remote,
-    'HEAD:refs/heads/main',
+    `HEAD:${branchRef}`,
   ]);
 
   const commitSHA = runGit([

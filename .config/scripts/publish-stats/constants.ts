@@ -1,5 +1,7 @@
 export const statisticsPath = 'website/src/data/statistics.yaml';
 
+export const statisticsBranch = 'automation/statistics';
+
 export const commitArguments = [
   '-c',
   'user.name=github-actions[bot]',
