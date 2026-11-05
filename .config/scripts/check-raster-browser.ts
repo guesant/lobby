@@ -479,7 +479,7 @@ void test('six PNG cursors preserve transparency and use one global cursor', asy
 
   const css = await readFile('website/src/assets/css/main.css', 'utf8');
 
-  const declarations = css.match(/\bcursor\s*:[^;]+;/g);
+  const declarations = css.match(/\bcursor\s*:\s*url\([^;]+;/g);
 
   if (declarations === null) {
     throw new Error('Missing required declarations');

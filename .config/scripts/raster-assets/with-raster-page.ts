@@ -1,5 +1,6 @@
 import { createAuditPage } from '../browser-fixture.ts';
 import { installRasterHelpers } from '../raster-helpers.ts';
+import { readRasterPixels } from '../read-raster-pixels.ts';
 import type { Page } from 'puppeteer-core';
 import puppeteer from 'puppeteer-core';
 
@@ -18,6 +19,7 @@ export async function withRasterPage(
   try {
     const page = await createAuditPage(browser);
 
+    await page.exposeFunction('readRasterPixels', readRasterPixels);
     await page.evaluate(installRasterHelpers);
     await task(page);
   } finally {

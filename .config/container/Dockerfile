@@ -46,7 +46,7 @@ CMD ["sleep", "infinity"]
 FROM workspace-fast AS workspace-audit
 # renovate: datasource=deb registryUrl=https://deb.debian.org/debian-security?suite=bookworm-security&components=main
 RUN apt-get update \
-  && apt-get install --yes --no-install-recommends chromium=156.0.8078.73-1~deb12u1 g++=4:12.2.0-3 make=4.3-4.1 \
+  && apt-get install --yes --no-install-recommends chromium=156.0.8078.79-1~deb12u1 g++=4:12.2.0-3 make=4.3-4.1 \
   && rm --recursive --force /var/lib/apt/lists/*
 ENV TOOLING_PROFILE=audit
 ENV CHROME_PATH=/usr/bin/chromium

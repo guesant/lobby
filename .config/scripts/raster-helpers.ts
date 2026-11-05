@@ -1,5 +1,3 @@
-import { readRasterPixels } from './read-raster-pixels.ts';
-
 export function installRasterHelpers(): void {
-  window.rasterPixels = readRasterPixels;
+  window.rasterPixels = window.readRasterPixels.bind(window);
 }

@@ -318,6 +318,8 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.source_sha }}
           persist-credentials: false
+      - name: Trust the mounted checkout for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Initialize CodeQL
         uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
