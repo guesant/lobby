@@ -1,15 +1,17 @@
 import { runCommand as command } from './process.ts';
+import { annotateSarif } from './sarif.ts';
+import { mkdir } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 export async function scanFilesystem(): Promise<void> {
-  await command('trivy', [
-    'fs',
+  const sarifPath = '.local/reports/sarif/trivy-filesystem.sarif';
+
+  const scanArguments = [
     '--no-progress',
     '--scanners',
     'vuln,secret',
     '--severity',
     'CRITICAL,HIGH',
-    '--exit-code',
-    '1',
     '--skip-dirs',
     '.git',
     '--skip-dirs',
@@ -26,6 +28,31 @@ export async function scanFilesystem(): Promise<void> {
     'website/node_modules',
     '--skip-dirs',
     'website/.svelte-kit',
+  ];
+
+  const sarifDirectory = dirname(sarifPath);
+
+  await mkdir(sarifDirectory, {
+    recursive: true,
+  });
+
+  await command('trivy', [
+    'fs',
+    ...scanArguments,
+    '--format',
+    'sarif',
+    '--output',
+    sarifPath,
+    '--exit-code',
+    '0',
+    '.',
+  ]);
+  await annotateSarif(sarifPath, 'trivy/filesystem');
+  await command('trivy', [
+    'fs',
+    ...scanArguments,
+    '--exit-code',
+    '1',
     '.',
   ]);
 }

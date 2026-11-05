@@ -131,6 +131,9 @@ jobs:
       (needs.plan.outputs.update_statistics == 'true' && needs.statistics.result == 'success' &&
       needs.statistics.outputs.changed == 'true')) }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     outputs:
       source_sha: ${{ steps.source.outputs.sha }}
     steps:
@@ -162,6 +165,15 @@ jobs:
           docker run --rm --volume "$GITHUB_WORKSPACE:/workspace" --workdir /workspace \
             --env GITHUB_REPOSITORY --env GITHUB_SERVER_URL --env GITHUB_SHA \
             --env GITHUB_RUN_ID --env GITHUB_RUN_NUMBER --env LOBBY_SOURCE_SHA lobby-workspace-fast just ci
+      - name: Upload native SARIF reports
+        if: >-
+          always() && hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
+          (github.ref == 'refs/heads/main' ||
+          (github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository))
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: .local/reports/sarif
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -182,11 +194,52 @@ jobs:
           path: .cache/federation
           key: federation-v1-${{ hashFiles('.config/federation.yaml') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
+  sbom:
+    timeout-minutes: 10
+    needs: [plan, build]
+    if: >-
+      github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      needs.plan.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout built source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.build.outputs.source_sha }}
+          persist-credentials: false
+      - name: Prepare fast workspace
+        uses: ./.github/actions/workspace # zizmor: ignore[self-repository]
+        with:
+          target: workspace-fast
+          tag: lobby-workspace-fast
+      - name: Submit CycloneDX snapshots in Docker
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          LOBBY_SOURCE_SHA: ${{ needs.build.outputs.source_sha }}
+        run: |
+          set -eu
+          docker run --rm --volume "$GITHUB_WORKSPACE:/workspace" --workdir /workspace \
+            --env GITHUB_TOKEN --env GITHUB_REPOSITORY --env GITHUB_REF \
+            --env GITHUB_RUN_ID --env LOBBY_SOURCE_SHA \
+            lobby-workspace-fast node .config/scripts/submit-dependency-sboms.ts
+      - name: Upload CycloneDX and snapshot reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-snapshots
+          path: .local/reports/sbom
+          if-no-files-found: ignore
+
   audit:
     timeout-minutes: 60
     needs: plan
     if: github.event_name == 'workflow_dispatch' && needs.plan.outputs.operation == 'audit'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout selected source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -211,6 +264,15 @@ jobs:
           docker run --rm --volume "$GITHUB_WORKSPACE:/workspace" --workdir /workspace \
             --env GITHUB_REPOSITORY --env GITHUB_SERVER_URL --env GITHUB_SHA \
             --env GITHUB_RUN_ID --env GITHUB_RUN_NUMBER lobby-workspace-audit just check
+      - name: Upload native SARIF reports
+        if: >-
+          always() && hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
+          (github.ref == 'refs/heads/main' ||
+          (github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository))
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: .local/reports/sarif
       - name: Upload audit reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -306,3 +368,72 @@ jobs:
         id: deployment
         if: steps.freshness.outputs.current == 'true'
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  gate:
+    name: gate
+    timeout-minutes: 2
+    if: always() && !cancelled()
+    needs:
+      [plan, dependency-review, statistics, build, sbom, audit, codeql, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify required jobs
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PLAN_RESULT: ${{ needs.plan.result }}
+          OPERATION: ${{ needs.plan.outputs.operation }}
+          UPDATE_STATISTICS: ${{ needs.plan.outputs.update_statistics }}
+          PUBLISH: ${{ needs.plan.outputs.publish }}
+          DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
+          STATISTICS_RESULT: ${{ needs.statistics.result }}
+          STATISTICS_CHANGED: ${{ needs.statistics.outputs.changed }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          SBOM_RESULT: ${{ needs.sbom.result }}
+          AUDIT_RESULT: ${{ needs.audit.result }}
+          CODEQL_RESULT: ${{ needs.codeql.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        run: |
+          set -eu
+          test "$PLAN_RESULT" = success
+          if [ "$EVENT_NAME" = pull_request ]; then
+            test "$DEPENDENCY_REVIEW_RESULT" = success
+          else
+            test "$DEPENDENCY_REVIEW_RESULT" = skipped
+          fi
+          if [ "$OPERATION" = audit ]; then
+            test "$STATISTICS_RESULT" = skipped
+            test "$BUILD_RESULT" = skipped
+            test "$SBOM_RESULT" = skipped
+            test "$AUDIT_RESULT" = success
+            test "$CODEQL_RESULT" = success
+            test "$DEPLOY_RESULT" = skipped
+            exit 0
+          fi
+          test "$AUDIT_RESULT" = skipped
+          test "$CODEQL_RESULT" = skipped
+          if [ "$UPDATE_STATISTICS" = true ]; then
+            test "$STATISTICS_RESULT" = success
+            if [ "$STATISTICS_CHANGED" = true ]; then
+              test "$BUILD_RESULT" = success
+              test "$SBOM_RESULT" = success
+              test "$DEPLOY_RESULT" = success
+              exit 0
+            fi
+            test "$STATISTICS_CHANGED" = false
+            test "$BUILD_RESULT" = skipped
+            test "$SBOM_RESULT" = skipped
+            test "$DEPLOY_RESULT" = skipped
+            exit 0
+          fi
+          test "$STATISTICS_RESULT" = skipped
+          test "$BUILD_RESULT" = success
+          if [ "$EVENT_NAME" = pull_request ]; then
+            test "$SBOM_RESULT" = skipped
+          else
+            test "$SBOM_RESULT" = success
+          fi
+          if [ "$PUBLISH" = true ]; then
+            test "$DEPLOY_RESULT" = success
+          else
+            test "$DEPLOY_RESULT" = skipped
+          fi
