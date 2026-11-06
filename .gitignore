@@ -8,3 +8,4 @@
 /.config/python/.venv/
 /.pnpm-store/
 .DS_Store
+**/node_modules
