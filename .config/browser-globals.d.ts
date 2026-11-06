@@ -9,6 +9,7 @@ declare global {
     lobbyAssertions: {
       element(parent: ParentNode, selector: string): HTMLElement;
     };
+    readRasterPixels(png: string): Promise<RasterPixels>;
     rasterPixels(png: string): Promise<RasterPixels>;
     lobbyLayout: {
       rowAligned(elements: Element[]): boolean;

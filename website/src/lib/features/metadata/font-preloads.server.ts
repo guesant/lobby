@@ -7,5 +7,8 @@ export function fontPreloads(interfaceName: string): string {
     return `<link rel="preload" href="${terminalFont}" as="font" type="font/woff2" crossorigin="anonymous">`;
   }
 
-  return `<link rel="preload" href="${headingFont}" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="${bodyFont}" as="font" type="font/woff2" crossorigin="anonymous">`;
+  const scenePreload =
+    '<link rel="preload" href="/assets/generated/aged-oak.webp" as="image" fetchpriority="high">';
+
+  return `<link rel="preload" href="${headingFont}" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="${bodyFont}" as="font" type="font/woff2" crossorigin="anonymous">${scenePreload}`;
 }

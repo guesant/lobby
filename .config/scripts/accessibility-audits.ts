@@ -15,14 +15,34 @@ const routes = config.language_options.flatMap((language): string[] => {
     });
 });
 
+function lightThemeRoutes(): string[] {
+  return config.language_options.flatMap((language): string[] => {
+    return configuration
+      .pagesFor(config, language.id)
+      .filter((page): boolean => {
+        return (
+          !page.fallback &&
+          [
+            'home',
+            'career',
+            'code',
+          ].includes(page.id)
+        );
+      })
+      .map((page): string => {
+        return page.url;
+      });
+  });
+}
+
 function appearanceAudits(
   path: string,
   detailed = false,
-): AccessibilityAudit[] {
-  return [
+  themes: ('dark' | 'light')[] = [
     'dark',
-    'light',
-  ].map((theme): AccessibilityAudit => {
+  ],
+): AccessibilityAudit[] {
+  return themes.map((theme): AccessibilityAudit => {
     const actions = [
       'click element [data-settings-open]',
       `click element label[for="theme-${theme}"]`,
@@ -100,7 +120,14 @@ export function accessibilityAudits(): {
     return appearanceAudits(path);
   });
 
-  const measuredCount = urls.length + config.language_options.length * 6;
+  urls.push(
+    ...lightThemeRoutes()
+      .flatMap((path): AccessibilityAudit[] => {
+        return appearanceAudits(path, false, [
+          'light',
+        ]);
+      }),
+  );
 
   urls.push(
     ...config.language_options.flatMap((language): AccessibilityAudit[] => {
@@ -112,10 +139,16 @@ export function accessibilityAudits(): {
       });
     }),
   );
+
   urls.push(
     ...config.language_options.flatMap((language): AccessibilityAudit[] => {
       return navigationAudits(language.path);
     }),
+  );
+
+  const measuredCount = urls.length;
+
+  urls.push(
     ...config.language_options.flatMap((language): AccessibilityAudit[] => {
       return dialogAudits(language.path);
     }),

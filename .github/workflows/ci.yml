@@ -199,6 +199,7 @@ jobs:
           path: |
             .local/reports
             .cache/lighthouseci
+          include-hidden-files: true
           if-no-files-found: ignore
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
@@ -256,6 +257,10 @@ jobs:
     needs: plan
     if: github.event_name == 'workflow_dispatch' && needs.plan.outputs.operation == 'audit'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [core, browser, lighthouse, links]
     permissions:
       contents: read
       security-events: write
@@ -277,15 +282,18 @@ jobs:
           key: federation-audit-v1-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             federation-v1-${{ hashFiles('.config/federation.yaml') }}-
-      - name: Run full quality audit in Docker
+      - name: Run ${{ matrix.stage }} audit in Docker
         run: |
           set -eu
           docker run --rm --volume "$GITHUB_WORKSPACE:/workspace" --workdir /workspace \
             --env GITHUB_REPOSITORY --env GITHUB_SERVER_URL --env GITHUB_SHA \
-            --env GITHUB_RUN_ID --env GITHUB_RUN_NUMBER lobby-workspace-audit just check
+            --env GITHUB_RUN_ID --env GITHUB_RUN_NUMBER \
+            --env AUDIT_STAGE='${{ matrix.stage }}' lobby-workspace-audit \
+            sh -c 'git config --global --add safe.directory /workspace && just check-audit-stage'
       - name: Upload native SARIF reports
         if: >-
-          always() && hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
+          always() && matrix.stage == 'core' &&
+          hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
           (github.ref == 'refs/heads/main' ||
           (github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository))
@@ -296,10 +304,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: full-quality-reports
+          name: full-quality-reports-${{ matrix.stage }}
           path: |
             .local/reports
             .cache/lighthouseci
+          include-hidden-files: true
           if-no-files-found: ignore
 
   codeql:
@@ -318,6 +327,8 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.source_sha }}
           persist-credentials: false
+      - name: Trust the mounted checkout for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Initialize CodeQL
         uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:

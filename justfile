@@ -25,6 +25,10 @@ check:
     {{ audit }} node .config/scripts/dependencies.ts --audit
     {{ audit }} node .config/scripts/tasks.ts check
 
+check-audit-stage:
+    {{ audit }} node .config/scripts/dependencies.ts --audit
+    {{ audit }} node .config/scripts/tasks.ts check-audit-stage
+
 check-fast: dependencies
     {{ runner }} node .config/scripts/tasks.ts check-fast
 

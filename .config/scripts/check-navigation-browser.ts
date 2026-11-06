@@ -32,7 +32,7 @@ async function inspectLists(input: {
 
   for (const selector of [
     '.header-navigation-links a',
-    '.footer-navigation-links a',
+    '.footer-navigation-links a[data-navigation-page]',
   ] as const) {
     assert.deepEqual(
       await page.$$eval(

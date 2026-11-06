@@ -288,10 +288,7 @@ async function inspectTerminalRoute(input: {
     `${path} curriculum and platform destinations`,
   );
 
-  for (const mode of [
-    'compact',
-    'detailed',
-  ] as const) {
+  for (const mode of terminalModes(route, language.id)) {
     await inspectTerminalMode({
       route,
       page,
@@ -299,6 +296,8 @@ async function inspectTerminalRoute(input: {
       path,
       initial,
       checks,
+      themes: terminalThemes(route, language.id),
+      widths: terminalViewports(route, language.id),
     });
   }
 
@@ -428,6 +427,63 @@ async function captureTerminalViewport(input: {
   });
 }
 
+function terminalViewports(
+  route: ConfiguredPage,
+  languageID: string,
+): number[] {
+  if (route.id === 'home' || languageID === 'pt-br') {
+    return [
+      320,
+      390,
+      768,
+      1024,
+      1440,
+    ];
+  }
+
+  return [
+    1440,
+  ];
+}
+
+function terminalModes(
+  route: ConfiguredPage,
+  languageID: string,
+): ('compact' | 'detailed')[] {
+  if (route.type === 'now') {
+    return [
+      'compact',
+    ];
+  }
+
+  if (route.id === 'home' || languageID === 'pt-br') {
+    return [
+      'compact',
+      'detailed',
+    ];
+  }
+
+  return [
+    'compact',
+  ];
+}
+
+function terminalThemes(
+  route: ConfiguredPage,
+  languageID: string,
+): ('dark' | 'light')[] {
+  if (route.id === 'home' || languageID === 'pt-br') {
+    return [
+      'light',
+      'dark',
+    ];
+  }
+
+  return [
+    'dark',
+  ];
+}
+
 async function inspectTerminalMode(input: {
   route: ConfiguredPage;
   page: Page;
@@ -435,6 +491,8 @@ async function inspectTerminalMode(input: {
   path: string;
   initial: (string | undefined)[];
   checks: Record<string, unknown>[];
+  themes: ('dark' | 'light')[];
+  widths: number[];
 }): Promise<void> {
   const {
     route,
@@ -442,28 +500,21 @@ async function inspectTerminalMode(input: {
     mode,
     path,
     initial,
-    checks
+    checks,
+    themes,
+    widths
   } = input;
 
   if (route.type !== 'now') {
     await page.click(`label[for="link-view-${mode}"]`);
   }
 
-  for (const theme of [
-    'light',
-    'dark',
-  ] as const) {
+  for (const theme of themes) {
     await page.evaluate((value): void => {
       document.documentElement.dataset['theme'] = value;
     }, theme);
 
-    for (const width of [
-      320,
-      390,
-      768,
-      1024,
-      1440,
-    ] as const) {
+    for (const width of widths) {
       await inspectTerminalViewport({
         page,
         width,

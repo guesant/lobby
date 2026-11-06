@@ -364,12 +364,19 @@
     position: absolute;
     z-index: 1;
     inset-block: calc(
-      -1 *
-        (
-          var(--page-block-gap) + var(--profile-frame-width) / 2 +
-            var(--rail-coupling-seat)
-        )
-    );
+        -1 *
+          (
+            var(--header-content-gap) + var(--profile-frame-width) / 2 +
+              var(--rail-coupling-seat)
+          )
+      )
+      calc(
+        -1 *
+          (
+            var(--page-block-gap) + var(--profile-frame-width) / 2 +
+              var(--rail-coupling-seat)
+          )
+      );
     pointer-events: none;
     width: var(--rail-width);
   }
