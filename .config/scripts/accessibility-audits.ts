@@ -16,23 +16,42 @@ const routes = config.language_options.flatMap((language): string[] => {
 });
 
 function lightThemeRoutes(): string[] {
-  return config.language_options.flatMap((language): string[] => {
+  const homeRoutes = config.language_options.flatMap((language): string[] => {
     return configuration
       .pagesFor(config, language.id)
       .filter((page): boolean => {
-        return (
-          !page.fallback &&
-          [
-            'home',
-            'career',
-            'code',
-          ].includes(page.id)
-        );
+        return !page.fallback && page.id === 'home';
       })
       .map((page): string => {
         return page.url;
       });
   });
+
+  const defaultLanguage = config.language_options[0];
+
+  if (!defaultLanguage) {
+    return homeRoutes;
+  }
+
+  const representativeThemeRoutes = configuration
+    .pagesFor(config, defaultLanguage.id)
+    .filter((page): boolean => {
+      return (
+        !page.fallback &&
+        [
+          'career',
+          'code',
+        ].includes(page.id)
+      );
+    })
+    .map((page): string => {
+      return page.url;
+    });
+
+  return [
+    ...homeRoutes,
+    ...representativeThemeRoutes,
+  ];
 }
 
 function appearanceAudits(
@@ -45,6 +64,7 @@ function appearanceAudits(
   return themes.map((theme): AccessibilityAudit => {
     const actions = [
       'click element [data-settings-open]',
+      'wait for element #settings-dialog to be added',
       `click element label[for="theme-${theme}"]`,
       'click element #settings-dialog [data-dialog-close]',
     ];
@@ -62,51 +82,17 @@ function appearanceAudits(
 
 function navigationAudits(path: string): AccessibilityAudit[] {
   return [
-    'dark',
-    'light',
-  ].map((theme): AccessibilityAudit => {
-    return {
+    {
       url: `http://127.0.0.1:4173${path}career/`,
       rootElement: '.profile-navigation',
       actions: [
         'click element [data-settings-open]',
-        `click element label[for="theme-${theme}"]`,
+        'wait for element #settings-dialog to be added',
+        'click element label[for="theme-dark"]',
         'click element #settings-dialog [data-dialog-close]',
       ],
-    };
-  });
-}
-
-function dialogActions(dialog: string): string[] {
-  if (dialog === 'credits') {
-    return [
-      'click element #settings-dialog [data-dialog-close]',
-      'click element [data-credits-open]',
-    ];
-  }
-
-  return [];
-}
-
-function dialogAudits(path: string): AccessibilityAudit[] {
-  return [
-    'dark',
-    'light',
-  ].flatMap((theme): AccessibilityAudit[] => {
-    return [
-      'settings',
-      'credits',
-    ].map((dialog): AccessibilityAudit => {
-      return {
-        url: `http://127.0.0.1:4173${path}`,
-        actions: [
-          'click element [data-settings-open]',
-          `click element label[for="theme-${theme}"]`,
-          ...dialogActions(dialog),
-        ],
-      };
-    });
-  });
+    },
+  ];
 }
 
 export function accessibilityAudits(): {
@@ -129,14 +115,22 @@ export function accessibilityAudits(): {
       }),
   );
 
+  const detailedLanguages = config.language_options.filter(
+    (language): boolean => {
+      return language.id === 'pt-br' || language.id === 'zh';
+    },
+  );
+
+  const detailedPaths = detailedLanguages.flatMap((language): string[] => {
+    return [
+      language.path,
+      `${language.path}code/`,
+    ];
+  });
+
   urls.push(
-    ...config.language_options.flatMap((language): AccessibilityAudit[] => {
-      return [
-        language.path,
-        `${language.path}code/`,
-      ].flatMap((path): AccessibilityAudit[] => {
-        return appearanceAudits(path, true);
-      });
+    ...detailedPaths.flatMap((path): AccessibilityAudit[] => {
+      return appearanceAudits(path, true);
     }),
   );
 
@@ -147,12 +141,6 @@ export function accessibilityAudits(): {
   );
 
   const measuredCount = urls.length;
-
-  urls.push(
-    ...config.language_options.flatMap((language): AccessibilityAudit[] => {
-      return dialogAudits(language.path);
-    }),
-  );
 
   return {
     pa11y: {

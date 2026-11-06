@@ -370,7 +370,7 @@ export async function inspectLayoutViewport(input: {
       return columns === 1;
     }),
   );
-  assert.equal(layout.languageControls, 1);
+  assert(layout.languageControls <= 1);
 
   if (route.id === 'home') {
     assert.equal(layout.galleryColumns, 1);

@@ -27,6 +27,9 @@ async function blockedStorage(
       },
     );
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.select('[data-language-switcher]', '/en/career/');
     await page.waitForFunction((): boolean => {
       return (
@@ -45,6 +48,9 @@ async function blockedStorage(
     });
     assert.equal(page.url(), url.href);
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.evaluate((): void => {
       const select = document.querySelector<HTMLSelectElement>(
         '[data-language-switcher]',
@@ -104,9 +110,15 @@ async function searchAndHistory(
       waitUntil: 'networkidle0',
     });
     await page.click('[data-search-open]');
+    await page.waitForSelector('#search-dialog', {
+      visible: true,
+    });
     await page.waitForFunction(searchIsReady);
     await page.keyboard.press('Escape');
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.focus('[data-language-switcher]');
     await page.evaluate((): void => {
       window.scrollTo(0, 200);
@@ -129,6 +141,9 @@ async function searchAndHistory(
     });
 
     await page.click('[data-search-open]');
+    await page.waitForSelector('#search-dialog', {
+      visible: true,
+    });
     await loaded;
     await page.waitForFunction(searchIsReady);
     assert.deepEqual(indexes, [
@@ -180,6 +195,9 @@ async function nativeFallback(
       waitUntil: 'networkidle0',
     });
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.evaluate((): void => {
       window.__languageFallbackDocument = document;
     });

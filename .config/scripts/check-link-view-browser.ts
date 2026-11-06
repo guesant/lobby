@@ -10,6 +10,7 @@ import {
 } from './browser-presentation.ts';
 import type { ViewSnapshot } from './check-link-view-browser.types.ts';
 import { pagesFor, readConfiguration } from './configuration.ts';
+import { waitForSettingsDialog } from './wait-for-settings-dialog.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import type { Browser, Page } from 'puppeteer-core';
@@ -122,6 +123,7 @@ export default async function checkLinkViewBrowser(
       'detailed',
     );
     await page.click('[data-settings-open]');
+    await waitForSettingsDialog(page);
     await Promise.all([
       page.waitForNavigation({
         waitUntil: 'networkidle0',

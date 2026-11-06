@@ -57,10 +57,14 @@ async function inspectSearch(page: Page): Promise<void> {
     return document.querySelectorAll('#search-results a').length > 0;
   });
   await page.select('[data-search-filter="source"]', 'lobby');
-  await page.keyboard.press('Escape');
-  await page.keyboard.down('Control');
-  await page.keyboard.press('k');
-  await page.keyboard.up('Control');
+  await page.click('#search-dialog .dialog-close');
+  await page.waitForSelector('#search-dialog', {
+    hidden: true,
+  });
+  await page.click('[data-search-open]');
+  await page.waitForSelector('#search-query', {
+    visible: true,
+  });
   assert.equal(
     await page.$eval('[data-search-filter="source"]', (element): string => {
       if (!(element instanceof HTMLSelectElement)) {
@@ -128,6 +132,9 @@ async function inspectInterfaceNavigation(page: Page): Promise<void> {
 
 async function inspectSoundPreference(page: Page): Promise<void> {
   await page.click('[data-settings-open]');
+  await page.waitForSelector('#settings-dialog', {
+    visible: true,
+  });
   await page.click('label[for="sound-off"]');
   assert.equal(
     await page.evaluate((): string | null => {
@@ -146,6 +153,9 @@ async function inspectSoundPreference(page: Page): Promise<void> {
     'off',
   );
   await page.click('[data-settings-open]');
+  await page.waitForSelector('#settings-dialog', {
+    visible: true,
+  });
   assert.equal(await page.$eval('#sound-off', inputIsChecked), true);
   await page.click('#settings-dialog [data-dialog-close]');
 }

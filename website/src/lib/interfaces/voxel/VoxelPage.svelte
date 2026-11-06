@@ -30,7 +30,6 @@
   import { profileInitials } from '#lib/features/listings/presentation.model.ts';
   import { openDialog } from '#lib/features/preferences/open-dialog.controller.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
-  import PrivacyPolicy from '#lib/features/privacy/PrivacyPolicy.svelte';
 
   const state = interfaceState();
 
@@ -193,55 +192,59 @@
               </div>
             </section>
           </section>
-          <header class="section-toolbar home-sections-toolbar">
-            <h2 class="section-toolbar-title" id="home-categories-title">
-              {data.localized.ui['home_sections_label']}
-            </h2>
-          </header>
-          <LinkView ui={data.localized.ui} pageKey="sections" />
-          <section
-            class="home-categories"
-            id="home-categories"
-            aria-labelledby="home-categories-title"
-          >
-            <div class="category-grid">
-              {#each data.homeSections as section, index (section.page.id)}
-                <SectionCard
-                  page={section.page}
-                  items={section.links}
-                  editorial={section.editorial}
-                  editorialUI={data.editorialUI}
-                  thirdPartyLabel={data.localized.ui.third_party}
-                  locale={data.locale}
-                  {destination}
-                  {index}
-                />
+          <div class="presentation-group home-explore-group">
+            <header class="section-toolbar home-sections-toolbar">
+              <h2 class="section-toolbar-title" id="home-categories-title">
+                {data.localized.ui['home_sections_label']}
+              </h2>
+            </header>
+            <div class="home-listings">
+              <LinkView ui={data.localized.ui} pageKey="sections" />
+              <section
+                class="home-categories"
+                id="home-categories"
+                aria-labelledby="home-categories-title"
+              >
+                <div class="category-grid">
+                  {#each data.homeSections as section, index (section.page.id)}
+                    <SectionCard
+                      page={section.page}
+                      items={section.links}
+                      editorial={section.editorial}
+                      editorialUI={data.editorialUI}
+                      thirdPartyLabel={data.localized.ui.third_party}
+                      locale={data.locale}
+                      {destination}
+                      {index}
+                    />
+                  {/each}
+                </div>
+              </section>
+              {#each presentation.nowPages as entry (entry.id)}
+                <section class="home-updates" data-home-update="now">
+                  <SectionCard
+                    page={entry}
+                    items={entry.nowLinks}
+                    editorial={[]}
+                    editorialUI={data.editorialUI}
+                    thirdPartyLabel={data.localized.ui.third_party}
+                    locale={data.locale}
+                    {destination}
+                    update
+                  />
+                  {#if nowActivities.length}
+                    <article class="now-activity">
+                      <NowActivity
+                        entries={nowActivities}
+                        labels={data.editorialUI}
+                        className=""
+                      />
+                    </article>
+                  {/if}
+                </section>
               {/each}
             </div>
-          </section>
-          {#each presentation.nowPages as entry (entry.id)}
-            <section class="home-updates" data-home-update="now">
-              <SectionCard
-                page={entry}
-                items={entry.nowLinks}
-                editorial={[]}
-                editorialUI={data.editorialUI}
-                thirdPartyLabel={data.localized.ui.third_party}
-                locale={data.locale}
-                {destination}
-                update
-              />
-              {#if nowActivities.length}
-                <article class="now-activity">
-                  <NowActivity
-                    entries={nowActivities}
-                    labels={data.editorialUI}
-                    className=""
-                  />
-                </article>
-              {/if}
-            </section>
-          {/each}
+          </div>
         {:else if data.page.id === 'now'}
           <section class="presentation-group page-introduction">
             <header class="section-toolbar">
@@ -278,7 +281,13 @@
             description={data.page.description}
             titleID="privacy-policy-title"
           />
-          <PrivacyPolicy {data} />
+          {#await import('../../features/privacy/PrivacyPolicy.svelte') then {
+            default: PrivacyPolicy
+          }}
+            <div class="presentation privacy-policy-panel">
+              <PrivacyPolicy {data} />
+            </div>
+          {/await}
         {:else}
           <PageIntroduction
             title={data.page.title}

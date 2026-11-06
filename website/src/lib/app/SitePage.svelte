@@ -3,11 +3,8 @@
   import AnalyticsTracker from '#lib/features/analytics/AnalyticsTracker.svelte';
   import ConsentDialog from '#lib/features/analytics/ConsentDialog.svelte';
   import BiosScreen from '#lib/features/boot/BiosScreen.svelte';
-  import CreditsDialog from '#lib/features/content/CreditsDialog.svelte';
   import MetadataHead from '#lib/features/metadata/MetadataHead.svelte';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
-  import SettingsDialog from '#lib/features/preferences/SettingsDialog.svelte';
-  import SearchDialog from '#lib/features/search/SearchDialog.svelte';
   import type { Snippet } from 'svelte';
 
   const {
@@ -28,10 +25,28 @@
   path={data.page.url}
 />
 {@render children()}
-<SettingsDialog {data} />
-{#key data.locale + ':' + data.interfaceName}
-  <SearchDialog {data} />
-{/key}
-<CreditsDialog {data} />
+{#if state.dialog === 'settings'}
+  {#await import('../features/preferences/SettingsDialog.svelte') then {
+    default: SettingsDialog
+  }}
+    <SettingsDialog {data} />
+  {/await}
+{/if}
+{#if state.dialog === 'search'}
+  {#key data.locale + ':' + data.interfaceName}
+    {#await import('../features/search/SearchDialog.svelte') then {
+      default: SearchDialog
+    }}
+      <SearchDialog {data} />
+    {/await}
+  {/key}
+{/if}
+{#if state.dialog === 'credits'}
+  {#await import('../features/content/CreditsDialog.svelte') then {
+    default: CreditsDialog
+  }}
+    <CreditsDialog {data} />
+  {/await}
+{/if}
 <ConsentDialog {data} />
 <BiosScreen ui={data.editorialUI} />

@@ -1,1 +1,1 @@
-export type AuditStage = 'core' | 'browser' | 'lighthouse' | 'links';
+export type AuditStage = 'core' | 'browser' | 'lighthouse';

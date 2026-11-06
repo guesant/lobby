@@ -5,6 +5,7 @@ import { useBrowserLanguages } from './browser-presentation.ts';
 import withBrowserErrors from './check-browser-errors.ts';
 import checkLanguageContinuity from './check-language-continuity.ts';
 import checkLanguageSPA from './check-language-spa.ts';
+import { waitForSettingsDialog } from './wait-for-settings-dialog.ts';
 import assert from 'node:assert/strict';
 import type { Browser } from 'puppeteer-core';
 
@@ -193,6 +194,7 @@ async function checkLanguageBrowser(
       waitUntil: 'networkidle0',
     });
     await page.click('[data-settings-open]');
+    await waitForSettingsDialog(page);
     await Promise.all([
       page.waitForNavigation({
         waitUntil: 'networkidle0',

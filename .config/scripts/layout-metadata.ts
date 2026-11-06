@@ -227,6 +227,10 @@ export async function verifyRouteMetadata(input: {
     ),
     1,
   );
+  await page.click('[data-settings-open]');
+  await page.waitForSelector('#settings-dialog', {
+    visible: true,
+  });
   assert.deepEqual(
     await page.$$eval(
       '.language-select option',
@@ -272,6 +276,10 @@ export async function verifyRouteMetadata(input: {
       },
     ),
   );
+  await page.click('#settings-dialog [data-dialog-close]');
+  await page.waitForSelector('#settings-dialog', {
+    hidden: true,
+  });
   assert.deepEqual(
     await page.$$eval('.link-section .link-button', (links): string[] => {
       return links

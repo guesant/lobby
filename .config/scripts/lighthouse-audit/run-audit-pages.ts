@@ -1,6 +1,6 @@
 import type { readConfiguration } from '../configuration.ts';
-import { pagesFor } from '../configuration.ts';
 import { assertLighthouse } from './assert-lighthouse.ts';
+import { auditPageURLs } from './audit-page-urls.ts';
 import type { LighthouseResult } from './lighthouse-audit.types.ts';
 import { runLighthouse } from './run-lighthouse.ts';
 import { resolve } from 'node:path';
@@ -9,29 +9,24 @@ export async function runAuditPages(
   data: ReturnType<typeof readConfiguration>,
   results: LighthouseResult[],
 ): Promise<void> {
-  for (const language of data.language_options) {
-    for (const page of pagesFor(data, language.id)) {
-      if (page.fallback) {
-        continue;
-      }
+  const urls = auditPageURLs(data);
 
-      const output = resolve(
-        '.cache/lighthouseci/reports',
-        language.id,
-        page.id,
-      );
+  for (const [
+    index,
+    path,
+  ] of urls.entries()) {
+    const reportIndex = String(index)
+      .padStart(2, '0');
 
-      const result = await runLighthouse(
-        `http://127.0.0.1:4173${page.url}`,
-        output,
-      );
+    const output = resolve('.cache/lighthouseci/reports', reportIndex);
 
-      results.push(result);
+    const result = await runLighthouse(`http://127.0.0.1:4173${path}`, output);
 
-      const serializedResult = JSON.stringify(result);
+    results.push(result);
 
-      console.log(serializedResult);
-      assertLighthouse(result);
-    }
+    const serializedResult = JSON.stringify(result);
+
+    console.log(serializedResult);
+    assertLighthouse(result);
   }
 }
