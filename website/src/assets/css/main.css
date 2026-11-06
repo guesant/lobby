@@ -73,6 +73,7 @@
     --color-icon-face-shade: rgb(0 0 0 / 16%);
     --color-accent: light-dark(#365520, #b3ca86);
     --color-accent-strong: light-dark(#2b461b, #dedfb3);
+    --color-home-toolbar-caption: light-dark(#1f3a0f, #dedfb3);
     --color-selected: #38651f;
     --color-selected-hover: #426f25;
     --color-selected-text: #fff9e8;
@@ -482,7 +483,7 @@
   .page-content {
     width: var(--size-full);
     grid-template-columns: var(--grid-columns-1);
-    gap: var(--section-gap);
+    gap: var(--page-block-gap);
     margin-inline: auto;
   }
 
@@ -492,17 +493,20 @@
     gap: var(--space-3);
   }
 
-  .page-content > .presentation-group {
-    margin-block-end: calc(var(--page-block-gap) - var(--section-gap));
-  }
-
-  .page-content > .home-context-group {
+  .home-context-group,
+  .home-explore-group {
     gap: var(--space-5);
-    margin-block-end: calc((var(--page-block-gap) - var(--section-gap)) / 2);
   }
 
-  .page-content > .home-sections-toolbar {
-    margin-block-end: calc((var(--page-block-gap) - var(--section-gap)) / 2);
+  .home-listings {
+    display: grid;
+    grid-template-columns: var(--grid-columns-1);
+    min-width: var(--space-0);
+    gap: var(--section-gap);
+  }
+
+  .privacy-policy-panel > .privacy-policy {
+    padding: var(--space-0);
   }
 
   .world-scene {
@@ -2188,8 +2192,7 @@
   }
 
   .consent-content > p,
-  .consent-details p,
-  .privacy-policy-section p {
+  .consent-details p {
     color: var(--color-text-muted);
   }
 
@@ -2204,8 +2207,7 @@
 
   .consent-privacy-link,
   .settings-privacy-link,
-  .footer-privacy-link,
-  .privacy-policy-contact {
+  .footer-privacy-link {
     width: fit-content;
     color: var(--color-accent-strong);
     text-decoration-line: underline;
@@ -2229,35 +2231,6 @@
     min-height: var(--control-min-height);
     padding-inline: var(--space-3);
     text-align: start;
-  }
-
-  .privacy-policy {
-    display: grid;
-    gap: var(--space-5);
-    padding: var(--space-5);
-  }
-
-  .privacy-policy-status {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-small);
-  }
-
-  .privacy-policy-section {
-    display: grid;
-    gap: var(--space-2);
-  }
-
-  .privacy-policy-section h2 {
-    color: var(--color-accent-strong);
-    font-family: var(--font-pixel);
-    font-size: var(--font-size-label);
-    line-height: var(--line-height-body);
-  }
-
-  .privacy-policy-section p {
-    max-width: var(--copy-width);
-    font-size: var(--font-size-small);
-    line-height: var(--line-height-body);
   }
 
   .app-dialog-header {
@@ -2628,6 +2601,10 @@
     color: var(--color-accent-strong);
     font-size: var(--font-size-small);
     overflow-wrap: anywhere;
+  }
+
+  .home-explore-group .link-view-caption {
+    color: var(--color-home-toolbar-caption);
   }
 
   .section-toolbar-title,

@@ -289,13 +289,16 @@ async function inspectMenu(input: {
         waitUntil: 'networkidle0',
       },
     );
+    await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.evaluate((): void => {
       window.__languageSettings =
         document.querySelector<HTMLDialogElement>('#settings-dialog');
       window.__languageDocument = document;
       window.__languageHistory = history.length;
     });
-    await page.click('[data-settings-open]');
 
     for (const locale of [
       'en',
@@ -423,6 +426,9 @@ async function inspectFallbacks(
       },
     );
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.focus('[data-language-switcher]');
     await page.select('[data-language-switcher]', '/fr/');
     await page.waitForFunction((): boolean => {

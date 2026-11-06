@@ -75,7 +75,6 @@ for (const [
 const losslessImages: Record<string, string> = {
   'rail-coupling': resolve(generated, 'rail-coupling.png'),
   'rail-lantern': resolve(generated, 'rail-lantern.png'),
-  'section-toolbar-rail': resolve(ui, 'section-toolbar-rail.png'),
 };
 
 for (const [
@@ -128,6 +127,25 @@ for (const [
     throw new Error(`Lossless WebP is not smaller: ${name}`);
   }
 }
+
+const sectionToolbarSourcePath = resolve(ui, 'section-toolbar-rail.png');
+
+const sectionToolbarOutputPath = resolve(
+  generated,
+  'section-toolbar-rail.webp',
+);
+
+await sharp(sectionToolbarSourcePath)
+  .resize({
+    width: 1180,
+    height: 49,
+    kernel: 'nearest',
+  })
+  .webp({
+    quality: 80,
+    effort: 6,
+  })
+  .toFile(sectionToolbarOutputPath);
 
 for (const [
   name,
@@ -194,10 +212,16 @@ for (const [
 ][]) {
   const outputPath = resolve(generated, name);
 
+  let quality = 78;
+
+  if (name === 'day-mobile.webp') {
+    quality = 68;
+  }
+
   await sharp(path)
     .resize(resize)
     .webp({
-      quality: 78,
+      quality,
     })
     .toFile(outputPath);
 }

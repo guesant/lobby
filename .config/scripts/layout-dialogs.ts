@@ -62,6 +62,9 @@ export async function verifyDialogs(page: Page, path: string): Promise<void> {
   );
 
   await page.click('[data-settings-open]');
+  await page.waitForSelector('#settings-dialog', {
+    visible: true,
+  });
 
   const settings = await page.$eval(
     'dialog#settings-dialog',
@@ -145,6 +148,9 @@ export async function verifyDialogs(page: Page, path: string): Promise<void> {
     true,
   );
   await page.click('[data-credits-open]');
+  await page.waitForSelector('#credits-dialog', {
+    visible: true,
+  });
 
   const dialog = await page.$eval(
     'dialog#credits-dialog',
@@ -182,10 +188,10 @@ export async function verifyDialogs(page: Page, path: string): Promise<void> {
       dialog.scrolls,
   );
   await page.keyboard.press('Escape');
-  assert.equal(
-    await page.$eval('dialog#credits-dialog', (dialog): boolean => {
-      return dialog.open;
-    }),
-    false,
-  );
+  await page.waitForFunction((): boolean => {
+    const creditsDialog =
+      document.querySelector<HTMLDialogElement>('#credits-dialog');
+
+    return !creditsDialog?.open;
+  });
 }

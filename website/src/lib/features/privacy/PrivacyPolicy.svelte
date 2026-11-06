@@ -48,3 +48,43 @@
     </NavigationLink>
   </article>
 {/if}
+
+<style>
+  :global(:root[data-interface='voxel']) .privacy-policy {
+    display: grid;
+    gap: var(--space-5);
+    padding: var(--space-5);
+  }
+
+  :global(:root[data-interface='voxel']) .privacy-policy-status {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+  }
+
+  :global(:root[data-interface='voxel']) .privacy-policy-section {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  :global(:root[data-interface='voxel']) .privacy-policy-section h2 {
+    color: var(--color-accent-strong);
+    font-family: var(--font-pixel);
+    font-size: var(--font-size-label);
+    line-height: var(--line-height-body);
+  }
+
+  :global(:root[data-interface='voxel']) .privacy-policy-section p {
+    max-width: var(--copy-width);
+    font-size: var(--font-size-small);
+    line-height: var(--line-height-body);
+    color: var(--color-text-muted);
+  }
+
+  :global(:root[data-interface='voxel']) :global(.privacy-policy-contact) {
+    width: fit-content;
+    color: var(--color-accent-strong);
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--pixel-border);
+    text-underline-offset: var(--space-1);
+  }
+</style>

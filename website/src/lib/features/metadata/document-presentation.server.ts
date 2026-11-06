@@ -1,8 +1,8 @@
 import type { SiteData } from '../content/content.types.ts';
-import { pagesFor } from '../navigation/catalog.model.ts';
 import { interfaceBodyClass } from '../navigation/navigation.viewmodel.ts';
 import { documentContext } from './document-context.server.ts';
 import { documentLanguage } from './document-language.server.ts';
+import { documentPageID } from './document-page-id.server.ts';
 import type { DocumentPresentation } from './document-presentation.types.ts';
 import { fontPreloads } from './font-preloads.server.ts';
 
@@ -10,20 +10,14 @@ export function documentPresentation(
   data: SiteData,
   url: URL,
 ): DocumentPresentation {
+  const context = documentContext(data, url);
+
   const {
     language,
-    interfaceName,
-    pathname
-  } = documentContext(data, url);
+    interfaceName
+  } = context;
 
-  let pageID: string | undefined;
-
-  for (const page of pagesFor(data, language, interfaceName)) {
-    if (page.url.replace(/\/+$/, '') === pathname) {
-      pageID = page.id;
-      break;
-    }
-  }
+  const pageID = documentPageID(data, context);
 
   const presentation: DocumentPresentation = {
     language: documentLanguage(data, language),

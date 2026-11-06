@@ -163,9 +163,15 @@ export default async function checkCompactControls(
     }
 
     await page.click('[data-credits-open]');
+    await page.waitForSelector('#credits-dialog', {
+      visible: true,
+    });
     assert.equal(await page.$eval('#credits-dialog', dialogIsOpen), true);
     await page.keyboard.press('Escape');
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     assert.equal(await page.$eval('#settings-dialog', dialogIsOpen), true);
     await page.keyboard.press('Escape');
     await page.focus('#link-view-compact');

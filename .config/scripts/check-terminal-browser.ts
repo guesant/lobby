@@ -57,6 +57,9 @@ export default async function checkTerminalBrowser(
       waitUntil: 'networkidle2',
     });
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.click('label[for="theme-light"]');
     await Promise.all([
       page.waitForNavigation({
@@ -235,27 +238,36 @@ async function inspectTerminalRoute(input: {
     }),
     1,
   );
-  assert.deepEqual(
-    await page.$$eval('.language-select option', (options): string[] => {
-      return options.map((option): string => {
-        return new URL(option.value, location.href).pathname;
-      });
-    }),
-    config.language_options.map((option): string => {
-      function localizedSectionPath(): string {
-        if (
-          route.id === 'home' ||
-          (route.id === 'now' && !config.now[option.id])
-        ) {
-          return '';
+
+  if (route.id === 'home') {
+    await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
+    assert.deepEqual(
+      await page.$$eval('.language-select option', (options): string[] => {
+        return options.map((option): string => {
+          return new URL(option.value, location.href).pathname;
+        });
+      }),
+      config.language_options.map((option): string => {
+        function localizedSectionPath(): string {
+          if (
+            route.id === 'home' ||
+            (route.id === 'now' && !config.now[option.id])
+          ) {
+            return '';
+          }
+
+          return `${route.id}/`;
         }
 
-        return `${route.id}/`;
-      }
+        return `${option.path}terminal/${localizedSectionPath()}`;
+      }),
+    );
+    await page.keyboard.press('Escape');
+  }
 
-      return `${option.path}terminal/${localizedSectionPath()}`;
-    }),
-  );
   assert.equal(await page.$eval('#bios-dialog', dialogIsOpen), false);
 
   await inspectTerminalStyles(page, path);

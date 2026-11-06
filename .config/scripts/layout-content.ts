@@ -19,10 +19,6 @@ export function measureContent(): Pick<
   const settingsDialog =
     document.querySelector<HTMLDialogElement>('#settings-dialog');
 
-  if (settingsDialog === null) {
-    throw new Error('Missing required settingsDialog');
-  }
-
   return {
     categoryPreviewColumns: [
       ...document.querySelectorAll<HTMLElement>('.category-preview'),
@@ -393,7 +389,7 @@ export function measureContent(): Pick<
     footerAligned: window.lobbyLayout.rowAligned([
       ...document.querySelectorAll<HTMLElement>('.site-footer-content > *'),
     ]),
-    settingsClosed: !settingsDialog.open,
+    settingsClosed: settingsDialog?.open !== true,
     isolatedPreferences: [
       ...document.querySelectorAll<HTMLElement>('.toggle-group'),
     ].every((group): Element | null => {

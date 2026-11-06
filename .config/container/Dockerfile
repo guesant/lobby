@@ -36,6 +36,8 @@ ENV UV_PYTHON_DOWNLOADS=never
 ENV PATH="/workspace/.config/node_modules/.bin:/workspace/website/node_modules/.bin:/opt/python/.venv/bin:${PATH}"
 COPY .config/package.json .config/pnpm-lock.yaml .config/pnpm-workspace.yaml /opt/tooling/
 COPY website/package.json website/pnpm-lock.yaml website/pnpm-workspace.yaml /opt/website/
+RUN node -p "require('/opt/tooling/package.json').packageManager" \
+  | xargs node /opt/corepack/dist/corepack.js install --global
 RUN pnpm --dir /opt/tooling fetch --store-dir /pnpm/store \
   && pnpm --dir /opt/website fetch --store-dir /pnpm/store
 COPY .config/python/pyproject.toml .config/python/uv.lock /opt/python/

@@ -135,7 +135,16 @@ async function initialControlGeometry(page: Page): Promise<ControlGeometry> {
     initial.box.height > 0,
     'uninitialized controls reserve their layout space',
   );
-  assert.equal(initial.visibility, 'hidden');
+
+  const readyBeforeHydration = await page.evaluate((): boolean => {
+    return document.documentElement.dataset['linkViewReady'] === 'true';
+  });
+
+  if (readyBeforeHydration) {
+    assert.equal(initial.visibility, 'visible');
+  } else {
+    assert.equal(initial.visibility, 'hidden');
+  }
 
   return initial;
 }

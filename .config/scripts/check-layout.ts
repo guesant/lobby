@@ -270,6 +270,9 @@ const layoutContext: LayoutContext = {
       waitUntil: 'networkidle2',
     });
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.$eval('#motion-off', activateElement);
     await page.reload({
       waitUntil: 'networkidle2',
@@ -281,6 +284,9 @@ const layoutContext: LayoutContext = {
       'off',
     );
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.emulateMediaFeatures([
       {
         name: 'prefers-reduced-motion',
@@ -546,6 +552,9 @@ async function inspectLayoutRoute(
 
   async function inspectRouteAppearance(theme: string): Promise<void> {
     await page.click('[data-settings-open]');
+    await page.waitForSelector('#settings-dialog', {
+      visible: true,
+    });
     await page.$eval(`#theme-${theme}`, activateElement);
     await page.click('#settings-dialog [data-dialog-close]');
 
