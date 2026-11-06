@@ -30,32 +30,3 @@ export type PersonalProfile = {
   };
   contact_links: string[];
 };
-
-export type PublicProfile = {
-  version: 1;
-  source: {
-    url: string;
-    revision: string;
-  };
-  language: 'en';
-  name: string;
-  username: string;
-  spoken_languages: string[];
-  birth_place: string;
-  residence: string;
-  birth_country: {
-    name: string;
-    url: string;
-  };
-  interests: {
-    id: string;
-    title: string;
-    description: string;
-  }[];
-  contacts: {
-    id: string;
-    title: string;
-    url: string;
-  }[];
-  technologies: TechnologyGroup[];
-};
