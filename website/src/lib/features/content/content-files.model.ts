@@ -1,5 +1,6 @@
 export const contentFiles = [
   'src/data/links.yaml',
+  'src/data/profile.yaml',
   'src/data/editorial.yaml',
   'src/data/credits.yaml',
   'src/data/statistics.yaml',

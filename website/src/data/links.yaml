@@ -1427,8 +1427,6 @@ locales:
     presentation:
       title: About / Context
       facts:
-        - icon: user
-          text: Based in Brazil
         - icon: desktop
           text: Software, infrastructure and open source
         - icon: gamepad
@@ -1501,8 +1499,6 @@ locales:
     presentation:
       title: Sobre / Contexto
       facts:
-        - icon: user
-          text: Moro no Brasil
         - icon: desktop
           text: Software, infraestrutura e open source
         - icon: gamepad
@@ -1581,8 +1577,6 @@ locales:
     presentation:
       title: À Propos / Contexte
       facts:
-        - icon: user
-          text: Basé au Brésil
         - icon: desktop
           text: Logiciels, infrastructure et open source
         - icon: gamepad
@@ -1656,8 +1650,6 @@ locales:
     presentation:
       title: Sobre Mí / Contexto
       facts:
-        - icon: user
-          text: Vivo en Brasil
         - icon: desktop
           text: Software, infraestructura y código abierto
         - icon: gamepad
@@ -1731,8 +1723,6 @@ locales:
     presentation:
       title: Chi Sono / Contesto
       facts:
-        - icon: user
-          text: Vivo in Brasile
         - icon: desktop
           text: Software, infrastruttura e open source
         - icon: gamepad
@@ -1806,8 +1796,6 @@ locales:
     presentation:
       title: 关于 / 背景
       facts:
-        - icon: user
-          text: 居住在巴西
         - icon: desktop
           text: 软件、基础设施与开源
         - icon: gamepad

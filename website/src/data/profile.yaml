@@ -1,0 +1,71 @@
+version: 1
+full_name: Gabriel Rodrigues Antunes
+spoken_languages:
+  - id: pt-br
+    labels:
+      en: 'Brazilian Portuguese'
+      pt-br: 'Português Brasileiro'
+      fr: 'Portugais Brésilien'
+      es: 'Portugués Brasileño'
+      it: 'Portoghese Brasiliano'
+      zh: '巴西葡萄牙语'
+  - id: en
+    labels:
+      en: 'English'
+      pt-br: 'Inglês'
+      fr: 'Anglais'
+      es: 'Inglés'
+      it: 'Inglese'
+      zh: '英语'
+birth_place:
+  en: 'Ji-Paraná, Rondônia, Brazil'
+  pt-br: 'Ji-Paraná, Rondônia, Brasil'
+  fr: 'Ji-Paraná, Rondônia, Brésil'
+  es: 'Ji-Paraná, Rondônia, Brasil'
+  it: 'Ji-Paraná, Rondônia, Brasile'
+  zh: '巴西朗多尼亚州 Ji-Paraná'
+birth_country:
+  labels:
+    en: Brazil
+    pt-br: Brasil
+    fr: Brésil
+    es: Brasil
+    it: Brasile
+    zh: 巴西
+  url: https://en.wikipedia.org/wiki/Brazil
+residence:
+  en: 'Ji-Paraná, Rondônia, Brazil'
+  pt-br: 'Ji-Paraná, Rondônia, Brasil'
+  fr: 'Ji-Paraná, Rondônia, Brésil'
+  es: 'Ji-Paraná, Rondônia, Brasil'
+  it: 'Ji-Paraná, Rondônia, Brasile'
+  zh: '巴西朗多尼亚州 Ji-Paraná'
+labels:
+  born:
+    en: 'Born in'
+    pt-br: 'Nasci em'
+    fr: 'Lieu de Naissance'
+    es: 'Lugar de Nacimiento'
+    it: 'Luogo di Nascita'
+    zh: '出生地'
+  lives:
+    en: 'Living in'
+    pt-br: 'Moro em'
+    fr: 'Résidence'
+    es: 'Residencia'
+    it: 'Residenza'
+    zh: '现居地'
+  languages:
+    en: 'Spoken Languages'
+    pt-br: 'Idiomas Falados'
+    fr: 'Langues Parlées'
+    es: 'Idiomas Hablados'
+    it: 'Lingue Parlate'
+    zh: '使用的语言'
+contact_links:
+  - email
+  - linkedin
+  - lattes
+  - orcid
+  - instagram
+  - gitlab

@@ -1,3 +1,4 @@
+import { optionalTechnologyCatalog } from '../profile/optional-technology-catalog.model.ts';
 import type { FederationItem, SiteData } from './content.types.ts';
 import { validateFederationItem } from './validate-federation-item.validation.ts';
 import { array, record } from './validation.model.ts';
@@ -26,5 +27,6 @@ export function validateFederation(value: unknown): SiteData['federation'] {
   return {
     version: 1,
     items,
+    ...optionalTechnologyCatalog(feed['technologies']),
   };
 }

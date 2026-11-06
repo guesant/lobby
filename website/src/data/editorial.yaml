@@ -528,7 +528,67 @@ ui:
     status: '状态'
     group: '分组'
 entries:
-  interests: []
+  interests:
+    - id: coffee-and-code
+      labels:
+        en:
+          title: 'Coffee and Code'
+          description: 'Coffee and code.'
+        pt-br:
+          title: 'Café e Código'
+          description: 'Café e código.'
+        fr:
+          title: 'Café et Code'
+          description: 'Café et code.'
+        es:
+          title: 'Café y Código'
+          description: 'Café y código.'
+        it:
+          title: 'Caffè e Codice'
+          description: 'Caffè e codice.'
+        zh:
+          title: '咖啡与编程'
+          description: '咖啡与编程。'
+    - id: geopolitics-music-cinema
+      labels:
+        en:
+          title: 'Geopolitics, Music and Cinema'
+          description: 'Geopolitics, music and watching movies.'
+        pt-br:
+          title: 'Geopolítica, Música e Cinema'
+          description: 'Geopolítica, música e assistir a filmes.'
+        fr:
+          title: 'Géopolitique, Musique et Cinéma'
+          description: 'Géopolitique, musique et cinéma.'
+        es:
+          title: 'Geopolítica, Música y Cine'
+          description: 'Geopolítica, música y ver películas.'
+        it:
+          title: 'Geopolitica, Musica e Cinema'
+          description: 'Geopolitica, musica e guardare film.'
+        zh:
+          title: '地缘政治、音乐与电影'
+          description: '地缘政治、音乐和看电影。'
+    - id: it-and-science
+      labels:
+        en:
+          title: 'IT and Science'
+          description: 'Learning about IT and science, understanding how things work internally and how to do them myself.'
+        pt-br:
+          title: 'TI e Ciência'
+          description: 'Aprender sobre TI e ciência, entender como as coisas funcionam por dentro e como fazê-las por conta própria.'
+        fr:
+          title: 'Informatique et Sciences'
+          description: 'Apprendre l’informatique et les sciences, comprendre le fonctionnement interne des choses et les réaliser moi-même.'
+        es:
+          title: 'Informática y Ciencia'
+          description: 'Aprender sobre informática y ciencia, comprender cómo funcionan las cosas por dentro y cómo hacerlas por mi cuenta.'
+        it:
+          title: 'Informatica e Scienza'
+          description: 'Imparare l’informatica e la scienza, capire come funzionano le cose al loro interno e come realizzarle da solo.'
+        zh:
+          title: '信息技术与科学'
+          description: '学习信息技术与科学，了解事物的内部原理，并学习自己动手实现。'
   uses: []
   library: []
   curiosities: []

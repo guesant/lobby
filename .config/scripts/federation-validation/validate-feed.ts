@@ -3,6 +3,7 @@ import {
   record,
 } from '../../../website/src/lib/features/content/validation.model.ts';
 import type { Feed, Source } from '../federation.types.ts';
+import { resumeTechnologies } from '../federation/resume-technologies.ts';
 import { sourceID } from './source-id.ts';
 import { validateEntry } from './validate-entry.ts';
 
@@ -34,5 +35,6 @@ export function validateFeed(value: unknown, source: Source): Feed {
     version: 1,
     source: sourceName,
     items,
+    ...resumeTechnologies(feed, source),
   };
 }
