@@ -1,4 +1,5 @@
 import type { RunPlan } from './ci-policy.types.ts';
+import { isProtectedOperation } from './is-protected-operation.ts';
 import { validateSha } from './validate-sha.ts';
 
 export function resolveRun(input: {
@@ -28,6 +29,7 @@ export function resolveRun(input: {
     ![
       'validate',
       'audit',
+      'codeql',
       'publish',
       'statistics',
     ].includes(selected)
@@ -37,7 +39,7 @@ export function resolveRun(input: {
 
   const publish = selected === 'publish';
 
-  if ((publish || selected === 'statistics') && ref !== 'refs/heads/main') {
+  if (isProtectedOperation(selected) && ref !== 'refs/heads/main') {
     throw new Error('Publication and statistics require the main branch');
   }
 

@@ -50,6 +50,27 @@ test('statistics updates create a candidate without publishing directly', (): vo
   assert.equal(result.publish, false);
 });
 
+test('manual CodeQL runs only on main and do not request publication', (): void => {
+  const result = resolveRun({
+    eventName: 'workflow_dispatch',
+    operation: 'codeql',
+    ref: 'refs/heads/main',
+    sha,
+  });
+
+  assert.equal(result.operation, 'codeql');
+  assert.equal(result.update_statistics, false);
+  assert.equal(result.publish, false);
+  assert.throws((): unknown => {
+    return resolveRun({
+      eventName: 'workflow_dispatch',
+      operation: 'codeql',
+      ref: 'refs/heads/feature',
+      sha,
+    });
+  }, /main/);
+});
+
 test('deployment fails closed and skips an obsolete main snapshot', async (): Promise<void> => {
   const result = await deploymentStatus({
     sha,
