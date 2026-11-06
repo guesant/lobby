@@ -1,4 +1,5 @@
 import type { FederationItem } from '../../website/src/lib/features/content/content.types.ts';
+import type { TechnologyGroup } from '../../website/src/lib/features/profile/profile.types.ts';
 
 export type Source = {
   id: string;
@@ -10,6 +11,7 @@ export type Feed = {
   version: 1;
   source: 'blog' | 'resume';
   items: FederationItem[];
+  technologies?: TechnologyGroup[];
 };
 
 export type LoadOptions = {

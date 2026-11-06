@@ -5,6 +5,7 @@ import {
   languageRoutes,
 } from '../navigation/translations.model.ts';
 import { privacyPageURL } from '../privacy/privacy-page-url.model.ts';
+import { profilePresentation } from '../profile/profile-presentation.model.ts';
 import { clientConfiguration } from './client-configuration.model.ts';
 import type { SiteData } from './content.types.ts';
 import { homeSectionContents } from './home-section-contents.model.ts';
@@ -34,7 +35,7 @@ export function pageContent(data: SiteData, context: PageContext): PageContent {
     config: clientConfiguration(data),
     nowActivity: data.editorial.now[locale] ?? {},
     editorialUI,
-    localized,
+    localized: profilePresentation(data.personalProfile, localized, locale),
     credits: data.credits,
     locale,
     interfaceName: context.interfaceName,

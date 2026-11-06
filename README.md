@@ -16,6 +16,7 @@ Meu site pessoal em [guesant.net](https://guesant.net/).
 [![Forks](https://img.shields.io/github/forks/guesant/lobby?style=flat-square&labelColor=0b1120&color=b45309&logo=github&logoColor=white)](https://github.com/guesant/lobby/forks)
 [![Feito no Brasil](https://img.shields.io/badge/feito_no-Brasil-009440?style=flat-square&labelColor=0b1120)](https://pt.wikipedia.org/wiki/Brasil)
 
+- [Perfil em YAML](https://guesant.net/profile.yaml)
 - [Aplicação](website/src/) e [conteúdo](website/src/data/)
 - [Comandos](justfile) e [ambiente Docker](.config/compose.yaml)
 - [Configurações](.config/), [CI](.github/workflows/ci.yml) e [Scorecard](.github/workflows/scorecard.yml)

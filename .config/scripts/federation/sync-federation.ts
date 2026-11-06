@@ -1,5 +1,6 @@
 import { federationStatuses } from '../../../website/src/lib/features/content/federation-status.model.ts';
 import { atomicJSON } from '../federation-cache.ts';
+import { federatedTechnologies } from './federated-technologies.ts';
 import { federationItems } from './federation-items.ts';
 import { federationSources } from './federation-sources.ts';
 import { loadFederationFeeds } from './load-federation-feeds.ts';
@@ -34,6 +35,7 @@ export async function syncFederation(): Promise<void> {
   const federationDocument = {
     version: 1,
     items,
+    ...federatedTechnologies(feeds),
   };
 
   const statusDocument = {

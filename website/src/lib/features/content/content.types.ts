@@ -1,4 +1,8 @@
 import type { PrivacyPolicyContent } from '../privacy/privacy.types.ts';
+import type {
+  PersonalProfile,
+  TechnologyGroup,
+} from '../profile/profile.types.ts';
 import type { FederationStatus } from './federation-status.types.ts';
 
 type LinkLabel = {
@@ -168,6 +172,7 @@ export type FederationItem = {
 };
 
 export type SiteData = {
+  personalProfile: PersonalProfile;
   links: LinkDocument;
   editorial: {
     entries: Record<string, EditorialEntry[]>;
@@ -182,6 +187,7 @@ export type SiteData = {
   federation: {
     version: 1;
     items: FederationItem[];
+    technologies?: TechnologyGroup[];
   };
 };
 

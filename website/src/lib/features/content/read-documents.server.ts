@@ -24,10 +24,13 @@ export async function readDocuments(root: string): Promise<SiteData> {
     statisticsPromise,
   ]);
 
+  const profile = await readYaml(root, 'profile');
+
   const federation = await readFederation(root);
 
   return validateSiteDocuments({
     links,
+    profile,
     editorial,
     credits,
     statistics,
