@@ -188,7 +188,7 @@ test('atomic cache updates and failure retention', async (): Promise<void> => {
     await updateStats({
       ...options,
       fetcher: async (url): Promise<Response> => {
-        if (url.includes('leetcode.com')) {
+        if (new URL(url).hostname === 'leetcode.com') {
           return Response.json(
             {},
             {
