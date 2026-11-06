@@ -2585,7 +2585,7 @@
     padding-inline: var(--space-0);
   }
 
-  .page-content > .link-view-control .link-view-toolbar {
+  .home-listings > .link-view-control .link-view-toolbar {
     padding-inline: var(--space-3);
     background-color: var(--color-wood-copy);
     background-image:
@@ -2608,7 +2608,7 @@
   }
 
   .section-toolbar-title,
-  .page-content > .link-view-control .link-view-caption {
+  .home-listings > .link-view-control .link-view-caption {
     color: var(--color-wood-text);
     font-weight: 600;
   }
