@@ -111,7 +111,7 @@ jobs:
           CI_SUMMARY_PATH: .local/ci/statistics-summary
         run: |
           set -eu
-          docker compose -f .config/compose.yaml run --rm --no-build \
+          docker compose -f .config/compose.yaml run --rm --pull never \
             -e GITHUB_STATS_TOKEN -e GITHUB_REPOSITORY -e GITHUB_REF \
             -e CI_OUTPUT_PATH -e CI_SUMMARY_PATH \
             workspace sh -eu -c 'just stats && node .config/scripts/publish-stats.ts'
@@ -179,7 +179,7 @@ jobs:
           LOBBY_SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           set -eu
-          docker compose -f .config/compose.yaml run --rm --no-build \
+          docker compose -f .config/compose.yaml run --rm --pull never \
             -e GITHUB_REPOSITORY -e GITHUB_SERVER_URL -e GITHUB_SHA \
             -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e LOBBY_SOURCE_SHA workspace just ci
       - name: Upload native SARIF reports
@@ -240,7 +240,7 @@ jobs:
           LOBBY_SOURCE_SHA: ${{ needs.build.outputs.source_sha }}
         run: |
           set -eu
-          docker compose -f .config/compose.yaml run --rm --no-build \
+          docker compose -f .config/compose.yaml run --rm --pull never \
             -e GITHUB_TOKEN -e GITHUB_REPOSITORY -e GITHUB_REF \
             -e GITHUB_RUN_ID -e LOBBY_SOURCE_SHA \
             workspace sh -eu -c 'just dependencies && node .config/scripts/submit-dependency-sboms.ts'
@@ -286,7 +286,7 @@ jobs:
       - name: Run ${{ matrix.stage }} audit in Docker
         run: |
           set -eu
-          docker compose -f .config/compose.yaml run --rm --no-build \
+          docker compose -f .config/compose.yaml run --rm --pull never \
             -e GITHUB_REPOSITORY -e GITHUB_SERVER_URL -e GITHUB_SHA \
             -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER \
             -e AUDIT_STAGE='${{ matrix.stage }}' audit \
