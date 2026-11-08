@@ -3,6 +3,7 @@ packages:
 minimumReleaseAge: 1440
 minimumReleaseAgeStrict: true
 overrides:
+  minimatch@10: 11.0.3
   'glob@>=9 <14': 14.0.2
 allowBuilds:
   puppeteer: false
