@@ -23,15 +23,15 @@ Meu site pessoal em [guesant.net](https://guesant.net/).
 
 ## Desenvolvimento Local
 
-Requer Docker e Docker Compose.
+Requer Just, Docker e Docker Compose.
 
 ```sh
 git clone https://github.com/guesant/lobby.git
 cd lobby
-docker compose -f .config/compose.yaml run --build --rm --service-ports workspace just dev
+just dev
 ```
 
-Acesse [localhost:4173](http://localhost:4173/). As ferramentas rodam no container.
+Acesse [localhost:4173](http://localhost:4173/). O Just chama o Docker Compose, que executa o servidor e as ferramentas do projeto no container.
 
 ## Licença
 

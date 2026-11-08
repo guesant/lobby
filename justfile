@@ -1,67 +1,71 @@
 set shell := ["sh", "-eu", "-c"]
 
+compose := "docker compose -f .config/compose.yaml run --build --rm"
+runner := "sh .config/run-workspace.sh"
+workspace := compose + " workspace " + runner
+audit := compose + " audit " + runner + " --audit"
+tasks := "node .config/scripts/tasks.ts"
+
 default:
     @just --list
 
 dependencies:
-    node .config/scripts/dependencies.ts
+    {{ compose }} workspace node .config/scripts/dependencies.ts
 
-dev: dependencies
-    node .config/scripts/tasks.ts dev
+dev:
+    {{ compose }} --service-ports workspace {{ runner }} {{ tasks }} dev
 
-build: dependencies
-    node .config/scripts/tasks.ts build
+build:
+    {{ workspace }} {{ tasks }} build
 
 lighthouse-baseline:
-    node .config/scripts/dependencies.ts --audit
-    node .config/scripts/tasks.ts lighthouse-baseline
+    {{ audit }} {{ tasks }} lighthouse-baseline
 
-check:
-    node .config/scripts/dependencies.ts --audit
-    node .config/scripts/tasks.ts check
+check: _check-justfile
+    {{ audit }} {{ tasks }} check
 
 check-audit-stage:
-    node .config/scripts/dependencies.ts --audit
-    node .config/scripts/tasks.ts check-audit-stage
+    {{ compose }} -e AUDIT_STAGE audit {{ runner }} --audit {{ tasks }} check-audit-stage
 
-check-fast: dependencies
-    node .config/scripts/tasks.ts check-fast
+check-fast: _check-justfile
+    {{ workspace }} {{ tasks }} check-fast
 
-ci: dependencies
-    node .config/scripts/tasks.ts ci
+ci: _check-justfile
+    {{ workspace }} {{ tasks }} ci
 
-format: dependencies
-    node .config/scripts/tasks.ts format
+format: _check-justfile
+    {{ workspace }} {{ tasks }} format
 
-format-fix: dependencies
-    node .config/scripts/tasks.ts format-fix
+format-fix:
+    just --fmt
+    {{ workspace }} {{ tasks }} format-fix
 
-test: dependencies
-    node .config/scripts/tasks.ts test
+test:
+    {{ workspace }} {{ tasks }} test
 
-lint: dependencies
-    node .config/scripts/quality.ts lint
+lint:
+    {{ workspace }} node .config/scripts/quality.ts lint
 
-lint-fix: dependencies
-    node .config/scripts/quality.ts lint-fix
+lint-fix:
+    {{ workspace }} node .config/scripts/quality.ts lint-fix
 
-typecheck: dependencies
-    pnpm --dir website run check
-    pnpm --dir .config exec tsc --project tsconfig.json
+typecheck:
+    {{ workspace }} sh -eu -c 'pnpm --dir website run check && pnpm --dir .config exec tsc --project tsconfig.json'
 
-stats: dependencies
-    node .config/scripts/update-stats.ts
+stats:
+    {{ workspace }} node .config/scripts/update-stats.ts
 
 icons:
-    node .config/scripts/dependencies.ts --audit
-    node .config/scripts/generate-icons.ts
+    {{ audit }} node .config/scripts/generate-icons.ts
 
 links:
-    node .config/scripts/dependencies.ts --audit
-    node .config/scripts/verify-links.ts
+    {{ audit }} node .config/scripts/verify-links.ts
 
-preview: dependencies
-    node .config/scripts/tasks.ts preview
+preview:
+    {{ compose }} --service-ports workspace {{ runner }} {{ tasks }} preview
 
 shell:
-    bash
+    {{ compose }} workspace bash
+
+_check-justfile:
+    just --fmt --check

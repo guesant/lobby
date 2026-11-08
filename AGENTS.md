@@ -2,7 +2,7 @@
 
 Preserve a interface Minecraft e a BIOS, os idiomas e o contrato dos feeds. Mantenha o CI rápido automático e a auditoria pesada manual.
 
-Execute as ferramentas do projeto em Docker. Use os targets do Compose descritos na documentação para desenvolver, formatar, testar e construir. Execute `just` dentro da imagem que fornece a ferramenta.
+Execute `just` no host para desenvolver, formatar, testar e construir. As receitas usam o Docker Compose para executar as ferramentas do projeto nos containers.
 
 Siga Conventional Commits com escopo e título em inglês, no imperativo, com até 72 caracteres. Use um título por commit e peça autorização antes de criar commits. Mantenha a revisão de código e a automação restritas às mudanças pedidas.
 

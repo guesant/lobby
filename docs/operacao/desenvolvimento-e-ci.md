@@ -2,13 +2,17 @@
 
 A imagem `workspace-fast` reúne as ferramentas para desenvolver, verificar e
 construir o site. A imagem `workspace-audit` acrescenta scanners, Chromium e
-as dependências da auditoria manual. Execute os comandos a partir da raiz.
+as dependências da auditoria manual. Execute o Just no host, a partir da raiz.
 
 ```sh
-docker compose -f .config/compose.yaml run --build --rm --service-ports workspace just dev
-docker compose -f .config/compose.yaml run --build --rm workspace just ci
-docker compose -f .config/compose.yaml run --build --rm audit just check
+just dev
+just ci
+just check
 ```
+
+As receitas chamam o Docker Compose. No GitHub Actions, os jobs usam o mesmo
+script de entrada para preparar as dependências e executar as tarefas no
+container. A formatação do Justfile é verificada com o Just no runner.
 
 O workflow `ci.yml` executa o gate rápido e o build em pull requests e pushes.
 Em `main`, a publicação usa o artefato da revisão validada. A operação manual
