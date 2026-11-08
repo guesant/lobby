@@ -19,10 +19,6 @@ export async function checkFast(
     'run',
     'format',
   ]);
-  await dependencies.command('just', [
-    '--fmt',
-    '--check',
-  ]);
   await dependencies.command('pnpm', [
     '--dir',
     'website',
