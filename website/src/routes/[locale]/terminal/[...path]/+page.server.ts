@@ -1,26 +1,36 @@
-import type { PageLoadData } from '../../../../lib/features/content/content.types.ts';
 import type { PageServerLoadEvent } from './$types';
-import { error } from '@sveltejs/kit';
-import { loadPageData } from '#lib/features/content/page.controller.server.ts';
+import { error, redirect } from '@sveltejs/kit';
+import { getSiteData } from '#lib/features/content/content.server.ts';
+import { pagesFor } from '#lib/features/navigation/catalog.model.ts';
+import { knownLocale } from '#lib/features/navigation/known-locale.model.ts';
+import { privacyPageURL } from '#lib/features/privacy/privacy-page-url.model.ts';
 
 export { terminalEntries as entries } from '#lib/features/navigation/entries.server.ts';
 
-export async function load(event: PageServerLoadEvent): Promise<PageLoadData> {
-  const params = event.params;
+export async function load(event: PageServerLoadEvent): Promise<never> {
+  const locale = event.params.locale;
 
-  const routeParts = [
-    params.locale,
-    'terminal',
-    params.path,
-  ].filter(Boolean);
+  const path = event.params.path.replace(/\/+$/, '');
 
-  const route = routeParts.join('/');
+  const data = await getSiteData();
 
-  const page = await loadPageData(route);
-
-  if (!page) {
+  if (!knownLocale(data, locale)) {
     error(404, 'Page not found');
   }
 
-  return page;
+  if (path === 'privacy') {
+    const destination = privacyPageURL(locale);
+
+    redirect(308, destination);
+  }
+
+  const pageID = path || 'home';
+
+  for (const page of pagesFor(data, locale)) {
+    if (page.id === pageID && !page.fallback) {
+      redirect(308, page.url);
+    }
+  }
+
+  error(404, 'Page not found');
 }

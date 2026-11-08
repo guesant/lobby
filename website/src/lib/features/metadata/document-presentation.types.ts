@@ -8,6 +8,6 @@ export type DocumentPresentation = {
 
 export type DocumentContext = {
   language: string;
-  interfaceName: 'voxel' | 'terminal';
+  interfaceName: 'voxel';
   pathname: string;
 };

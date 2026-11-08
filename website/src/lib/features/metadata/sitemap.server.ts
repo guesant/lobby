@@ -8,7 +8,6 @@ export function sitemap(data: SiteData, locale?: string): string {
 
   for (const language of data.links.language_options) {
     paths.add(`${language.id}/privacy`);
-    paths.add(`${language.id}/terminal/privacy`);
   }
 
   const urls: string[] = [];
@@ -20,6 +19,7 @@ export function sitemap(data: SiteData, locale?: string): string {
 
     const location = encodeXML(new URL(`/${path}/`, siteOrigin).href);
 
+    // nosemgrep: html-in-template-string
     urls.push(`<url><loc>${location}</loc></url>`);
   }
 

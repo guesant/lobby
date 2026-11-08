@@ -34,19 +34,13 @@ function fixtureRunner(server: ViteDevServer): ModuleRunner {
   return environment.runner;
 }
 
-function informativeProps(
-  locale: string,
-  interfaceName: string,
-): Record<string, unknown> {
+function informativeProps(locale: string): Record<string, unknown> {
   const config = readConfiguration();
 
   const localized = config.locales[locale];
 
-  if (
-    !localized ||
-    (interfaceName !== 'voxel' && interfaceName !== 'terminal')
-  ) {
-    throw new Error('Invalid listing fixture locale or interface');
+  if (!localized) {
+    throw new Error('Invalid listing fixture locale');
   }
 
   const item: EditorialRecord = {
@@ -66,7 +60,6 @@ function informativeProps(
     ui: {},
     thirdPartyLabel: localized.ui.third_party,
     locale,
-    interfaceName,
     sectionID: 'uses',
     headingLevel: 3,
     destination(
@@ -77,10 +70,7 @@ function informativeProps(
   };
 }
 
-async function renderInformativeRecord(
-  locale: string,
-  interfaceName: string,
-): Promise<string> {
+async function renderInformativeRecord(locale: string): Promise<string> {
   const server = await createServer({
     root: websiteRoot,
     logLevel: 'silent',
@@ -111,7 +101,7 @@ async function renderInformativeRecord(
     const result: unknown = Reflect.apply(render, undefined, [
       component,
       {
-        props: informativeProps(locale, interfaceName),
+        props: informativeProps(locale),
       },
     ]);
 
@@ -126,10 +116,7 @@ async function renderInformativeRecord(
 
 export async function informativeRecordFixture(
   locale: string,
-  interfaceName: string | undefined,
 ): Promise<string> {
-  const selected = requiredText(interfaceName, 'fixture interface');
-
   const directory = await mkdtemp(join(tmpdir(), 'lobby-listing-'));
 
   const output = join(directory, 'record.html');
@@ -140,7 +127,6 @@ export async function informativeRecordFixture(
       [
         fileURLToPath(import.meta.url),
         locale,
-        selected,
         output,
       ],
       {
@@ -160,9 +146,7 @@ export async function informativeRecordFixture(
 if (import.meta.main) {
   const locale = requiredText(process.argv[2], 'fixture locale');
 
-  const interfaceName = requiredText(process.argv[3], 'fixture interface');
+  const output = requiredText(process.argv[3], 'fixture output');
 
-  const output = requiredText(process.argv[4], 'fixture output');
-
-  await writeFile(output, await renderInformativeRecord(locale, interfaceName));
+  await writeFile(output, await renderInformativeRecord(locale));
 }

@@ -1,24 +1,20 @@
 import type { SiteData } from '../content/content.types.ts';
+import { absoluteURL } from './absolute-url.server.ts';
 import type { CatalogPage } from './ai-catalog.types.ts';
-import { catalogPageURLs } from './catalog-page-urls.server.ts';
-import { localizedCatalogVariants } from './localized-catalog-variants.server.ts';
+import { availableCatalogPages } from './available-catalog-pages.server.ts';
 
 export function localizedCatalogPages(
   data: SiteData,
   locale: string,
 ): CatalogPage[] {
-  const variants = localizedCatalogVariants(data, locale);
-
-  const first = variants[0];
-
-  if (!first) {
-    throw new Error(`Missing page routes: ${locale}`);
-  }
+  const pages = availableCatalogPages(data, locale);
 
   const catalog: CatalogPage[] = [];
 
-  for (const page of first.values()) {
-    const urls = catalogPageURLs(page.id, variants);
+  for (const page of pages) {
+    const urls = {
+      voxel: absoluteURL(page.url),
+    };
 
     const entry = {
       id: page.id,

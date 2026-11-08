@@ -82,7 +82,6 @@
         {thirdPartyLabel}
         sectionID={page.id}
         {locale}
-        interfaceName="voxel"
         {destination}
         emptyAction={emptyActionFor({
           home: true,

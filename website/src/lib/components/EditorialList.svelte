@@ -17,7 +17,6 @@
     thirdPartyLabel,
     sectionID,
     locale,
-    interfaceName,
     destination,
     emptyAction,
     headingLevel = 3,
@@ -28,7 +27,6 @@
     thirdPartyLabel: string;
     sectionID: string;
     locale: string;
-    interfaceName: 'voxel' | 'terminal';
     destination: ListingDestination;
     emptyAction?: EmptyAction | undefined;
     headingLevel?: 2 | 3 | 4;
@@ -64,7 +62,6 @@
               {ui}
               {thirdPartyLabel}
               {locale}
-              {interfaceName}
               {sectionID}
               {destination}
               headingLevel={itemHeadingLevel(headingLevel)}
@@ -92,7 +89,6 @@
         title={emptyAction.label}
         action={presentation.fallback}
         {thirdPartyLabel}
-        {interfaceName}
         className="editorial-related"
       />
     {/if}

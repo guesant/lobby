@@ -8,16 +8,11 @@ export function documentPageID(
 ): string | undefined {
   const privacyPath = `/${context.language}/privacy`;
 
-  const terminalPrivacyPath = `/${context.language}/terminal/privacy`;
-
-  if (
-    context.pathname === privacyPath ||
-    context.pathname === terminalPrivacyPath
-  ) {
+  if (context.pathname === privacyPath) {
     return 'privacy';
   }
 
-  for (const page of pagesFor(data, context.language, context.interfaceName)) {
+  for (const page of pagesFor(data, context.language)) {
     if (page.url.replace(/\/+$/, '') === context.pathname) {
       return page.id;
     }

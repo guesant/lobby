@@ -5,14 +5,9 @@ export function routeEntries(data: SiteData): string[] {
   const output: string[] = [];
 
   for (const language of data.links.language_options) {
-    const voxel = pagesFor(data, language.id, 'voxel');
+    const pages = pagesFor(data, language.id);
 
-    const terminal = pagesFor(data, language.id, 'terminal');
-
-    for (const page of [
-      ...voxel,
-      ...terminal,
-    ]) {
+    for (const page of pages) {
       if (!page.fallback) {
         const entry = page.url.slice(1, -1);
 

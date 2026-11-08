@@ -1,7 +1,7 @@
 import { quickLinks } from '../listings/quick-links.model.ts';
 import type { PageContext } from '../navigation/page.types.ts';
 import {
-  interfaceDestinations,
+  homeDestination,
   languageRoutes,
 } from '../navigation/translations.model.ts';
 import { privacyPageURL } from '../privacy/privacy-page-url.model.ts';
@@ -42,8 +42,8 @@ export function pageContent(data: SiteData, context: PageContext): PageContent {
     page: summarizePage(context.page),
     pages,
     languageRoutes: languageRoutes(data, context.page.id),
-    ...interfaceDestinations(context),
-    privacyURL: privacyPageURL(locale, context.interfaceName),
+    standardHomeURL: homeDestination(context),
+    privacyURL: privacyPageURL(locale),
     homeSections: homeSectionContents(data, context),
     quickLinks: quickLinks(data, locale),
     links: listings.links,

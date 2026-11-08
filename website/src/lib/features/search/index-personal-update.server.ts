@@ -7,11 +7,10 @@ export function indexPersonalUpdate(context: SearchContext): SearchItem[] {
   const {
     data,
     locale,
-    interfaceName,
     ui
   } = context;
 
-  const nowPage = personalUpdatePage(data, locale, interfaceName);
+  const nowPage = personalUpdatePage(data, locale);
 
   const now = data.links.now[locale] ?? data.links.now['en'];
 

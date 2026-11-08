@@ -8,8 +8,7 @@ export function updatePageChrome(): void {
   const interfaceName = data.interfaceName;
 
   document.documentElement.dataset['interface'] = interfaceName;
-  document.documentElement.dataset['interfaceReady'] = 'true';
   document.documentElement.dataset['page'] = data.page.id;
   document.documentElement.lang = data.localized.ui.html_lang;
-  document.body.className = interfaceBodyClass(interfaceName);
+  document.body.className = interfaceBodyClass();
 }

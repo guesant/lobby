@@ -3,16 +3,12 @@ import type { PageLoadData } from '../content/content.types.ts';
 import { loadPageData } from '../content/page.controller.server.ts';
 import { createPrivacyPageData } from './create-privacy-page-data.model.ts';
 import { privacyContactURL } from './privacy-contact-url.model.ts';
-import { privacyPageRoute } from './privacy-page-route.model.ts';
 import { privacyPolicyContent } from './privacy-policy-content.model.ts';
 
 export async function loadPrivacyPageData(
   locale: string,
-  interfaceName: 'voxel' | 'terminal',
 ): Promise<PageLoadData> {
-  const route = privacyPageRoute(locale, interfaceName);
-
-  const base = await loadPageData(route);
+  const base = await loadPageData(locale);
 
   if (!base) {
     throw new Error(`Missing privacy page locale: ${locale}`);
@@ -27,7 +23,6 @@ export async function loadPrivacyPageData(
   return createPrivacyPageData({
     base,
     locale,
-    interfaceName,
     privacyPolicy: policy,
   });
 }

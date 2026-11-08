@@ -178,28 +178,26 @@ const layoutContext: LayoutContext = {
         waitUntil: 'networkidle2',
       });
 
-      if (!route.url.includes('/terminal/')) {
-        assert.equal(
-          await page.$eval('.world-landscape', (landscape): boolean => {
-            const root = document.documentElement;
+      assert.equal(
+        await page.$eval('.world-landscape', (landscape): boolean => {
+          const root = document.documentElement;
 
-            const worldLandscapePreview = window.lobbyAssertions.element(
-              document,
-              '.world-landscape-preview',
-            );
+          const worldLandscapePreview = window.lobbyAssertions.element(
+            document,
+            '.world-landscape-preview',
+          );
 
-            const preview = getComputedStyle(worldLandscapePreview);
+          const preview = getComputedStyle(worldLandscapePreview);
 
-            return (
-              !root.hasAttribute('data-js-enabled') &&
-              getComputedStyle(landscape).backgroundImage !== 'none' &&
-              Number(preview.opacity) === 0
-            );
-          }),
-          true,
-          `${route.url} progressive scene fallback without JavaScript`,
-        );
-      }
+          return (
+            !root.hasAttribute('data-js-enabled') &&
+            getComputedStyle(landscape).backgroundImage !== 'none' &&
+            Number(preview.opacity) === 0
+          );
+        }),
+        true,
+        `${route.url} progressive scene fallback without JavaScript`,
+      );
 
       assert.equal(
         await page.$eval('.header-navigation-links a', (tab): boolean => {

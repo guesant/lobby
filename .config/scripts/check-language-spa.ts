@@ -245,14 +245,12 @@ async function inspectRoot(input: {
 async function inspectMenu(input: {
   browser: Browser;
   baseURL: string;
-  terminal: boolean;
   width: number;
   theme: string;
 }): Promise<void> {
   const {
     browser,
     baseURL,
-    terminal,
     width,
     theme
   } = input;
@@ -261,16 +259,6 @@ async function inspectMenu(input: {
 
   try {
     const page = await preparePage(context, theme, width);
-
-    function resolveSegment(): '' | 'terminal/' {
-      if (terminal) {
-        return 'terminal/';
-      }
-
-      return '';
-    }
-
-    const segment = resolveSegment();
 
     let documents = 0;
 
@@ -283,8 +271,7 @@ async function inspectMenu(input: {
       }
     });
     await page.goto(
-      new URL(`/pt-br/${segment}career/?source=language#main-content`, baseURL)
-        .href,
+      new URL(`/pt-br/career/?source=language#main-content`, baseURL).href,
       {
         waitUntil: 'networkidle0',
       },
@@ -308,7 +295,7 @@ async function inspectMenu(input: {
       'zh',
       'pt-br',
     ] as const) {
-      const path = `/${locale}/${segment}career/`;
+      const path = `/${locale}/career/`;
 
       await page.focus('[data-language-switcher]');
       await page.select('[data-language-switcher]', path);
@@ -381,14 +368,6 @@ async function inspectMenu(input: {
         },
       );
 
-      function resolveInterface(): 'voxel' | 'terminal' {
-        if (terminal) {
-          return 'terminal';
-        }
-
-        return 'voxel';
-      }
-
       assert.deepEqual(state, {
         settings: true,
         document: true,
@@ -397,7 +376,7 @@ async function inspectMenu(input: {
         history: true,
         query: '?source=language',
         hash: '#main-content',
-        interface: resolveInterface(),
+        interface: 'voxel',
         bios: false,
       });
       assert.equal(documents, 1);
@@ -483,22 +462,16 @@ export default async function checkLanguageSPA(
       });
     }
 
-    for (const terminal of [
-      false,
-      true,
-    ]) {
-      for (const width of [
-        390,
-        1440,
-      ] as const) {
-        await inspectMenu({
-          browser,
-          baseURL,
-          terminal,
-          width,
-          theme,
-        });
-      }
+    for (const width of [
+      390,
+      1440,
+    ] as const) {
+      await inspectMenu({
+        browser,
+        baseURL,
+        width,
+        theme,
+      });
     }
   }
 
@@ -506,7 +479,7 @@ export default async function checkLanguageSPA(
   console.log(
     JSON.stringify({
       rootPresentations: 10,
-      manualLanguageTransitions: 48,
+      manualLanguageTransitions: 24,
       languageSPAFailures: [],
     }),
   );

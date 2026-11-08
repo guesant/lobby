@@ -2,7 +2,6 @@ import type { InterfaceName } from './resources.types.ts';
 
 export const interfaceNames: InterfaceName[] = [
   'voxel',
-  'terminal',
 ];
 
 export { absoluteURL } from './absolute-url.server.ts';

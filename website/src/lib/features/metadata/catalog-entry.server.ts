@@ -33,7 +33,7 @@ export function catalogEntry(candidate: CatalogCandidate): CatalogEntry {
     entry.details_label = item.details_label;
   }
 
-  const urls = catalogInterfaceURLs(candidate, item);
+  const urls = catalogInterfaceURLs(item);
 
   if (Object.keys(urls).length > 0) {
     entry.interface_urls = urls;

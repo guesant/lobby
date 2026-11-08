@@ -27,7 +27,7 @@ export function searchEntries(
 
   const output: SearchItem[] = [];
 
-  for (const page of pagesFor(data, locale, interfaceName)) {
+  for (const page of pagesFor(data, locale)) {
     if (!page.fallback) {
       const entries = indexPage(page, context);
 

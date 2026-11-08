@@ -9,9 +9,7 @@ export function languageRoutes(
   const routes: PageLoadData['languageRoutes'] = [];
 
   for (const option of data.links.language_options) {
-    const standard = pagesFor(data, option.id, 'voxel');
-
-    const terminal = pagesFor(data, option.id, 'terminal');
+    const standard = pagesFor(data, option.id);
 
     let available = false;
 
@@ -24,8 +22,6 @@ export function languageRoutes(
 
     const standardURL = pageDestination(standard, pageID);
 
-    const terminalURL = pageDestination(terminal, pageID);
-
     const ogLocale = data.links.locales[option.id]?.ui['og_locale'] ?? '';
 
     routes.push({
@@ -33,7 +29,6 @@ export function languageRoutes(
       ogLocale,
       available,
       standardURL,
-      terminalURL,
     });
   }
 

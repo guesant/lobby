@@ -82,7 +82,6 @@ function controlGeometry(element: Element): ControlGeometry {
 export async function inspectControlReadiness(
   context: BrowserContext,
   baseURL: string,
-  voxel: boolean,
 ): Promise<void> {
   const page = await createAuditPage(context);
 
@@ -96,20 +95,9 @@ export async function inspectControlReadiness(
 
     const gate = holdScripts(page);
 
-    function resolveNavigation(): '' | 'terminal/' {
-      if (voxel) {
-        return '';
-      }
-
-      return 'terminal/';
-    }
-
-    const navigation = page.goto(
-      new URL(`pt-br/${resolveNavigation()}code/`, baseURL).href,
-      {
-        waitUntil: 'domcontentloaded',
-      },
-    );
+    const navigation = page.goto(new URL('pt-br/code/', baseURL).href, {
+      waitUntil: 'domcontentloaded',
+    });
 
     await gate.script;
 

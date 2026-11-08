@@ -50,7 +50,6 @@ export type CatalogCandidate = {
   language: string;
   variants: {
     requestedLocale: string;
-    interfaceName: InterfaceName;
     item: SearchItem;
   }[];
 };

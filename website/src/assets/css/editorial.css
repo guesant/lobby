@@ -4,14 +4,6 @@
     --editorial-search-width: 44rem;
   }
 
-  .interface-control {
-    display: none;
-  }
-
-  :scope[data-interface-ready='true'] .interface-control {
-    display: grid;
-  }
-
   .editorial-list {
     display: grid;
     gap: var(--space-5);

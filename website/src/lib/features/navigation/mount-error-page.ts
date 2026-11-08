@@ -11,5 +11,4 @@ export function mountErrorPage(
   const presentation = initializeErrorPage(data.locales);
 
   state.selected = presentation.selected;
-  state.terminal = presentation.terminal;
 }

@@ -22,9 +22,9 @@ export function documentPresentation(
   const presentation: DocumentPresentation = {
     language: documentLanguage(data, language),
     interfaceName,
-    bodyClass: interfaceBodyClass(interfaceName),
+    bodyClass: interfaceBodyClass(),
     page: pageID ?? 'home',
-    earlyHead: fontPreloads(interfaceName),
+    earlyHead: fontPreloads(),
   };
 
   if (url.pathname === '/404.html' || (!pageID && url.pathname !== '/')) {

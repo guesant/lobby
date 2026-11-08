@@ -51,7 +51,7 @@
 <style>
   .federation-status {
     padding-block: var(--space-3);
-    color: var(--color-text-muted, var(--terminal-muted));
+    color: var(--color-text-muted);
     font-size: var(--font-size-small);
     overflow-wrap: anywhere;
   }

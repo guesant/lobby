@@ -6,15 +6,15 @@ export function terminalPaths(
   data: SiteData,
   language: SiteData['links']['language_options'][number],
 ): TerminalEntry[] {
-  const prefix = `${language.path}terminal/`;
-
   const entries: TerminalEntry[] = [];
 
-  for (const page of pagesFor(data, language.id, 'terminal')) {
+  for (const page of pagesFor(data, language.id)) {
     if (!page.fallback) {
-      const pagePath = page.url.slice(prefix.length);
+      let path = page.id;
 
-      const path = pagePath.replace(/\/$/, '');
+      if (path === 'home') {
+        path = '';
+      }
 
       entries.push({
         locale: language.id,
@@ -22,6 +22,11 @@ export function terminalPaths(
       });
     }
   }
+
+  entries.push({
+    locale: language.id,
+    path: 'privacy',
+  });
 
   return entries;
 }
