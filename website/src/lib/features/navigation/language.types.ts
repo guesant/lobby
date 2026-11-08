@@ -2,7 +2,7 @@ import type { PageLoadData } from '../content/content.types.ts';
 
 export type LanguagePageData = Pick<
   PageLoadData,
-  'config' | 'interfaceName' | 'isLanguageEntry' | 'locale' | 'languageRoutes'
+  'config' | 'isLanguageEntry' | 'locale' | 'languageRoutes'
 >;
 
 export type LanguageRoute = {

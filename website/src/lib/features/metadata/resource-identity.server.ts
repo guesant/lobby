@@ -5,13 +5,11 @@ export function resourceIdentity(
   data: SiteData,
   index: string,
 ): ResourceIdentity | undefined {
-  const match = /^(.*)-(voxel|terminal)$/.exec(index);
+  const match = /^(.*)-voxel$/.exec(index);
 
   const locale = match?.[1];
 
-  const interfaceName = match?.[2];
-
-  if (!locale || (interfaceName !== 'voxel' && interfaceName !== 'terminal')) {
+  if (!locale) {
     return undefined;
   }
 
@@ -19,7 +17,7 @@ export function resourceIdentity(
     if (entry.id === locale) {
       return {
         locale,
-        interfaceName: interfaceName,
+        interfaceName: 'voxel',
       };
     }
   }

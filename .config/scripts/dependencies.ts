@@ -13,9 +13,4 @@ if (
   );
 }
 
-await installDependencies('.config');
 await installDependencies('website');
-
-if (process.argv.includes('--audit')) {
-  await installDependencies('.config/audit');
-}

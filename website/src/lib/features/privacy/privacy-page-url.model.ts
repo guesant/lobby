@@ -1,12 +1,3 @@
-export function privacyPageURL(
-  locale: string,
-  interfaceName: 'voxel' | 'terminal',
-): string {
-  let prefix = `/${locale}/`;
-
-  if (interfaceName === 'terminal') {
-    prefix += 'terminal/';
-  }
-
-  return `${prefix}privacy/`;
+export function privacyPageURL(locale: string): string {
+  return `/${locale}/privacy/`;
 }

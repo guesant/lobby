@@ -1,7 +1,6 @@
 <script lang="ts">
   import '../../../assets/css/not-found.css';
   import { textOr } from '../content/text-or.model.ts';
-  import { errorHomeURL } from './error-home-url.viewmodel.ts';
   import { errorInterfaceName } from './error-interface-name.viewmodel.ts';
   import { selectedErrorLocale } from './selected-error-locale.viewmodel.ts';
   import { syncErrorPage } from './sync-error-page.ts';
@@ -18,7 +17,6 @@
 
   const state = $state({
     selected: '',
-    terminal: false,
   });
 
   const getLanguagesLabel = (): string => {
@@ -56,17 +54,14 @@
         <h1>{locale.errorTitle}</h1>
         <p>{locale.errorDescription}</p>
       {/if}
-      <NavigationLink href={errorHomeURL(locale, state.terminal)}>
+      <NavigationLink href={locale.home}>
         {locale.homeLabel}
       </NavigationLink>
     </section>
   {/each}
   <nav aria-label={languagesLabel}>
     {#each locales as locale (locale.id)}
-      <NavigationLink
-        lang={locale.id}
-        href={errorHomeURL(locale, state.terminal)}
-      >
+      <NavigationLink lang={locale.id} href={locale.home}>
         {locale.name}
       </NavigationLink>
     {/each}

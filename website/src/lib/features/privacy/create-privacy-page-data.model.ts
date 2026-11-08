@@ -10,15 +10,9 @@ export function createPrivacyPageData(
 
   const locale = input.locale;
 
-  const interfaceName = input.interfaceName;
-
   const privacyPolicy = input.privacyPolicy;
 
-  const standardURL = privacyPageURL(locale, 'voxel');
-
-  const terminalURL = privacyPageURL(locale, 'terminal');
-
-  const url = privacyPageURL(locale, interfaceName);
+  const url = privacyPageURL(locale);
 
   const languageRoutes = privacyLanguageRoutes(base.languageRoutes);
 
@@ -31,15 +25,11 @@ export function createPrivacyPageData(
       title: privacyPolicy.title,
       description: privacyPolicy.description,
       url,
-      standard_url: standardURL,
-      terminal_url: terminalURL,
       fallback: false,
     },
     links: [],
     editorial: [],
     languageRoutes,
-    standardPageURL: standardURL,
-    terminalPageURL: terminalURL,
     privacyURL: url,
     privacyPolicy,
   };

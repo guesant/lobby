@@ -3,6 +3,7 @@ packages:
 minimumReleaseAge: 1440
 minimumReleaseAgeStrict: true
 overrides:
+  minimatch@10: 11.0.3
   'glob@>=9 <14': 14.0.2
 allowBuilds:
   puppeteer: false
@@ -17,3 +18,4 @@ minimumReleaseAgeExclude:
   - '@renovatebot/osv-offline-db@4.5.7'
   - '@renovatebot/osv-offline@4.5.7'
   - renovate@44.201.1
+verifyDepsBeforeRun: false

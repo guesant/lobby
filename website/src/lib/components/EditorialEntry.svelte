@@ -10,7 +10,6 @@
     ui,
     thirdPartyLabel,
     locale,
-    interfaceName,
     sectionID,
     destination,
     headingLevel,
@@ -19,7 +18,6 @@
     ui: Record<string, string>;
     thirdPartyLabel: string;
     locale: string;
-    interfaceName: 'voxel' | 'terminal';
     sectionID: string;
     destination: ListingDestination;
     headingLevel: 3 | 4 | 5;
@@ -30,7 +28,6 @@
   > => {
     return editorialEntryPresentation(item, destination, {
       locale,
-      interfaceName,
       languageLabel: ui['language'] ?? '',
     });
   };
@@ -52,7 +49,6 @@
           title={item.title}
           action={presentation.primary}
           {thirdPartyLabel}
-          {interfaceName}
           icon={presentation.icon}
           className="editorial-primary"
         />
@@ -74,7 +70,6 @@
       title={item.details_label}
       action={presentation.secondary}
       {thirdPartyLabel}
-      {interfaceName}
       className="editorial-details"
     />
   {/if}

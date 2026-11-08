@@ -18,17 +18,17 @@ Meu site pessoal em [guesant.net](https://guesant.net/).
 
 - [Perfil em YAML](https://guesant.net/profile.yaml)
 - [Aplicação](website/src/) e [conteúdo](website/src/data/)
-- [Comandos](justfile) e [ambiente Docker](.config/compose.yaml)
+- [Desenvolvimento e CI](docs/operacao/desenvolvimento-e-ci.md) e [ambiente Docker](.config/compose.yaml)
 - [Configurações](.config/), [CI](.github/workflows/ci.yml) e [Scorecard](.github/workflows/scorecard.yml)
 
 ## Desenvolvimento Local
 
-Requer Git, Docker, Docker Compose e `just`.
+Requer Docker e Docker Compose.
 
 ```sh
 git clone https://github.com/guesant/lobby.git
 cd lobby
-just dev
+docker compose -f .config/compose.yaml run --build --rm --service-ports workspace just dev
 ```
 
 Acesse [localhost:4173](http://localhost:4173/). As ferramentas rodam no container.

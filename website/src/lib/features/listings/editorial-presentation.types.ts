@@ -35,6 +35,5 @@ export type EditorialEntryPresentation = {
 
 export type EditorialEntryContext = {
   locale: string;
-  interfaceName: 'voxel' | 'terminal';
   languageLabel: string;
 };

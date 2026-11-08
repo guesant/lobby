@@ -11,11 +11,9 @@ export async function standardEntries(): Promise<StandardEntry[]> {
     '',
     ...routeEntries(data),
   ]) {
-    if (path.split('/')[1] !== 'terminal') {
-      entries.push({
-        path,
-      });
-    }
+    entries.push({
+      path,
+    });
   }
 
   return entries;

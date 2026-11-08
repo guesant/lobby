@@ -16,11 +16,10 @@ export function indexActivity(context: SearchContext): SearchItem[] {
   const {
     data,
     locale,
-    interfaceName,
     ui
   } = context;
 
-  const page = activityDestination(data, locale, interfaceName);
+  const page = activityDestination(data, locale);
 
   if (!page) {
     throw new Error('Missing activity destination');

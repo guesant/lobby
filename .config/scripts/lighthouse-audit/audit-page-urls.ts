@@ -9,16 +9,12 @@ export function auditPageURLs(data: LinkDocument): string[] {
     return [];
   }
 
-  const urls = pageURLs(data, false);
+  const urls = pageURLs(data);
 
   const localizedHomeURLs = localizedHomePageURLs(data);
 
-  const primaryTerminalURLs = pageURLs(data, true);
-
   urls.push(...localizedHomeURLs);
-  urls.push(...primaryTerminalURLs);
   urls.push(`${primaryLanguage.path}privacy/`);
-  urls.push(`${primaryLanguage.path}terminal/privacy/`);
 
   return urls;
 }

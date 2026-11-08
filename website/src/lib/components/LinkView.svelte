@@ -11,12 +11,8 @@
 
   const {
     ui,
-    pageKey,
-    terminal = false,
   }: {
     ui: Record<string, string>;
-    pageKey: string;
-    terminal?: boolean;
   } = $props();
 </script>
 
@@ -26,11 +22,6 @@
     <span class="link-view-caption" aria-hidden="true">
       {ui['link_view_label']}
     </span>
-    {#if terminal}
-      <span class="terminal-command" aria-hidden="true">
-        $ ls ~/{pageKey}/
-      </span>
-    {/if}
     <div class="link-view-options">
       <input
         class="toggle-input"
@@ -48,15 +39,11 @@
         data-tooltip
         {@attach tooltip}
       >
-        {#if terminal}
-          <span>{ui['link_view_compact']}</span>
-        {:else}
-          <IconButton name="view-compact" />
-          <span class="visually-hidden">{ui['link_view_compact']}</span>
-          <span class="control-tooltip" aria-hidden="true">
-            {ui['link_view_compact']}
-          </span>
-        {/if}
+        <IconButton name="view-compact" />
+        <span class="visually-hidden">{ui['link_view_compact']}</span>
+        <span class="control-tooltip" aria-hidden="true">
+          {ui['link_view_compact']}
+        </span>
       </label>
       <input
         class="toggle-input"
@@ -74,15 +61,11 @@
         data-tooltip
         {@attach tooltip}
       >
-        {#if terminal}
-          <span>{ui['link_view_detailed']}</span>
-        {:else}
-          <IconButton name="view-detailed" />
-          <span class="visually-hidden">{ui['link_view_detailed']}</span>
-          <span class="control-tooltip" aria-hidden="true">
-            {ui['link_view_detailed']}
-          </span>
-        {/if}
+        <IconButton name="view-detailed" />
+        <span class="visually-hidden">{ui['link_view_detailed']}</span>
+        <span class="control-tooltip" aria-hidden="true">
+          {ui['link_view_detailed']}
+        </span>
       </label>
     </div>
   </div>

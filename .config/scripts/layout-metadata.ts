@@ -1,7 +1,10 @@
+import { getSiteData } from '../../website/src/lib/features/content/content.server.ts';
 import type { LinkDocument } from '../../website/src/lib/features/content/content.types.ts';
 import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
+import { profilePresentation } from '../../website/src/lib/features/profile/profile-presentation.model.ts';
 import { localizedURL, pagesFor } from './configuration.ts';
 import type { LayoutRoute } from './layout.types.ts';
+import { websiteRoot } from './paths.ts';
 import assert from 'node:assert/strict';
 import type { Page } from 'puppeteer-core';
 
@@ -306,7 +309,15 @@ export async function verifyRouteMetadata(input: {
 
     assert.ok(locale);
 
-    const expected = locale.presentation;
+    const {
+      personalProfile
+    } = await getSiteData(websiteRoot);
+
+    const expected = profilePresentation(
+      personalProfile,
+      locale,
+      route.language,
+    ).presentation;
 
     assert.deepEqual(
       await page.$eval(

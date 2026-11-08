@@ -15,13 +15,10 @@ export async function scanSemgrep(): Promise<void> {
   let scanFailure: unknown;
 
   try {
-    await runCommand('semgrep', [
-      'scan',
-      '--config',
-      'auto',
-      '--error',
-      '--sarif-output',
+    await runCommand('sh', [
+      '.config/scan-semgrep.sh',
       reportPath,
+      'typescript',
       '--exclude',
       'website/node_modules/**',
       '--exclude',
@@ -32,6 +29,7 @@ export async function scanSemgrep(): Promise<void> {
       '.local/**',
       'website/src',
       '.config/scripts',
+      '.github',
     ]);
   } catch (error) {
     scanFailure = error;

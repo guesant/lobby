@@ -242,9 +242,7 @@ async function inspectStructure(page: Page): Promise<void> {
         }),
         overflow: document.documentElement.scrollWidth > innerWidth,
         categoryActions: Boolean(
-          document.querySelector<HTMLAnchorElement>(
-            '.category-summary a, .terminal-directory-entry > header a',
-          ),
+          document.querySelector<HTMLAnchorElement>('.category-summary a'),
         ),
       };
     },
@@ -379,11 +377,7 @@ async function inspectInformativeRecord(
     '../../website/test/listing-fixtures.ts'
   );
 
-  const interfaceName = await page.$eval('html', (root): string | undefined => {
-    return root.dataset['interface'];
-  });
-
-  const html = await informativeRecordFixture(language.id, interfaceName);
+  const html = await informativeRecordFixture(language.id);
 
   await page.$eval(
     'main',
@@ -432,20 +426,14 @@ async function inspectFallbacks(input: {
   page: Page;
   baseURL: string;
   language: LinkDocument['language_options'][number];
-  terminal: boolean;
 }): Promise<void> {
   const {
     page,
     baseURL,
-    language,
-    terminal
+    language
   } = input;
 
-  let prefix = language.path;
-
-  if (terminal) {
-    prefix += 'terminal/';
-  }
+  const prefix = language.path;
 
   await page.goto(new URL(`${prefix}uses/`, baseURL).href, {
     waitUntil: 'networkidle0',
@@ -488,14 +476,12 @@ async function inspectRoute(inputValue: {
   browser: Browser;
   baseURL: string;
   language: LinkDocument['language_options'][number];
-  terminal: boolean;
   directory: string;
 }): Promise<number> {
   const {
     browser,
     baseURL,
     language,
-    terminal,
     directory
   } = inputValue;
 
@@ -506,11 +492,7 @@ async function inspectRoute(inputValue: {
       language.hreflang,
     ]);
 
-    let prefix = language.path;
-
-    if (terminal) {
-      prefix += 'terminal/';
-    }
+    const prefix = language.path;
 
     await page.goto(new URL(prefix, baseURL).href, {
       waitUntil: 'networkidle0',
@@ -544,13 +526,12 @@ async function inspectRoute(inputValue: {
     await inspectPassiveCard(page);
     await inspectInformativeRecord(page, language);
     await page.screenshot({
-      path: resolve(directory, `${language.id}-${String(terminal)}-rows.png`),
+      path: resolve(directory, `${language.id}-rows.png`),
     });
     await inspectFallbacks({
       page,
       baseURL,
       language,
-      terminal,
     });
     await page.setJavaScriptEnabled(false);
     await page.goto(new URL(`${prefix}career/`, baseURL).href, {
@@ -622,18 +603,12 @@ async function checkListingBrowser(
   let states = 0;
 
   for (const language of config.language_options) {
-    for (const terminal of [
-      false,
-      true,
-    ]) {
-      states += await inspectRoute({
-        browser,
-        baseURL,
-        language,
-        terminal,
-        directory,
-      });
-    }
+    states += await inspectRoute({
+      browser,
+      baseURL,
+      language,
+      directory,
+    });
   }
 
   await writeFile(

@@ -8,20 +8,15 @@ import type { ConfiguredPage } from './routes.types.ts';
 export function pagesFor(
   data: SiteData,
   locale: string,
-  interfaceName = 'voxel',
 ): ReturnType<typeof presentedPage>[] {
-  const localePath = languagePath(data, locale);
-
   const englishPath = languagePath(data, 'en');
 
-  if (!localePath || !englishPath) {
+  if (!englishPath) {
     throw new Error(`Unknown language: ${locale}`);
   }
 
   const context: RouteContext = {
-    localePath,
     englishPath,
-    interfaceName,
   };
 
   const pages: ConfiguredPage[] = configuredPages(data.links, locale);

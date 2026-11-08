@@ -1,4 +1,3 @@
-import { textOr } from '../../website/src/lib/features/content/text-or.model.ts';
 import { dialogIsOpen, waitForBoot } from './browser-dom.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import type {
@@ -241,40 +240,16 @@ async function rebootLifecycle(page: Page, url: string): Promise<void> {
   );
 }
 
-function biosRoutes(baseURL: string): {
-  language: string;
-  interfaceName: string;
-  url: string;
-}[] {
-  return readConfiguration().language_options.flatMap(
-    (
-      language,
-    ): {
-      language: string;
-      interfaceName: string;
-      url: string;
-    }[] => {
-      return [
-        '',
-        'terminal/',
-      ].map(
-        (
-          prefix,
-        ): {
-          language: string;
-          interfaceName: string;
-          url: string;
-        } => {
-          return {
-            language: language.id,
-            interfaceName: textOr(prefix.replace('/', ''), 'voxel'),
-            url: new URL(`${language.path.slice(1)}${prefix}career/`, baseURL)
-              .href,
-          };
-        },
-      );
-    },
-  );
+function biosRoutes(baseURL: string): BiosRoute[] {
+  return readConfiguration().language_options.map((language): BiosRoute => {
+    const path = language.path.slice(1);
+
+    return {
+      language: language.id,
+      interfaceName: 'voxel',
+      url: new URL(`${path}career/`, baseURL).href,
+    };
+  });
 }
 
 async function inspectPresentations(input: {
@@ -311,7 +286,7 @@ async function inspectPresentations(input: {
         assert.deepEqual(
           actual.styles,
           fingerprints.get(key),
-          'boot styles do not depend on the interface or appearance',
+          'boot styles do not depend on appearance',
         );
       }
 
@@ -366,33 +341,25 @@ export default async function checkBiosBrowser(
       });
     }
 
-    for (const prefix of [
-      '',
-      'terminal/',
-    ] as const) {
-      await page.setViewport({
-        width: 390,
-        height: 844,
-      });
+    await page.setViewport({
+      width: 390,
+      height: 844,
+    });
 
-      const url = new URL(
-        `pt-br/${prefix}career/?verify=bios#main-content`,
-        baseURL,
-      ).href;
+    const url = new URL(`pt-br/career/?verify=bios#main-content`, baseURL).href;
 
-      await rebootLifecycle(page, url);
-      await page.emulateMediaFeatures([
-        {
-          name: 'prefers-reduced-motion',
-          value: 'reduce',
-        },
-      ]);
-      await page.goto(`${String(url.split('#')[0])}&lobby-boot=1`, {
-        waitUntil: 'networkidle2',
-      });
-      await assertBootClosed(page);
-      await page.emulateMediaFeatures([]);
-    }
+    await rebootLifecycle(page, url);
+    await page.emulateMediaFeatures([
+      {
+        name: 'prefers-reduced-motion',
+        value: 'reduce',
+      },
+    ]);
+    await page.goto(`${String(url.split('#')[0])}&lobby-boot=1`, {
+      waitUntil: 'networkidle2',
+    });
+    await assertBootClosed(page);
+    await page.emulateMediaFeatures([]);
 
     await page.setJavaScriptEnabled(false);
     await page.goto(new URL('pt-br/?lobby-boot=1', baseURL).href, {

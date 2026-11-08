@@ -21,13 +21,7 @@ export function resolvePageContext(
     return undefined;
   }
 
-  let interfaceName: PageContext['interfaceName'] = 'voxel';
-
-  if (parts[1] === 'terminal') {
-    interfaceName = 'terminal';
-  }
-
-  const pages = pagesFor(data, locale, interfaceName);
+  const pages = pagesFor(data, locale);
 
   const pathname = `/${parts.join('/')}`.replace(/\/+$/, '') || '/';
 
@@ -39,10 +33,8 @@ export function resolvePageContext(
 
   return {
     locale,
-    interfaceName,
+    interfaceName: 'voxel',
     page,
     pages,
-    standardPages: pagesFor(data, locale, 'voxel'),
-    terminalPages: pagesFor(data, locale, 'terminal'),
   };
 }

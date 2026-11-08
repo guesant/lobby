@@ -75,8 +75,6 @@ export type PageRecord = {
   title: string;
   description: string;
   url: string;
-  standard_url: string;
-  terminal_url: string;
   fallback: boolean;
   icon?: string;
   section?: SectionRecord;
@@ -214,7 +212,7 @@ export type PageLoadData = {
   };
   credits: SiteData['credits'];
   locale: string;
-  interfaceName: 'voxel' | 'terminal';
+  interfaceName: 'voxel';
   page: PageRecord;
   pages: PageRecord[];
   languageRoutes: {
@@ -225,11 +223,8 @@ export type PageLoadData = {
     ogLocale: string;
     available: boolean;
     standardURL: string;
-    terminalURL: string;
   }[];
   standardHomeURL: string;
-  standardPageURL: string;
-  terminalPageURL: string;
   privacyURL: string;
   privacyPolicy?: PrivacyPolicyContent;
   homeSections: {

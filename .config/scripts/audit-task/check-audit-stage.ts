@@ -1,13 +1,6 @@
-import type { AuditStage } from './audit-stage.types.ts';
 import { runBrowserAuditStage } from './run-browser-audit-stage.ts';
 import { runCoreAuditStage } from './run-core-audit-stage.ts';
 import { runLighthouseAuditStage } from './run-lighthouse-audit-stage.ts';
-
-const stages: Record<AuditStage, () => Promise<void>> = {
-  core: runCoreAuditStage,
-  browser: runBrowserAuditStage,
-  lighthouse: runLighthouseAuditStage,
-};
 
 export async function checkAuditStage(): Promise<void> {
   if (process.env['TOOLING_PROFILE'] !== 'audit') {
@@ -16,15 +9,17 @@ export async function checkAuditStage(): Promise<void> {
 
   const stage = process.env['AUDIT_STAGE'];
 
-  const allowedStages: AuditStage[] = [
-    'core',
-    'browser',
-    'lighthouse',
-  ];
+  switch (stage) {
+    case 'core':
+      return runCoreAuditStage();
 
-  if (!allowedStages.includes(stage as AuditStage)) {
-    throw new Error(`Unknown audit stage: ${stage ?? 'missing'}`);
+    case 'browser':
+      return runBrowserAuditStage();
+
+    case 'lighthouse':
+      return runLighthouseAuditStage();
+
+    default:
+      throw new Error(`Unknown audit stage: ${stage ?? 'missing'}`);
   }
-
-  await stages[stage as AuditStage]();
 }

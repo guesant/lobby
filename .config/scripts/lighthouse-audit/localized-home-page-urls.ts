@@ -18,7 +18,6 @@ export function localizedHomePageURLs(data: LinkDocument): string[] {
     for (const page of pagesFor(data, language.id)) {
       if (page.id === 'home' && !page.fallback) {
         urls.push(page.url);
-        urls.push(`${language.path}terminal/`);
       }
     }
   }

@@ -1,4 +1,4 @@
-import { dialogIsOpen, inputIsChecked } from './browser-dom.ts';
+import { inputIsChecked } from './browser-dom.ts';
 import { createAuditPage } from './browser-fixture.ts';
 import { readConfiguration } from './configuration.ts';
 import assert from 'node:assert/strict';
@@ -78,58 +78,6 @@ async function inspectSearch(page: Page): Promise<void> {
   await page.keyboard.press('Escape');
 }
 
-async function inspectInterfaceNavigation(page: Page): Promise<void> {
-  await page.evaluate((): void => {
-    window.__languageDocument = document;
-  });
-
-  for (const target of [
-    'terminal',
-    'voxel',
-    'terminal',
-    'voxel',
-  ]) {
-    await page.click('[data-settings-open]');
-    await page.waitForSelector('#settings-dialog[open]', {
-      visible: true,
-    });
-    await page.click(`label[for="interface-${target}"]`);
-    await page.waitForFunction(
-      (expected): boolean => {
-        return document.documentElement.dataset['interface'] === expected;
-      },
-      {},
-      target,
-    );
-
-    const open = await page.$eval('#bios-dialog', dialogIsOpen);
-
-    if (open) {
-      await page.keyboard.press('Escape');
-    }
-
-    assert.equal(
-      await page.evaluate((): boolean => {
-        return window.__languageDocument === document;
-      }),
-      true,
-      'interface changes preserve the document',
-    );
-
-    const font = await page.$eval('body', (body): string => {
-      return getComputedStyle(body).fontFamily;
-    });
-
-    if (target === 'terminal') {
-      assert.match(font, /JetBrains Mono/);
-    } else {
-      assert.match(font, /Oxanium/);
-    }
-
-    assert.equal(new URL(page.url()).searchParams.has('lobby-boot'), false);
-  }
-}
-
 async function inspectSoundPreference(page: Page): Promise<void> {
   await page.click('[data-settings-open]');
   await page.waitForSelector('#settings-dialog', {
@@ -189,10 +137,7 @@ async function inspectStaticErrors(
       (await page.$('meta[name="robots"][content="noindex, follow"]')) !== null,
       true,
     );
-    assert.equal(
-      await page.$('.world-scene, .site-frame, .terminal-window'),
-      null,
-    );
+    assert.equal(await page.$('.world-scene, .site-frame'), null);
 
     const body = await page.$eval('body', (element): string => {
       return element.className;
@@ -219,7 +164,6 @@ export default async function checkNativeRuntime(
     await inspectNativeAssets(page);
     await inspectSearch(page);
     await inspectSoundPreference(page);
-    await inspectInterfaceNavigation(page);
 
     const configuration = readConfiguration();
 

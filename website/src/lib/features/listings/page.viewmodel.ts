@@ -19,8 +19,6 @@ export function pagePresentation(
 
   const destinationContext = {
     config: data.config,
-    locale: data.locale,
-    interfaceName: data.interfaceName,
     origin,
   };
 

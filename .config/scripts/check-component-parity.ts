@@ -24,62 +24,41 @@ const widths = [
 async function inspectComponents(
   page: Page,
   expected: BadgeExpectation,
-  voxel: boolean,
 ): Promise<void> {
   const actual = await page.evaluate(
     (
       input,
-    ):
-      | {
-        badgesCorrect: boolean;
-        ownershipCorrect: boolean;
-        independent: boolean;
-        avatar?: never;
-        frames?: never;
-        icons?: never;
-        activeCheck?: never;
-        profileShadow?: never;
-        sharedOrnaments?: never;
-        shortcutsInHeader?: never;
-        navigationSeparated?: never;
-        navigationAligned?: never;
-        navigationText?: never;
-      }
-      | {
-        badgesCorrect: boolean;
-        ownershipCorrect: boolean;
-        avatar: string;
-        frames: {
-          source: string;
-          width: number;
-          repeat: string;
-          background: string;
-          innerBorder: string;
-          innerBackground: string;
-        }[];
-        icons: {
-          width: number;
-          height: number;
-          wrapped: boolean;
-        }[];
-        activeCheck: boolean;
-        profileShadow: string;
-        sharedOrnaments: boolean;
-        shortcutsInHeader: boolean;
-        navigationSeparated: boolean;
-        navigationAligned: boolean;
-        navigationText: boolean;
-        independent?: never;
-      } => {
+    ): {
+      badgesCorrect: boolean;
+      ownershipCorrect: boolean;
+      avatar: string;
+      frames: {
+        source: string;
+        width: number;
+        repeat: string;
+        background: string;
+        innerBorder: string;
+        innerBackground: string;
+      }[];
+      icons: {
+        width: number;
+        height: number;
+        wrapped: boolean;
+      }[];
+      activeCheck: boolean;
+      profileShadow: string;
+      sharedOrnaments: boolean;
+      shortcutsInHeader: boolean;
+      navigationSeparated: boolean;
+      navigationAligned: boolean;
+      navigationText: boolean;
+    } => {
       const {
-        expected,
-        voxel
+        expected
       } = input;
 
       const badges = [
-        ...document.querySelectorAll<HTMLElement>(
-          '.link-third-party-badge, .terminal-third-party-badge',
-        ),
+        ...document.querySelectorAll<HTMLElement>('.link-third-party-badge'),
       ];
 
       const links = [
@@ -114,16 +93,6 @@ async function inspectComponents(
           ) === thirdParty
         );
       });
-
-      if (!voxel) {
-        return {
-          badgesCorrect,
-          ownershipCorrect,
-          independent: !document.querySelector<HTMLElement>(
-            '.site-frame,.quick-contact-link,.profile-avatar',
-          ),
-        };
-      }
 
       const profileAvatar = window.lobbyAssertions.element(
         document,
@@ -312,18 +281,11 @@ async function inspectComponents(
     },
     {
       expected,
-      voxel,
     },
   );
 
   assert.equal(actual.badgesCorrect, true, 'translated text in every badge');
   assert.equal(actual.ownershipCorrect, true, 'badges match domain ownership');
-
-  if (!voxel) {
-    assert.equal(actual.independent, true, 'Terminal has no voxel structure');
-
-    return;
-  }
 
   assert.equal(actual.avatar, 'GA');
   assert.equal(actual.sharedOrnaments, true, 'shared header/footer ornaments');
@@ -397,14 +359,11 @@ async function captureComponents(
     path: resolve(directory, `${name}-header.png`),
   });
 
-  await page.$eval(
-    '.content-link-group, .terminal-link-list',
-    (element): void => {
-      element.scrollIntoView({
-        block: 'start',
-      });
-    },
-  );
+  await page.$eval('.content-link-group', (element): void => {
+    element.scrollIntoView({
+      block: 'start',
+    });
+  });
   await page.screenshot({
     path: resolve(directory, `${name}-links.png`),
   });
@@ -472,17 +431,9 @@ async function inspectRoute(input: {
     width: number,
   ): Promise<void> {
     await setPresentation(page, theme, view);
-    await inspectComponents(page, expected, route.voxel);
+    await inspectComponents(page, expected);
 
-    function resolveName(): 'voxel' | 'terminal' {
-      if (route.voxel) {
-        return 'voxel';
-      }
-
-      return 'terminal';
-    }
-
-    const name = `${route.language}-${resolveName()}-${route.id}-${String(width)}-${theme}-${view}`;
+    const name = `${route.language}-voxel-${route.id}-${String(width)}-${theme}-${view}`;
 
     if (screenshots && route.language === 'pt-br') {
       await captureComponents(page, directory, name);
@@ -495,46 +446,22 @@ async function inspectRoute(input: {
 async function inspectNavigation(input: {
   page: Page;
   baseURL: string;
-  voxel: boolean;
   expected: BadgeExpectation;
 }): Promise<void> {
   const {
     page,
     baseURL,
-    voxel,
     expected
   } = input;
 
-  function resolvePrefix(): '' | 'terminal/' {
-    if (voxel) {
-      return '';
-    }
-
-    return 'terminal/';
-  }
-
-  const prefix = `pt-br/${resolvePrefix()}`;
-
-  await page.goto(new URL(prefix, baseURL).href, {
+  await page.goto(new URL('pt-br/', baseURL).href, {
     waitUntil: 'networkidle0',
   });
   await page.evaluate((): void => {
     window.componentParityNavigation = true;
   });
 
-  function resolveSelector():
-    | '.header-navigation-links a[data-navigation-page="career"]'
-    | '.terminal-navigation a[href$="/career/"]' {
-    if (voxel) {
-      return '.header-navigation-links a[data-navigation-page="career"]';
-    }
-
-    return '.terminal-navigation a[href$="/career/"]';
-  }
-
-  const selector = resolveSelector();
-
-  await page.click(selector);
+  await page.click('.header-navigation-links a[data-navigation-page="career"]');
   await page.waitForFunction((): boolean => {
     return document.documentElement.dataset['page'] === 'career';
   });
@@ -545,88 +472,37 @@ async function inspectNavigation(input: {
     true,
     'internal navigation stays client-side',
   );
-  await inspectComponents(page, expected, voxel);
+  await inspectComponents(page, expected);
 }
 
 function componentRoutes(config: LinkDocument): ParityRoute[] {
-  return config.language_options.flatMap(
-    (
-      language,
-    ): {
-      path: string;
-      language: string;
-      voxel: boolean;
-      id: string;
-      expected: {
-        label: string;
-        domains: string[];
-      };
-    }[] => {
-      function interfaceRoutes(voxel: boolean): {
-        path: string;
-        language: string;
-        voxel: boolean;
-        id: string;
-        expected: {
-          label: string;
-          domains: string[];
-        };
-      }[] {
-        return [
-          'home',
-          'career',
-          'code',
-        ].map(
-          (
-            id,
-          ): {
-            path: string;
-            language: string;
-            voxel: boolean;
-            id: string;
-            expected: {
-              label: string;
-              domains: string[];
-            };
-          } => {
-            function resolvePath(): '' | 'terminal/' {
-              if (voxel) {
-                return '';
-              }
+  const routes: ParityRoute[] = [];
 
-              return 'terminal/';
-            }
+  for (const language of config.language_options) {
+    for (const id of [
+      'home',
+      'career',
+      'code',
+    ]) {
+      let path = language.path;
 
-            function resolvePath1(): string {
-              if (id === 'home') {
-                return '';
-              }
-
-              return `${id}/`;
-            }
-
-            return {
-              path: `${language.path.slice(
-                1,
-              )}${resolvePath()}${resolvePath1()}`,
-              language: language.id,
-              voxel,
-              id,
-              expected: {
-                label: config.locales[language.id]?.ui.third_party ?? '',
-                domains: config.site.first_party_domains,
-              },
-            };
-          },
-        );
+      if (id !== 'home') {
+        path += `${id}/`;
       }
 
-      return [
-        true,
-        false,
-      ].flatMap(interfaceRoutes);
-    },
-  );
+      routes.push({
+        path,
+        language: language.id,
+        id,
+        expected: {
+          label: config.locales[language.id]?.ui.third_party ?? '',
+          domains: config.site.first_party_domains,
+        },
+      });
+    }
+  }
+
+  return routes;
 }
 
 async function checkComponentParity(input: {
@@ -655,12 +531,7 @@ async function checkComponentParity(input: {
   const checks = [];
 
   try {
-    for (const voxel of [
-      true,
-      false,
-    ]) {
-      await inspectControlReadiness(context, baseURL, voxel);
-    }
+    await inspectControlReadiness(context, baseURL);
 
     const page = await createAuditPage(context);
 
@@ -685,56 +556,30 @@ async function checkComponentParity(input: {
       );
     }
 
-    for (const voxel of [
-      true,
-      false,
-    ]) {
-      const requiredValue = config.locales['pt-br'];
+    const requiredValue = config.locales['pt-br'];
 
-      if (requiredValue === undefined) {
-        throw new Error('Missing required requiredValue');
-      }
-
-      await inspectNavigation({
-        page,
-        baseURL,
-        voxel,
-        expected: {
-          label: requiredValue.ui.third_party,
-          domains: config.site.first_party_domains,
-        },
-      });
+    if (requiredValue === undefined) {
+      throw new Error('Missing required requiredValue');
     }
+
+    await inspectNavigation({
+      page,
+      baseURL,
+      expected: {
+        label: requiredValue.ui.third_party,
+        domains: config.site.first_party_domains,
+      },
+    });
 
     await page.setJavaScriptEnabled(false);
 
-    for (const voxel of [
-      true,
-      false,
-    ]) {
-      function interfaceSegment(): '' | 'terminal/' {
-        if (voxel) {
-          return '';
-        }
-
-        return 'terminal/';
-      }
-
-      await page.goto(
-        new URL(`pt-br/${interfaceSegment()}career/`, baseURL).href,
-        {
-          waitUntil: 'networkidle0',
-        },
-      );
-      await inspectComponents(
-        page,
-        {
-          label: 'Terceiros',
-          domains: config.site.first_party_domains,
-        },
-        voxel,
-      );
-    }
+    await page.goto(new URL(`pt-br/career/`, baseURL).href, {
+      waitUntil: 'networkidle0',
+    });
+    await inspectComponents(page, {
+      label: 'Terceiros',
+      domains: config.site.first_party_domains,
+    });
 
     await fs.writeFile(
       resolve(directory, 'checks.json'),

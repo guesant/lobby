@@ -11,9 +11,6 @@ export function resourceEntries(data: SiteData): {
     output.push({
       index: `${language.id}-voxel`,
     });
-    output.push({
-      index: `${language.id}-terminal`,
-    });
   }
 
   return output;

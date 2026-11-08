@@ -14,8 +14,5 @@ export function updateSettings(actions: SettingsActions, event: Event): void {
       actions.preferences.set(input.dataset['setting'], input.value);
 
       return;
-
-    case 'interface':
-      void actions.interfaceActions.select(input.value);
   }
 }

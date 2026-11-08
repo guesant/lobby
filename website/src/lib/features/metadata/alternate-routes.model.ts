@@ -10,15 +10,9 @@ export function alternateRoutes(page: PageLoadData): Alternate[] {
       continue;
     }
 
-    let path = route.standardURL;
-
-    if (page.interfaceName === 'terminal') {
-      path = route.terminalURL;
-    }
-
     output.push({
       id: route.id,
-      href: `${siteOrigin}${path}`,
+      href: `${siteOrigin}${route.standardURL}`,
       hreflang: route.hreflang,
       ogLocale: route.ogLocale,
     });

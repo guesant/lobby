@@ -7,7 +7,6 @@
   import { syncSettingsDialog } from './sync-settings-dialog.ts';
   import { updateSettings } from './update-settings.ts';
   import { dialogBackdrop } from '#lib/browser/dialog.ts';
-  import { createBrowserInterfaceController } from '#lib/browser/interface-navigation.ts';
   import IconButton from '#lib/components/IconButton.svelte';
   import NavigationLink from '#lib/components/NavigationLink.svelte';
   import { measurementID } from '#lib/features/analytics/analytics.config.ts';
@@ -33,17 +32,12 @@
 
   const model = $derived.by(getSettingsPresentation);
 
-  const terminal = $derived(model.terminal);
-
   const editorialUI = $derived(data.editorialUI);
 
   const locale = $derived(data.locale);
 
-  const interfaceActions = createBrowserInterfaceController(controls);
-
   const settingsActions = {
     preferences,
-    interfaceActions,
   };
 
   const closeDialog = settingsDialogClosed.bind(null, controls);
@@ -124,43 +118,6 @@
           <label class="toggle-button" for="sound-off">
             {editorialUI['sound_off']}
           </label>
-        </div>
-      </div>
-      <div class="toggle-control interface-control">
-        <span class="toggle-label" id="interface-label">
-          {editorialUI['interface']}
-        </span>
-        <div
-          class="toggle-group"
-          role="radiogroup"
-          aria-labelledby="interface-label"
-        >
-          <input
-            class="toggle-input"
-            type="radio"
-            name="interface"
-            id="interface-voxel"
-            value="voxel"
-            data-interface-option
-            data-setting="interface"
-            data-interface-url={data.standardPageURL}
-            checked={!terminal}
-            onchange={updateSettings.bind(null, settingsActions)}
-          />
-          <label class="toggle-button" for="interface-voxel">Minecraft</label>
-          <input
-            class="toggle-input"
-            type="radio"
-            name="interface"
-            id="interface-terminal"
-            value="terminal"
-            data-interface-option
-            data-setting="interface"
-            data-interface-url={data.terminalPageURL}
-            checked={terminal}
-            onchange={updateSettings.bind(null, settingsActions)}
-          />
-          <label class="toggle-button" for="interface-terminal">Terminal</label>
         </div>
       </div>
       <div class="toggle-control language-control">

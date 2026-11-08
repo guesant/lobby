@@ -15,12 +15,6 @@ export function documentContext(data: SiteData, url: URL): DocumentContext {
     }
   }
 
-  let interfaceName: DocumentContext['interfaceName'] = 'voxel';
-
-  if (parts[1] === 'terminal') {
-    interfaceName = 'terminal';
-  }
-
   const joinedPath = parts.join('/');
 
   const normalizedPath = `/${joinedPath}`.replace(/\/+$/, '');
@@ -29,7 +23,7 @@ export function documentContext(data: SiteData, url: URL): DocumentContext {
 
   return {
     language,
-    interfaceName,
+    interfaceName: 'voxel',
     pathname,
   };
 }

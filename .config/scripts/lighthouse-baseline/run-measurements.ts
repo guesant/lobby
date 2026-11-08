@@ -13,8 +13,6 @@ export async function runMeasurements(
     for (const path of [
       '/pt-br/',
       '/pt-br/code/',
-      '/pt-br/terminal/',
-      '/pt-br/terminal/code/',
     ]) {
       const results: LighthouseResult[] = [];
 

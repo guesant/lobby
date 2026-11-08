@@ -336,7 +336,6 @@ export default [
       '**/*.test.*',
       '**/fixtures/**',
       '.config/scripts/accessibility-*.ts',
-      '.config/scripts/audit-browser.ts',
       '.config/scripts/browser-*.ts',
       '.config/scripts/check-*.ts',
       '.config/scripts/layout-*.ts',

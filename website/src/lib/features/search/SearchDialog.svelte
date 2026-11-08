@@ -185,8 +185,7 @@
     padding: var(--space-2);
     font: inherit;
     color: inherit;
-    background: var(--color-surface-link, var(--terminal-surface));
-    border: var(--divider-width) solid
-      var(--color-border-control, var(--terminal-border));
+    background: var(--color-surface-link);
+    border: var(--divider-width) solid var(--color-border-control);
   }
 </style>

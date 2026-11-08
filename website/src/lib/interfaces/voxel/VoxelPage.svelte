@@ -199,7 +199,7 @@
               </h2>
             </header>
             <div class="home-listings">
-              <LinkView ui={data.localized.ui} pageKey="sections" />
+              <LinkView ui={data.localized.ui} />
               <section
                 class="home-categories"
                 id="home-categories"
@@ -296,10 +296,7 @@
           />
           <section class="link-sections" aria-labelledby="page-title">
             <section class="link-section" id={data.page.id}>
-              <LinkView
-                ui={data.localized.ui}
-                pageKey={data.page.id}
-              /><LinkList
+              <LinkView ui={data.localized.ui} /><LinkList
                 items={data.links}
                 ui={data.editorialUI}
                 thirdPartyLabel={data.localized.ui.third_party}
@@ -312,7 +309,6 @@
                 thirdPartyLabel={data.localized.ui.third_party}
                 sectionID={data.page.id}
                 locale={data.locale}
-                interfaceName="voxel"
                 {destination}
                 headingLevel={2}
                 emptyAction={emptyActionFor({

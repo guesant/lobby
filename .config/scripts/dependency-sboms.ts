@@ -1,3 +1,4 @@
+import { dependencySnapshotTargets } from './dependency-snapshot-targets.ts';
 import { runCommand } from './process.ts';
 import { verifySBOM } from './verify-sbom.ts';
 import { mkdir } from 'node:fs/promises';
@@ -6,11 +7,9 @@ import { resolve } from 'node:path';
 export async function dependencySBOMs(): Promise<string[]> {
   const paths: string[] = [];
 
-  for (const directory of [
-    'website',
-    '.config',
-    '.config/audit',
-  ]) {
+  for (const {
+    directory
+  } of dependencySnapshotTargets) {
     const path = resolve(
       '.local/reports/sbom',
       directory,

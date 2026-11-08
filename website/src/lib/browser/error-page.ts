@@ -4,7 +4,6 @@ import { browserPreferenceStorage } from './preference-storage.ts';
 
 export function initializeErrorPage(locales: ErrorLocale[]): {
   selected: string;
-  terminal: boolean;
 } {
   const parts = window.location.pathname.split('/')
     .filter(Boolean);
@@ -35,6 +34,5 @@ export function initializeErrorPage(locales: ErrorLocale[]): {
 
   return {
     selected,
-    terminal: parts[1] === 'terminal',
   };
 }

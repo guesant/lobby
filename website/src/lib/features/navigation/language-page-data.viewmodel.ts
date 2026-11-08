@@ -16,7 +16,6 @@ export function languagePageData(
 
   return {
     config: data.config,
-    interfaceName: data.interfaceName,
     isLanguageEntry: data.isLanguageEntry,
     locale: data.locale,
     languageRoutes: data.languageRoutes,

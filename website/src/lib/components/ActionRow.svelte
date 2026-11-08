@@ -7,7 +7,6 @@
     title,
     action,
     thirdPartyLabel,
-    interfaceName,
     icon,
     className = '',
     linkID,
@@ -16,7 +15,6 @@
     title: string;
     action: LinkDestination;
     thirdPartyLabel: string;
-    interfaceName: 'voxel' | 'terminal';
     icon?: string | undefined;
     className?: string;
     linkID?: string;
@@ -28,7 +26,7 @@
   class={[
     'action-row',
     className,
-    Boolean(icon) && interfaceName === 'voxel' && 'action-row-with-icon',
+    Boolean(icon) && 'action-row-with-icon'
   ]}
   href={action.href}
   target={action.target}
@@ -36,7 +34,7 @@
   data-link-id={linkID}
   data-preview-id={previewID}
 >
-  {#if icon && interfaceName === 'voxel'}
+  {#if icon}
     <span class="action-row-icon link-icon" aria-hidden="true">
       <Icon name={icon} optical />
     </span>
@@ -50,11 +48,7 @@
     {/if}
     {#if action.external}
       <span class="external-link-icon" aria-hidden="true">
-        {#if interfaceName === 'terminal'}
-          ↗
-        {:else}
-          <Icon name="external-link" />
-        {/if}
+        <Icon name="external-link" />
       </span>
     {/if}
   </span>

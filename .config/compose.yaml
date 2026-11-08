@@ -1,7 +1,17 @@
 name: guesant-links
 
+x-cli: &cli
+  working_dir: /workspace
+  volumes:
+    - ..:/workspace:ro
+
+x-cli-build: &cli-build
+  context: ..
+  dockerfile: .config/container/Dockerfile
+
 services:
   workspace:
+    image: lobby-workspace-fast
     build:
       context: ..
       dockerfile: .config/container/Dockerfile
@@ -12,8 +22,8 @@ services:
       - ../../blog/public:/sources/blog:ro
       - ../../resume/site:/sources/resume:ro
       - node-modules:/workspace/website/node_modules
-      - tooling-modules:/workspace/.config/node_modules
-      - audit-modules:/workspace/.config/audit/node_modules
+      - /workspace/.config/node_modules
+      - /workspace/.config/audit/node_modules
     ports:
       - '127.0.0.1:4173:4173'
     environment:
@@ -24,13 +34,151 @@ services:
     init: true
   audit:
     extends: workspace
+    image: lobby-workspace-audit
     build:
       context: ..
       dockerfile: .config/container/Dockerfile
       target: workspace-audit
     ports: []
 
+  ci-policy:
+    working_dir: /workspace
+    build: { <<: *cli-build, target: ci-policy }
+    volumes:
+      - ..:/workspace
+
+  renovate:
+    build:
+      context: ..
+      dockerfile: .config/container/Dockerfile
+      target: renovate
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace:ro
+    environment:
+      - GIT_CONFIG_COUNT=1
+      - GIT_CONFIG_KEY_0=safe.directory
+      - GIT_CONFIG_VALUE_0=/workspace
+      - RENOVATE_TOKEN
+      - RENOVATE_DRY_RUN
+      - RENOVATE_PLATFORM
+      - RENOVATE_REPOSITORIES
+      - RENOVATE_USERNAME
+      - RENOVATE_ONBOARDING
+      - RENOVATE_REQUIRE_CONFIG
+      - RENOVATE_PLATFORM_COMMIT
+      - RENOVATE_ALLOW_SCRIPTS
+  scorecard:
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: .config/container/Dockerfile
+      target: scorecard
+    volumes:
+      - ..:/workspace:ro
+    command: ['--local', '/workspace']
+
+  actionlint:
+    <<: *cli
+    build: { <<: *cli-build, target: actionlint }
+    entrypoint: ['/usr/local/bin/actionlint']
+    command: ['--version']
+
+  zizmor:
+    <<: *cli
+    build: { <<: *cli-build, target: zizmor }
+    entrypoint: ['/usr/bin/zizmor']
+    command: ['--version']
+
+  hadolint:
+    <<: *cli
+    build: { <<: *cli-build, target: hadolint }
+    entrypoint: ['/bin/hadolint']
+    command: ['--version']
+
+  shellcheck:
+    <<: *cli
+    build: { <<: *cli-build, target: shellcheck }
+    entrypoint: ['/bin/shellcheck']
+    command: ['--version']
+
+  shfmt:
+    <<: *cli
+    build: { <<: *cli-build, target: shfmt }
+    entrypoint: ['/bin/shfmt']
+    command: ['--version']
+
+  gitleaks:
+    <<: *cli
+    build: { <<: *cli-build, target: gitleaks }
+    entrypoint: ['/usr/bin/gitleaks']
+    command: ['--version']
+
+  osv-scanner:
+    <<: *cli
+    build: { <<: *cli-build, target: osv-scanner }
+    entrypoint: ['/osv-scanner']
+    command: ['--version']
+
+  trivy:
+    <<: *cli
+    build: { <<: *cli-build, target: trivy }
+    entrypoint: ['/usr/local/bin/trivy']
+    command: ['--version']
+
+  ast-grep:
+    <<: *cli
+    build: { <<: *cli-build, target: ast-grep }
+    entrypoint: ['ast-grep']
+    command: ['--version']
+
+  markdownlint:
+    <<: *cli
+    build: { <<: *cli-build, target: markdownlint }
+    entrypoint: ['markdownlint-cli2']
+    command: ['--version']
+
+  yamllint:
+    <<: *cli
+    build: { <<: *cli-build, target: yamllint }
+    entrypoint: ['/opt/python/.venv/bin/yamllint']
+    command: ['--version']
+
+  jscpd:
+    <<: *cli
+    build: { <<: *cli-build, target: jscpd }
+    entrypoint: ['jscpd']
+    command: ['--version']
+
+  eslint:
+    <<: *cli
+    build: { <<: *cli-build, target: eslint }
+    entrypoint: ['eslint']
+    command: ['--version']
+
+  prettier:
+    <<: *cli
+    build: { <<: *cli-build, target: prettier }
+    entrypoint: ['prettier']
+    command: ['--version']
+
+  knip:
+    <<: *cli
+    build: { <<: *cli-build, target: knip }
+    entrypoint: ['knip']
+    command: ['--version']
+
+  vitest:
+    <<: *cli
+    build: { <<: *cli-build, target: vitest }
+    entrypoint: ['vitest']
+    command: ['--version']
+
+  stylelint:
+    <<: *cli
+    build: { <<: *cli-build, target: stylelint }
+    entrypoint: ['stylelint']
+    command: ['--version']
+
 volumes:
   node-modules:
-  tooling-modules:
-  audit-modules:

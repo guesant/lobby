@@ -14,13 +14,8 @@ export function catalogLanguages(data: SiteData): CatalogLanguage[] {
 
     const homeURL = absoluteURL(language.path);
 
-    const terminalPath = `${language.path}terminal/`;
-
-    const terminalURL = absoluteURL(terminalPath);
-
     const homeURLs = {
       voxel: homeURL,
-      terminal: terminalURL,
     };
 
     output.push({
