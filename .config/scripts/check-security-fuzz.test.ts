@@ -170,6 +170,7 @@ test(
             value: string;
           } => {
             return {
+              // nosemgrep: html-in-template-string
               value: `</script><script>${value}</script>`,
             };
           },

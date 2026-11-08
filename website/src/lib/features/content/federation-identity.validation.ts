@@ -1,3 +1,4 @@
+import { validFederationLanguage } from './federation-language.model.ts';
 import { federationType } from './federation-type.validation.ts';
 import type { FederationIdentity } from './federation-validation.types.ts';
 import { requiredText } from './validation.model.ts';
@@ -21,7 +22,7 @@ export function federationIdentity(
 
   const language = requiredText(item['language'], `${label}.language`);
 
-  if (!/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/.test(language)) {
+  if (!validFederationLanguage(language)) {
     throw new Error(`Invalid ${label}.language`);
   }
 

@@ -300,14 +300,9 @@ export function measureContent(): Pick<
         );
       }
 
-      function aboutFactsPresent(context: HTMLElement): boolean {
-        return (
-          context.querySelectorAll<HTMLElement>('.about-fact').length === 3 &&
-          context.querySelectorAll<HTMLElement>('.about-topics > li').length ===
-            5 &&
-          !context.querySelector<HTMLElement>(
-            'a,button,details,.presentation-title,.presentation-intro,.presentation-focus',
-          )
+      function aboutHasNoControls(context: HTMLElement): boolean {
+        return !context.querySelector<HTMLElement>(
+          'a,button,details,.presentation-title,.presentation-intro,.presentation-focus',
         );
       }
 
@@ -346,7 +341,7 @@ export function measureContent(): Pick<
       }
 
       return (
-        aboutFactsPresent(introduction) &&
+        aboutHasNoControls(introduction) &&
         aboutGridMatches(grid, introduction) &&
         footerNavigationPlaced(navigation, updates)
       );

@@ -1,3 +1,4 @@
+import { validFederationLanguage } from '../../../website/src/lib/features/content/federation-language.model.ts';
 import { text } from './text.ts';
 
 export function entryIdentity(
@@ -17,7 +18,7 @@ export function entryIdentity(
     .toLowerCase()
     .replaceAll('_', '-');
 
-  if (!/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/.test(language)) {
+  if (!validFederationLanguage(language)) {
     throw new Error('Invalid federation language');
   }
 

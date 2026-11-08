@@ -394,7 +394,7 @@ async function inspectCompactViewport(input: {
       function resolveSymmetricPadding(): boolean {
         if (
           document.querySelector<HTMLElement>(
-            '.page-content > .link-view-control',
+            '.home-listings > .link-view-control',
           )
         ) {
           return parseFloat(toolbarStyle.paddingLeft) > 0;
