@@ -1,20 +1,11 @@
 import { positionLanterns } from './position-lanterns.ts';
 import type { RailLayoutState } from './rail-layout.types.ts';
+import { visibleLanes } from './visible-lanes.ts';
 
 export function positionLayout(state: RailLayoutState): void {
   state.frame = null;
 
-  const lanes = new Map<HTMLElement, number>();
-
-  for (const body of state.content.querySelectorAll<HTMLElement>(
-    '.suspension-body',
-  )) {
-    if (body.getClientRects().length) {
-      const bounds = body.getBoundingClientRect();
-
-      lanes.set(body, bounds.top);
-    }
-  }
+  const lanes = visibleLanes(state.content);
 
   if (!lanes.size) {
     return;
@@ -30,9 +21,7 @@ export function positionLayout(state: RailLayoutState): void {
 
   const styles = getComputedStyle(state.content);
 
-  const rowGap = styles.rowGap;
-
-  const gap = parseFloat(rowGap);
+  const gap = parseFloat(styles.rowGap);
 
   const anchorBottoms: number[] = [];
 

@@ -1,6 +1,6 @@
 import bodyFont from '../../../assets/fonts/oxanium-latin.woff2';
 import headingFont from '../../../assets/fonts/press-start-2p-latin.woff2';
-import iconSprite from '../../../assets/icons/pixel-compact.png';
+import iconSprite from '../../../assets/icons/pixel-compact.webp';
 import { encodeXML } from 'entities';
 
 export function fontPreloads(): string {
