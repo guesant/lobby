@@ -1,6 +1,6 @@
 export function positionLanterns(
   body: HTMLElement,
-  anchors: HTMLElement[],
+  anchorBottoms: number[],
   gap: number,
 ): void {
   if (!body.getClientRects().length) {
@@ -14,21 +14,24 @@ export function positionLanterns(
   )) {
     const index = Number(lantern.dataset['railLantern']);
 
-    const anchor = anchors[index];
+    const anchorBottom = anchorBottoms[index];
 
-    if (!anchor) {
+    if (anchorBottom === undefined) {
       continue;
     }
-
-    const anchorBottom = anchor.getBoundingClientRect().bottom;
 
     const position = anchorBottom + gap / 2 - top;
 
     const value = `${String(position)}px`;
 
-    lantern.style.setProperty('--rail-lantern-position', value);
+    if (lantern.style.getPropertyValue('--rail-lantern-position') !== value) {
+      lantern.style.setProperty('--rail-lantern-position', value);
+    }
 
-    if (index === Math.min(1, anchors.length - 1)) {
+    if (
+      index === Math.min(1, anchorBottoms.length - 1) &&
+      body.style.getPropertyValue('--rail-splice-position') !== value
+    ) {
       body.style.setProperty('--rail-splice-position', value);
     }
   }

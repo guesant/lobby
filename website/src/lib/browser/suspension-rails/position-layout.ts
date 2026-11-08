@@ -18,9 +18,17 @@ export function positionLayout(state: RailLayoutState): void {
 
   const gap = parseFloat(rowGap);
 
+  const anchorBottoms: number[] = [];
+
+  for (const anchor of anchors) {
+    const bounds = anchor.getBoundingClientRect();
+
+    anchorBottoms.push(bounds.bottom);
+  }
+
   for (const body of state.content.querySelectorAll<HTMLElement>(
     '.suspension-body',
   )) {
-    positionLanterns(body, anchors, gap);
+    positionLanterns(body, anchorBottoms, gap);
   }
 }
