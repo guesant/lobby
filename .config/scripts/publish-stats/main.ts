@@ -4,8 +4,8 @@ import { publishStatistics } from './publish-statistics.ts';
 export async function main(): Promise<void> {
   const options: Parameters<typeof publishStatistics>[0] = {};
 
-  if (process.env['GITHUB_STATS_TOKEN']) {
-    options.token = process.env['GITHUB_STATS_TOKEN'];
+  if (process.env['GITHUB_STATS_PUBLISH_TOKEN']) {
+    options.token = process.env['GITHUB_STATS_PUBLISH_TOKEN'];
   }
 
   if (process.env['GITHUB_REPOSITORY']) {

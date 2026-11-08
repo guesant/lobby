@@ -3,7 +3,7 @@ import { gitCredentialToken } from './git-credential-token.ts';
 export function gitDiagnosticSecrets(args: string[]): string[] {
   const secrets = new Set<string>();
 
-  const workflowToken = process.env['GITHUB_STATS_TOKEN'];
+  const workflowToken = process.env['GITHUB_STATS_PUBLISH_TOKEN'];
 
   if (workflowToken) {
     secrets.add(workflowToken);

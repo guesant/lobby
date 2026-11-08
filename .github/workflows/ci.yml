@@ -88,8 +88,6 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.operation == 'statistics'))
     runs-on: ubuntu-latest
     environment: renovate
-    permissions:
-      contents: write
     outputs:
       changed: ${{ steps.result.outputs.changed }}
       sha: ${{ steps.result.outputs.sha }}
@@ -104,18 +102,25 @@ jobs:
         with:
           target: workspace-fast
           tag: lobby-workspace-fast
-      - name: Collect and prepare statistics branch in Docker
+      - name: Collect public statistics in Docker
         env:
           GITHUB_STATS_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          docker compose -f .config/compose.yaml run --rm --pull never \
+            -e GITHUB_STATS_TOKEN workspace sh .config/run-workspace.sh node .config/scripts/update-stats.ts
+      - name: Publish statistics branch in Docker
+        env:
+          GITHUB_STATS_PUBLISH_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
           CI_OUTPUT_PATH: .local/ci/statistics-output
           CI_SUMMARY_PATH: .local/ci/statistics-summary
         run: |
           set -eu
+          test -n "$GITHUB_STATS_PUBLISH_TOKEN"
           docker compose -f .config/compose.yaml run --rm --pull never \
-            -e GITHUB_STATS_TOKEN -e GITHUB_REPOSITORY -e GITHUB_REF \
+            -e GITHUB_STATS_PUBLISH_TOKEN -e GITHUB_REPOSITORY -e GITHUB_REF \
             -e CI_OUTPUT_PATH -e CI_SUMMARY_PATH \
-            workspace sh .config/run-workspace.sh sh -eu -c \
-            'node .config/scripts/update-stats.ts && node .config/scripts/publish-stats.ts'
+            workspace sh .config/run-workspace.sh node .config/scripts/publish-stats.ts
       - name: Record statistics result
         id: result
         run: |
