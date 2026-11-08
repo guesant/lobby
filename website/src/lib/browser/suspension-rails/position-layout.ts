@@ -4,6 +4,22 @@ import type { RailLayoutState } from './rail-layout.types.ts';
 export function positionLayout(state: RailLayoutState): void {
   state.frame = null;
 
+  const lanes = new Map<HTMLElement, number>();
+
+  for (const body of state.content.querySelectorAll<HTMLElement>(
+    '.suspension-body',
+  )) {
+    if (body.getClientRects().length) {
+      const bounds = body.getBoundingClientRect();
+
+      lanes.set(body, bounds.top);
+    }
+  }
+
+  if (!lanes.size) {
+    return;
+  }
+
   const anchors = [
     ...state.content.querySelectorAll<HTMLElement>('[data-rail-anchor]'),
   ];
@@ -26,9 +42,10 @@ export function positionLayout(state: RailLayoutState): void {
     anchorBottoms.push(bounds.bottom);
   }
 
-  for (const body of state.content.querySelectorAll<HTMLElement>(
-    '.suspension-body',
-  )) {
-    positionLanterns(body, anchorBottoms, gap);
+  for (const [
+    body,
+    top,
+  ] of lanes) {
+    positionLanterns(body, anchorBottoms, gap / 2 - top);
   }
 }
