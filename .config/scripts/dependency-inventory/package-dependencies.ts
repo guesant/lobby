@@ -2,6 +2,7 @@ import {
   record,
   requiredText,
 } from '../../../website/src/lib/features/content/validation.model.ts';
+import { dependencySnapshotTargets } from '../dependency-snapshot-targets.ts';
 import type { ManagedDependency } from './dependency-inventory.types.ts';
 import { workspaceDependencies } from './workspace-dependencies.ts';
 import { readFile } from 'node:fs/promises';
@@ -9,14 +10,12 @@ import { readFile } from 'node:fs/promises';
 export async function packageDependencies(): Promise<ManagedDependency[]> {
   const dependencies: ManagedDependency[] = [];
 
-  for (const file of [
-    'website/package.json',
-    '.config/package.json',
-    '.config/audit/package.json',
-  ]) {
-    const workspaceEntries = await workspaceDependencies(file);
+  for (const {
+    directory
+  } of dependencySnapshotTargets) {
+    const file = `${directory}/package.json`;
 
-    dependencies.push(...workspaceEntries);
+    const workspaceEntries = await workspaceDependencies(file);
 
     const source = await readFile(file, 'utf8');
 
@@ -54,7 +53,7 @@ export async function packageDependencies(): Promise<ManagedDependency[]> {
       `${file} package manager`,
     );
 
-    dependencies.push({
+    dependencies.push(...workspaceEntries, {
       file,
       manager: 'npm',
       name: 'pnpm',

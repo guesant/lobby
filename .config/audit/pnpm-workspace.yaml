@@ -17,3 +17,4 @@ minimumReleaseAgeExclude:
   - '@renovatebot/osv-offline-db@4.5.7'
   - '@renovatebot/osv-offline@4.5.7'
   - renovate@44.201.1
+verifyDepsBeforeRun: false

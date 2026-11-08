@@ -48,6 +48,12 @@ const commands: [
     ],
   ],
   [
+    'bash',
+    [
+      '.config/check-shell.sh',
+    ],
+  ],
+  [
     'hadolint',
     [
       '--config',

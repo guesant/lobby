@@ -10,7 +10,7 @@
     "test": "cd .. && .config/node_modules/.bin/vitest run --config .config/vitest.config.ts --root .",
     "comments:test": "cd .. && ast-grep test --config .config/ast-grep/sgconfig.yml",
     "comments:scan": "cd .. && ast-grep scan --config .config/ast-grep/sgconfig.yml .",
-    "markdown": "cd .. && markdownlint-cli2 --config .config/.markdownlint-cli2.jsonc README.md .github/SECURITY.md 'LICENSES/**/*.md'",
+    "markdown": "cd .. && markdownlint-cli2 --config .config/.markdownlint-cli2.jsonc README.md .github/SECURITY.md 'LICENSES/**/*.md' AGENTS.md 'docs/**/*.md'",
     "duplicates": "cd .. && jscpd --min-tokens 50 --min-lines 5 --skip-comments --format javascript,svelte,typescript --ignore '**/*.test.*,**/fixtures/**' --reporters console --baseline .config/jscpd-baseline.json --fail-on-new-clones=0 website/src/lib website/src/routes .config/scripts"
   },
   "dependencies": {
