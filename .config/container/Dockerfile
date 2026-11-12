@@ -64,11 +64,13 @@ FROM node-tools AS yamllint
 COPY .config/python/pyproject.toml .config/python/uv.lock /opt/python/
 RUN uv sync --project /opt/python --locked --no-group audit --no-install-project
 
-FROM node-tools AS audit-node
+FROM node-tools AS audit-browser
 # renovate: datasource=deb registryUrl=https://deb.debian.org/debian-security?suite=bookworm-security&components=main
 RUN apt-get update \
   && apt-get install --yes --no-install-recommends chromium=156.0.8078.79-1~deb12u1 g++=4:12.2.0-3 make=4.3-4.1 \
   && rm --recursive --force /var/lib/apt/lists/*
+
+FROM audit-browser AS audit-node
 ENV TOOLING_PROFILE=audit
 ENV CHROME_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
@@ -204,14 +206,17 @@ CMD ["sleep", "infinity"]
 FROM yamllint AS semgrep
 RUN uv sync --project /opt/python --locked --group audit --no-install-project
 
-FROM workspace-fast AS workspace-audit
-# renovate: datasource=deb registryUrl=https://deb.debian.org/debian-security?suite=bookworm-security&components=main
-RUN apt-get update \
-  && apt-get install --yes --no-install-recommends chromium=156.0.8078.79-1~deb12u1 g++=4:12.2.0-3 make=4.3-4.1 \
-  && rm --recursive --force /var/lib/apt/lists/*
+FROM audit-browser AS workspace-audit
+COPY --from=workspace-fast /opt/tools /opt/tools
+COPY --from=workspace-fast /opt/python/.venv /opt/python/.venv
+COPY --from=workspace-fast /workspace/.config/node_modules /workspace/.config/node_modules
+COPY --from=workspace-fast /opt/link-tool-modules.mjs /opt/link-tool-modules.mjs
+COPY --from=workspace-fast /usr/local/bin/shellcheck /usr/local/bin/shellcheck
+COPY --from=workspace-fast /usr/local/bin/shfmt /usr/local/bin/shfmt
 ENV TOOLING_PROFILE=audit
 ENV CHROME_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+CMD ["sleep", "infinity"]
 
 COPY --from=lychee /usr/local/bin/lychee /usr/local/bin/lychee
 COPY --from=osv-scanner /osv-scanner /usr/local/bin/osv-scanner

@@ -1,15 +1,17 @@
 <script lang="ts">
+  import '../../../assets/css/bios.css';
   import { createBootController } from './boot.controller.ts';
   import { bootModules } from './boot.model.ts';
   import { createBootViewModel } from './boot.viewmodel.svelte.ts';
   import type { BootControllerState } from './boot-controller.types.ts';
   import { cancelBoot } from './cancel-boot.ts';
   import { finishBootForReducedMotion } from './finish-boot-for-reduced-motion.ts';
+  import { initializeBoot } from './initialize-boot.ts';
   import { syncBootDialog } from './sync-boot-dialog.ts';
   import { registerBootNavigation } from '#lib/browser/boot-navigation.ts';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
   import { page } from '$app/state';
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
 
   const {
     ui,
@@ -39,6 +41,8 @@
 
   const actions = createBootController(runtime);
 
+  const initializeInitialBoot = initializeBoot.bind(null, actions);
+
   const syncDialog = syncBootDialog.bind(null, runtime, preferences);
 
   const finishReducedMotion = finishBootForReducedMotion.bind(
@@ -51,6 +55,8 @@
   $effect(syncDialog);
 
   registerBootNavigation(actions.start);
+
+  onMount(initializeInitialBoot);
 
   $effect(finishReducedMotion);
   onDestroy(actions.destroy);

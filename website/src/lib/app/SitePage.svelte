@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { PageLoadData } from '../features/content/content.types.ts';
-  import AnalyticsTracker from '#lib/features/analytics/AnalyticsTracker.svelte';
-  import ConsentDialog from '#lib/features/analytics/ConsentDialog.svelte';
-  import BiosScreen from '#lib/features/boot/BiosScreen.svelte';
+  import { getBootRequest } from '#lib/features/boot/get-boot-request.ts';
   import MetadataHead from '#lib/features/metadata/MetadataHead.svelte';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
   import type { Snippet } from 'svelte';
@@ -16,14 +14,22 @@
   } = $props();
 
   const state = interfaceState();
+
+  const bootRequested = $derived.by(getBootRequest);
 </script>
 
 <MetadataHead {data} />
-<AnalyticsTracker
-  consent={state.analyticsConsent}
-  loaded={state.analyticsConsentLoaded}
-  path={data.page.url}
-/>
+{#if state.analyticsConsentLoaded && state.analyticsConsent === 'granted'}
+  {#await import('../features/analytics/AnalyticsTracker.svelte') then {
+    default: AnalyticsTracker
+  }}
+    <AnalyticsTracker
+      consent={state.analyticsConsent}
+      loaded={state.analyticsConsentLoaded}
+      path={data.page.url}
+    />
+  {/await}
+{/if}
 {@render children()}
 {#if state.dialog === 'settings'}
   {#await import('../features/preferences/SettingsDialog.svelte') then {
@@ -48,5 +54,15 @@
     <CreditsDialog {data} />
   {/await}
 {/if}
-<ConsentDialog {data} />
-<BiosScreen ui={data.editorialUI} />
+{#await import('../features/analytics/ConsentDialog.svelte') then {
+  default: ConsentDialog
+}}
+  <ConsentDialog {data} />
+{/await}
+{#if bootRequested}
+  {#await import('../features/boot/BiosScreen.svelte') then {
+    default: BiosScreen
+  }}
+    <BiosScreen ui={data.editorialUI} />
+  {/await}
+{/if}

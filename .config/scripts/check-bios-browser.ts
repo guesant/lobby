@@ -186,7 +186,13 @@ function assertPresentation(actual: BootPresentation): void {
 }
 
 async function assertBootClosed(page: Page): Promise<void> {
-  const open = await page.$eval('#bios-dialog', dialogIsOpen);
+  const dialog = await page.$('#bios-dialog');
+
+  if (dialog === null) {
+    return;
+  }
+
+  const open = await dialog.evaluate(dialogIsOpen);
 
   assert.equal(open, false);
 }
@@ -265,7 +271,11 @@ async function inspectPresentations(input: {
     fingerprints
   } = input;
 
-  await page.goto(route.url, {
+  const bootURL = new URL(route.url);
+
+  bootURL.searchParams.set('lobby-boot', '1');
+
+  await page.goto(bootURL.href, {
     waitUntil: 'networkidle2',
   });
 
