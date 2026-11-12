@@ -19,6 +19,7 @@ export default defineConfig({
   plugins: [
     sveltekit({
       preprocess: vitePreprocess(),
+      inlineStyleThreshold: 1024,
       paths: {
         relative: false,
       },

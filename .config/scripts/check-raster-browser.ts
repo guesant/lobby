@@ -9,8 +9,9 @@ import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import test from 'node:test';
 import type { Page } from 'puppeteer-core';
+import sharp from 'sharp';
 
-void test('PNG atlas renders each icon without shifting or leaking adjacent tiles', async (): Promise<void> => {
+void test('Both atlases render each icon without shifting or leaking adjacent tiles', async (): Promise<void> => {
   const manifest = await iconManifest();
 
   const geometry = await iconGeometry();
@@ -20,10 +21,12 @@ void test('PNG atlas renders each icon without shifting or leaking adjacent tile
       [
         'pixel',
         manifest.tileSize,
+        'png',
       ] as const,
       [
         'pixel-compact',
         manifest.compactTileSize,
+        'webp',
       ] as const,
     ].map(
       async (
@@ -36,16 +39,28 @@ void test('PNG atlas renders each icon without shifting or leaking adjacent tile
         const [
           name,
           tileSize,
+          format,
         ] = entry;
+
+        const path = `website/src/assets/icons/${name}.${format}`;
+
+        const bytes = await readFile(path);
+
+        const metadata = await sharp(bytes)
+          .metadata();
+
+        assert.equal(metadata.format, format, path);
+        assert.equal(metadata.width, manifest.count * tileSize, path);
+        assert.equal(metadata.height, tileSize * 2, path);
 
         return {
           name,
           tileSize,
-          atlas: await loadPNG(
-            `website/src/assets/icons/${name}.png`,
-            manifest.count * tileSize,
-            tileSize * 2,
-          ),
+          atlas: `data:image/png;base64,${(
+            await sharp(bytes)
+              .png()
+              .toBuffer()
+          ).toString('base64')}`,
         };
       },
     ),
@@ -158,10 +173,6 @@ void test('PNG atlas renders each icon without shifting or leaking adjacent tile
               }
             }
 
-            function imageURL(png: string): string {
-              return `url("data:image/png;base64,${png}")`;
-            }
-
             for (const [
               column,
               source,
@@ -179,10 +190,10 @@ void test('PNG atlas renders each icon without shifting or leaking adjacent tile
                   }
 
                   if (isMask) {
-                    return source.mask;
+                    return `data:image/png;base64,${source.mask}`;
                   }
 
-                  return source.png;
+                  return `data:image/png;base64,${source.png}`;
                 }
 
                 function resolveBackgroundSize(): string {
@@ -211,7 +222,7 @@ void test('PNG atlas renders each icon without shifting or leaking adjacent tile
                   top: `${String(row * size)}px`,
                   width: `${String(size)}px`,
                   height: `${String(size)}px`,
-                  backgroundImage: imageURL(resolveBackgroundImage()),
+                  backgroundImage: `url("${resolveBackgroundImage()}")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundSize: resolveBackgroundSize(),
                   backgroundPosition: resolveBackgroundPosition(),
@@ -231,14 +242,14 @@ void test('PNG atlas renders each icon without shifting or leaking adjacent tile
                   } = input;
 
                   return [
-                    png,
-                    mask,
+                    `data:image/png;base64,${png}`,
+                    `data:image/png;base64,${mask}`,
                   ];
                 }),
-              ].map(async (png): Promise<void> => {
+              ].map(async (url): Promise<void> => {
                 const image = new Image();
 
-                image.src = `data:image/png;base64,${png}`;
+                image.src = url;
                 await image.decode();
               }),
             );
