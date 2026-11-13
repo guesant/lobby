@@ -30,10 +30,9 @@ necessário e valide os targets rápido e de auditoria. APT verifica as
 assinaturas do arquivo mesmo quando a data de validade do índice arquivado
 já passou.
 
-A regra Semgrep `html-in-template-string` sinaliza interpolações mesmo
-quando o valor já passou por escape. As diretivas de linha nos preloads e
-no sitemap correspondem a valores codificados com `encodeXML`. A diretiva
-no fuzz test cobre a entrada de ataque usada para testar a serialização.
+Os valores interpolados nos preloads e no sitemap passam por `encodeXML`
+antes de compor o HTML e XML. A entrada do fuzz test usa texto de ataque,
+construído sem uma template literal que pareça injetar HTML.
 
 Continue em [Federação de conteúdo](../arquitetura/federacao.md).
 
