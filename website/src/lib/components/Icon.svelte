@@ -10,32 +10,40 @@
     optical?: boolean;
   } = $props();
 
-  const getIcon = (): ReturnType<typeof resolveIcon> => {
-    return resolveIcon(name);
-  };
+  function getIconData(): {
+    icon: ReturnType<typeof resolveIcon>;
+    metadata: (typeof manifest.icons)[keyof typeof manifest.icons];
+    style: string;
+  } {
+    const icon = resolveIcon(name);
 
-  const icon = $derived.by(getIcon);
+    const metadata = manifest.icons[icon];
 
-  const metadata = $derived(manifest.icons[icon]);
+    const columnCount = String(manifest.count);
 
-  const columnCount = String(manifest.count);
+    const position = String(metadata.position);
 
-  const position = String(metadata.position);
+    const opticalScale = String(metadata.opticalScale);
 
-  const opticalScale = String(metadata.opticalScale);
+    const style = `--icon-columns: ${columnCount}; --icon-position: ${position}%; --icon-optical-scale: ${opticalScale}`;
 
-  const style = $derived(
-    `--icon-columns: ${columnCount}; --icon-position: ${position}%; --icon-optical-scale: ${opticalScale}`,
-  );
+    return {
+      icon,
+      metadata,
+      style,
+    };
+  }
+
+  const iconData = $derived.by(getIconData);
 </script>
 
 <span
-  class:site-icon-monochrome={!metadata.colored}
+  class:site-icon-monochrome={!iconData.metadata.colored}
   class:site-icon-optical={optical}
   class="site-icon"
-  data-platform={icon}
+  data-platform={iconData.icon}
   data-finish="beveled"
-  {style}
+  style={iconData.style}
   aria-hidden="true"
 >
   <span class="site-icon-face"></span>

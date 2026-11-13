@@ -34,14 +34,19 @@
     update?: boolean;
   } = $props();
 
-  const railAnchorEnabled =
-    update ||
-      [
-        'writing',
-        'games',
-      ].includes(page.id);
+  function getRailAnchor(): true | undefined {
+    if (update) {
+      return enabledAttribute(true);
+    }
 
-  const railAnchor = enabledAttribute(railAnchorEnabled);
+    if (page.id === 'writing' || page.id === 'games') {
+      return enabledAttribute(true);
+    }
+
+    return enabledAttribute(false);
+  }
+
+  const railAnchor = $derived.by(getRailAnchor);
 </script>
 
 <article
