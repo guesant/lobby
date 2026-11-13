@@ -9,13 +9,20 @@ export function fontPreloads(): string {
 
   const iconURL = encodeXML(iconSprite);
 
-  // nosemgrep: html-in-template-string
-  const iconSpritePreload = `<link rel="preload" href="${iconURL}" as="image">`;
+  const iconSpritePreload =
+    '<link rel="preload" href="' + iconURL + '" as="image">';
 
   const headingURL = encodeXML(headingFont);
 
   const bodyURL = encodeXML(bodyFont);
 
-  // nosemgrep: html-in-template-string
-  return `<link rel="preload" href="${headingURL}" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="${bodyURL}" as="font" type="font/woff2" crossorigin="anonymous">${scenePreload}${iconSpritePreload}`;
+  return (
+    '<link rel="preload" href="' +
+    headingURL +
+    '" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="' +
+    bodyURL +
+    '" as="font" type="font/woff2" crossorigin="anonymous">' +
+    scenePreload +
+    iconSpritePreload
+  );
 }

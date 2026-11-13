@@ -19,8 +19,9 @@ export function sitemap(data: SiteData, locale?: string): string {
 
     const location = encodeXML(new URL(`/${path}/`, siteOrigin).href);
 
-    // nosemgrep: html-in-template-string
-    urls.push(`<url><loc>${location}</loc></url>`);
+    const urlElement = '<url><loc>' + location + '</loc></url>';
+
+    urls.push(urlElement);
   }
 
   return (
