@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageLoadData } from '../features/content/content.types.ts';
+  import ConsentDialog from '#lib/features/analytics/ConsentDialog.svelte';
   import { getBootRequest } from '#lib/features/boot/get-boot-request.ts';
   import MetadataHead from '#lib/features/metadata/MetadataHead.svelte';
   import { interfaceState } from '#lib/features/preferences/preferences.viewmodel.svelte.ts';
@@ -54,11 +55,7 @@
     <CreditsDialog {data} />
   {/await}
 {/if}
-{#await import('../features/analytics/ConsentDialog.svelte') then {
-  default: ConsentDialog
-}}
-  <ConsentDialog {data} />
-{/await}
+<ConsentDialog {data} />
 {#if bootRequested}
   {#await import('../features/boot/BiosScreen.svelte') then {
     default: BiosScreen
