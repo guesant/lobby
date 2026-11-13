@@ -43,7 +43,7 @@ async function inspectNativeAssets(page: Page): Promise<void> {
 
   assert.match(
     assets.sprite,
-    /\/_app\/immutable\/assets\/pixel-compact[.-][\w-]+\.png/,
+    /\/_app\/immutable\/assets\/pixel-compact[.-][\w-]+\.webp/,
   );
 }
 

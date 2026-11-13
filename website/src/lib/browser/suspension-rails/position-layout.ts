@@ -1,8 +1,15 @@
 import { positionLanterns } from './position-lanterns.ts';
 import type { RailLayoutState } from './rail-layout.types.ts';
+import { visibleLanes } from './visible-lanes.ts';
 
 export function positionLayout(state: RailLayoutState): void {
   state.frame = null;
+
+  const lanes = visibleLanes(state.content);
+
+  if (!lanes.size) {
+    return;
+  }
 
   const anchors = [
     ...state.content.querySelectorAll<HTMLElement>('[data-rail-anchor]'),
@@ -14,9 +21,7 @@ export function positionLayout(state: RailLayoutState): void {
 
   const styles = getComputedStyle(state.content);
 
-  const rowGap = styles.rowGap;
-
-  const gap = parseFloat(rowGap);
+  const gap = parseFloat(styles.rowGap);
 
   const anchorBottoms: number[] = [];
 
@@ -26,9 +31,10 @@ export function positionLayout(state: RailLayoutState): void {
     anchorBottoms.push(bounds.bottom);
   }
 
-  for (const body of state.content.querySelectorAll<HTMLElement>(
-    '.suspension-body',
-  )) {
-    positionLanterns(body, anchorBottoms, gap);
+  for (const [
+    body,
+    top,
+  ] of lanes) {
+    positionLanterns(body, anchorBottoms, gap / 2 - top);
   }
 }

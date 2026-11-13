@@ -4,14 +4,6 @@ on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
-    inputs:
-      mode:
-        description: Renovate operation
-        type: choice
-        default: dry-run
-        options:
-          - dry-run
-          - run
 
 permissions:
   contents: read
@@ -31,15 +23,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Select Renovate operation
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          MODE: ${{ inputs.mode }}
-        run: |
-          set -eu
-          if [ "$EVENT_NAME" = 'workflow_dispatch' ] && [ "$MODE" = 'dry-run' ]; then
-            echo 'RENOVATE_DRY_RUN=full' >> "$GITHUB_ENV"
-          fi
       - name: Run Renovate
         run: docker compose -f .config/compose.yaml run --build --rm renovate
         env:

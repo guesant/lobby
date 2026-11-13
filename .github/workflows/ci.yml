@@ -305,16 +305,38 @@ jobs:
             -e AUDIT_STAGE='${{ matrix.stage }}' audit \
             sh -eu -c 'git config --global --add safe.directory /workspace &&
             exec sh .config/run-workspace.sh --audit node .config/scripts/tasks.ts check-audit-stage'
-      - name: Upload native SARIF reports
+      - name: Group SARIF reports for upload
+        id: audit-sarif
+        if: always() && matrix.stage == 'core' && hashFiles('.local/reports/sarif/*.sarif') != ''
+        run: |
+          set -eu
+          mkdir -p "$RUNNER_TEMP/lobby-sarif/source" "$RUNNER_TEMP/lobby-sarif/sbom"
+          for report in .local/reports/sarif/*.sarif; do
+            case "${report##*/}" in
+              trivy-sbom-*) group=sbom ;;
+              *) group=source ;;
+            esac
+            cp "$report" "$RUNNER_TEMP/lobby-sarif/$group/"
+            printf '%s=true\n' "$group" >> "$GITHUB_OUTPUT"
+          done
+      - name: Upload source SARIF reports
         if: >-
           always() && matrix.stage == 'core' &&
-          hashFiles('.local/reports/sarif/**/*.sarif') != '' &&
+          steps.audit-sarif.outputs.source == 'true' &&
           (github.ref == 'refs/heads/main' ||
           (github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository))
         uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
-          sarif_file: .local/reports/sarif
+          sarif_file: ${{ runner.temp }}/lobby-sarif/source
+      - name: Upload SBOM SARIF reports
+        if: >-
+          always() && matrix.stage == 'core' &&
+          steps.audit-sarif.outputs.sbom == 'true' &&
+          github.ref == 'refs/heads/main'
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: ${{ runner.temp }}/lobby-sarif/sbom
       - name: Upload audit reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

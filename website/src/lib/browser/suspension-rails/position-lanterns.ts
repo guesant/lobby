@@ -1,14 +1,8 @@
 export function positionLanterns(
   body: HTMLElement,
   anchorBottoms: number[],
-  gap: number,
+  offset: number,
 ): void {
-  if (!body.getClientRects().length) {
-    return;
-  }
-
-  const top = body.getBoundingClientRect().top;
-
   for (const lantern of body.querySelectorAll<HTMLElement>(
     '[data-rail-lantern]',
   )) {
@@ -20,7 +14,7 @@ export function positionLanterns(
       continue;
     }
 
-    const position = anchorBottom + gap / 2 - top;
+    const position = anchorBottom + offset;
 
     const value = `${String(position)}px`;
 

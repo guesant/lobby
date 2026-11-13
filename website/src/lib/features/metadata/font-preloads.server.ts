@@ -1,16 +1,16 @@
 import bodyFont from '../../../assets/fonts/oxanium-latin.woff2';
 import headingFont from '../../../assets/fonts/press-start-2p-latin.woff2';
-import iconSprite from '../../../assets/icons/pixel-compact.png';
+import iconSprite from '../../../assets/icons/pixel-compact.webp';
 import { encodeXML } from 'entities';
 
 export function fontPreloads(): string {
   const scenePreload =
-    '<link rel="preload" href="/assets/generated/aged-oak.webp" as="image" fetchpriority="high">';
+    '<link rel="preload" href="/assets/generated/aged-oak.webp" as="image" fetchpriority="high"><link rel="preload" href="/assets/generated/oak-frame.webp" as="image" fetchpriority="high">';
 
   const iconURL = encodeXML(iconSprite);
 
   // nosemgrep: html-in-template-string
-  const iconSpritePreload = `<link rel="preload" href="${iconURL}" as="image" fetchpriority="high">`;
+  const iconSpritePreload = `<link rel="preload" href="${iconURL}" as="image">`;
 
   const headingURL = encodeXML(headingFont);
 

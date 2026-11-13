@@ -3,7 +3,6 @@
   import '../../../assets/css/main.css';
   import '../../../assets/css/editorial.css';
   import '../../../assets/css/listing.css';
-  import '../../../assets/css/bios.css';
   import type { PageLoadData } from '../../features/content/content.types.ts';
   import { navigationOrigin } from '#lib/browser/origin.ts';
   import { progressiveScene } from '#lib/browser/progressive-scene.ts';
