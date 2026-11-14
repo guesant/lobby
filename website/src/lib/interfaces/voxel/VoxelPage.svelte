@@ -212,6 +212,7 @@
                       editorial={section.editorial}
                       editorialUI={data.editorialUI}
                       thirdPartyLabel={data.localized.ui.third_party}
+                      detailed={state.view === 'detailed'}
                       locale={data.locale}
                       {destination}
                       {index}
@@ -227,6 +228,7 @@
                     editorial={[]}
                     editorialUI={data.editorialUI}
                     thirdPartyLabel={data.localized.ui.third_party}
+                    detailed={state.view === 'detailed'}
                     locale={data.locale}
                     {destination}
                     update
@@ -299,6 +301,7 @@
                 items={data.links}
                 ui={data.editorialUI}
                 thirdPartyLabel={data.localized.ui.third_party}
+                detailed={state.view === 'detailed'}
                 {destination}
                 sectionID={data.page.id}
                 headingLevel={2}

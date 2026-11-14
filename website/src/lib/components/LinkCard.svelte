@@ -11,11 +11,13 @@
     item,
     thirdPartyLabel,
     preview = false,
+    detailed,
     destination,
   }: {
     item: DisplayLinkRecord;
     thirdPartyLabel: string;
     preview?: boolean;
+    detailed: boolean;
     destination: ListingDestination;
   } = $props();
 
@@ -48,62 +50,64 @@
     linkID={item.id}
     previewID={presentation.previewID}
   />
-  <div class="link-card-details">
-    <span class="link-url">
-      <span class="link-url-icon"><Icon name="link" /></span>
-      <span class="link-url-text">{presentation.target.display}</span>
-    </span>
-    {#if item.description}
-      <span class="link-description">
-        {item.description}
+  {#if detailed}
+    <div class="link-card-details">
+      <span class="link-url">
+        <span class="link-url-icon"><Icon name="link" /></span>
+        <span class="link-url-text">{presentation.target.display}</span>
       </span>
-    {/if}
-    {#if item.badge}
-      <span class="link-badge">{item.badge}</span>
-    {/if}
-    {#if item.visual}
-      <span class="link-visual">
-        <img
-          src={item.visual.src}
-          alt={item.visual.alt}
-          width={item.visual.width}
-          height={item.visual.height}
-          loading="lazy"
-          decoding="async"
-        />
-      </span>
-    {/if}
-    {#if item.stats}
-      <div class="statistics" data-statistics={item.id}>
-        {#if item.statistics?.metrics}
-          <dl class="statistics-grid">
-            {#each item.statistics.metrics as metric (metric.id)}
-              <div class="statistic statistic-{metric.id}">
-                <dt>
-                  <IconButton name={metric.icon} optical />
-                  <span>{metric.label}</span>
-                </dt>
-                <dd>
-                  {metric.value}
-                  {#if metric.total}
-                    <span class="statistic-total">
-                      / {metric.total}
-                    </span>
-                  {/if}
-                </dd>
-              </div>
-            {/each}
-          </dl>
-          <p class="statistics-updated">
-            <span>{item.statistics.updatedLabel}</span>
-            <time datetime={item.statistics.updatedAt}>
-              {item.statistics.updatedAt}
-            </time>
-          </p>
-        {:else}
-          <p>{item.statistics?.unavailable}</p>
-        {/if}
-      </div>
-    {/if}
-  </div>
+      {#if item.description}
+        <span class="link-description">
+          {item.description}
+        </span>
+      {/if}
+      {#if item.badge}
+        <span class="link-badge">{item.badge}</span>
+      {/if}
+      {#if item.visual}
+        <span class="link-visual">
+          <img
+            src={item.visual.src}
+            alt={item.visual.alt}
+            width={item.visual.width}
+            height={item.visual.height}
+            loading="lazy"
+            decoding="async"
+          />
+        </span>
+      {/if}
+      {#if item.stats}
+        <div class="statistics" data-statistics={item.id}>
+          {#if item.statistics?.metrics}
+            <dl class="statistics-grid">
+              {#each item.statistics.metrics as metric (metric.id)}
+                <div class="statistic statistic-{metric.id}">
+                  <dt>
+                    <IconButton name={metric.icon} optical />
+                    <span>{metric.label}</span>
+                  </dt>
+                  <dd>
+                    {metric.value}
+                    {#if metric.total}
+                      <span class="statistic-total">
+                        / {metric.total}
+                      </span>
+                    {/if}
+                  </dd>
+                </div>
+              {/each}
+            </dl>
+            <p class="statistics-updated">
+              <span>{item.statistics.updatedLabel}</span>
+              <time datetime={item.statistics.updatedAt}>
+                {item.statistics.updatedAt}
+              </time>
+            </p>
+          {:else}
+            <p>{item.statistics?.unavailable}</p>
+          {/if}
+        </div>
+      {/if}
+    </div>
+  {/if}
 </article>

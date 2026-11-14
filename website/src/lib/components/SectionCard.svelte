@@ -18,6 +18,7 @@
     editorial,
     editorialUI,
     thirdPartyLabel,
+    detailed,
     locale,
     destination,
     index = 0,
@@ -28,6 +29,7 @@
     editorial: EditorialRecord[];
     editorialUI: Record<string, string>;
     thirdPartyLabel: string;
+    detailed: boolean;
     locale: string;
     destination: ListingDestination;
     index?: number;
@@ -76,6 +78,7 @@
         ui={editorialUI}
         {thirdPartyLabel}
         {destination}
+        {detailed}
         sectionID={page.id}
         preview
       />
