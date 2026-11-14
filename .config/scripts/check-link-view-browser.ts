@@ -328,8 +328,8 @@ export default async function checkLinkViewBrowser(
         'compact',
       );
       assert.equal(
-        await page.$eval('.link-description', (element): number => {
-          return element.getClientRects().length;
+        await page.$$eval('.link-description', (elements): number => {
+          return elements.length;
         }),
         0,
       );
