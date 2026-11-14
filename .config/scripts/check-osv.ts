@@ -175,6 +175,8 @@ function scannerArguments(paths: string[], format: 'json' | 'sarif'): string[] {
     'source',
     '--experimental-plugins',
     'sbom',
+    '--config',
+    '.config/osv-scanner.toml',
     ...files.flatMap((path): string[] => {
       return [
         '--lockfile',

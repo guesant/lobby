@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "GHSA-gcqx-w48m-w2h4"
+reason = "The CVE was rejected by its authority; the deepmerge maintainer confirmed it does not describe a vulnerability in https://github.com/TehShrike/deepmerge/issues/273."
