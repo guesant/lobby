@@ -1561,6 +1561,8 @@
 
   .category-card {
     min-height: calc(var(--space-7) * 3);
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto calc(var(--space-7) * 6);
     contain: layout style;
     grid-template-columns: var(--grid-columns-1);
     align-items: center;
