@@ -36,6 +36,13 @@
   border: var(--space-0);
 }
 
+:root[data-interface='voxel'][data-link-view='compact']
+  .category-card
+  .link-row {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto var(--listing-row-height);
+}
+
 :root[data-interface] .action-row {
   display: grid;
   grid-template-columns: var(--grid-track) auto;
