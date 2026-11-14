@@ -26,7 +26,7 @@ export async function inspectStatistics(
     snapshots
   } = context;
 
-  const statisticsEntries = (route.links ?? []).filter((entry) => {
+  const statisticsEntries = (route.links ?? []).filter((entry): boolean => {
     return entry.stats !== undefined;
   });
 
@@ -122,7 +122,7 @@ export async function inspectStatistics(
   }
 
   await page.$eval('#link-view-compact', activateElement);
-  await page.waitForFunction(() => {
+  await page.waitForFunction((): boolean => {
     return document.querySelector('.link-card-details') === null;
   });
 }
