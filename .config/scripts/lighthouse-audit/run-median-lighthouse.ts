@@ -3,7 +3,7 @@ import { assertLighthouse } from './assert-lighthouse.ts';
 import type { LighthouseResult } from './lighthouse-audit.types.ts';
 import { runLighthouse } from './run-lighthouse.ts';
 
-export async function runHomepageLighthouse(
+export async function runMedianLighthouse(
   url: string,
   output: string,
 ): Promise<LighthouseResult> {
@@ -23,19 +23,10 @@ export async function runHomepageLighthouse(
 
   const median = medianResult(results);
 
-  const performance = median.scores['performance'];
-
-  if (performance === undefined) {
-    throw new Error('Missing median Lighthouse performance score');
-  }
-
   for (const result of results) {
     assertLighthouse({
       ...result,
-      scores: {
-        ...result.scores,
-        performance,
-      },
+      scores: median.scores,
     });
   }
 
