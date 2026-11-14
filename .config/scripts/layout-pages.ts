@@ -1,4 +1,5 @@
 import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.types.ts';
+import { activateElement } from './browser-dom.ts';
 import { waitForLandscape } from './check-progressive-scene.ts';
 import { localizedURL, pagesFor } from './configuration.ts';
 import type { LayoutRoute } from './layout.types.ts';
@@ -25,9 +26,26 @@ export async function inspectStatistics(
     snapshots
   } = context;
 
-  for (const entry of route.links ?? []) {
-    if (!entry.stats) {
-      continue;
+  const statisticsEntries = (route.links ?? []).filter((entry) => {
+    return entry.stats !== undefined;
+  });
+
+  if (statisticsEntries.length === 0) {
+    return;
+  }
+
+  const firstEntry = statisticsEntries[0];
+
+  assert.ok(firstEntry);
+
+  await page.$eval('#link-view-detailed', activateElement);
+  await page.waitForSelector(`[data-statistics="${firstEntry.id}"] .statistic`);
+
+  for (const entry of statisticsEntries) {
+    const stats = entry.stats;
+
+    if (stats === undefined) {
+      throw new Error(`Missing statistics configuration: ${entry.id}`);
     }
 
     const snapshot = snapshots[entry.id];
@@ -36,7 +54,7 @@ export async function inspectStatistics(
 
     assert(
       snapshot.profile_url === entry.url &&
-        snapshot.provider === entry.stats.provider,
+        snapshot.provider === stats.provider,
     );
 
     const actual = await page.$$eval(
@@ -81,7 +99,7 @@ export async function inspectStatistics(
 
     assert.deepEqual(
       actual,
-      entry.stats.metrics.map(
+      stats.metrics.map(
         (
           metric,
         ): {
@@ -102,6 +120,11 @@ export async function inspectStatistics(
       ),
     );
   }
+
+  await page.$eval('#link-view-compact', activateElement);
+  await page.waitForFunction(() => {
+    return document.querySelector('.link-card-details') === null;
+  });
 }
 
 export async function inspectHomeCategories(input: {
