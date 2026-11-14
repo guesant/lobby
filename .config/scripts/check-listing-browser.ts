@@ -14,6 +14,7 @@ import type {
   StateName,
 } from './check-listing-browser.types.ts';
 import { readConfiguration } from './configuration.ts';
+import { clickActionRow } from './listing-browser/click-action-row.test.ts';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -191,70 +192,81 @@ async function inspectPresentation(
 }
 
 async function inspectStructure(page: Page): Promise<void> {
-  const actual = await page.evaluate(
-    (): {
-      borders: boolean;
-      nested: boolean;
-      markers: boolean;
-      overflow: boolean;
-      categoryActions: boolean;
-    } => {
-      const lists = [
-        ...document.querySelectorAll<HTMLElement>('.divided-list'),
-      ];
-
-      function inspectBordersEntry(list: HTMLElement): boolean {
-        const style = getComputedStyle(list);
-
-        return (
-          parseFloat(style.borderTopWidth) === 1 &&
-          parseFloat(style.borderBottomWidth) === 1 &&
-          [
-            ...list.children,
-          ].every((child, index): boolean => {
-            const itemStyle = getComputedStyle(child);
-
-            return (
-              parseFloat(itemStyle.borderTopWidth) === Number(index > 0) &&
-              parseFloat(itemStyle.borderBottomWidth) === 0
-            );
-          })
-        );
-      }
-
-      const borders = lists.every(inspectBordersEntry);
-
-      const rows = [
-        ...document.querySelectorAll<HTMLAnchorElement>('.action-row'),
-      ];
-
-      return {
-        borders,
-        nested: Boolean(
-          document.querySelector<HTMLAnchorElement>(
-            'a a, .editorial-description a, .editorial-metadata a',
-          ),
-        ),
-        markers: rows.every((row): boolean => {
-          return (
-            row.querySelectorAll<HTMLElement>('.external-link-icon').length <= 1
-          );
-        }),
-        overflow: document.documentElement.scrollWidth > innerWidth,
-        categoryActions: Boolean(
-          document.querySelector<HTMLAnchorElement>('.category-summary a'),
-        ),
-      };
-    },
-  );
-
-  assert.deepEqual(actual, {
-    borders: true,
-    nested: false,
-    markers: true,
-    overflow: false,
-    categoryActions: false,
+  await page.$eval('html', (root): void => {
+    root.setAttribute('data-layout-structure-test', 'true');
   });
+
+  try {
+    const actual = await page.evaluate(
+      (): {
+        borders: boolean;
+        nested: boolean;
+        markers: boolean;
+        overflow: boolean;
+        categoryActions: boolean;
+      } => {
+        const lists = [
+          ...document.querySelectorAll<HTMLElement>('.divided-list'),
+        ];
+
+        function inspectBordersEntry(list: HTMLElement): boolean {
+          const style = getComputedStyle(list);
+
+          return (
+            parseFloat(style.borderTopWidth) === 1 &&
+            parseFloat(style.borderBottomWidth) === 1 &&
+            [
+              ...list.children,
+            ].every((child, index): boolean => {
+              const itemStyle = getComputedStyle(child);
+
+              return (
+                parseFloat(itemStyle.borderTopWidth) === Number(index > 0) &&
+                parseFloat(itemStyle.borderBottomWidth) === 0
+              );
+            })
+          );
+        }
+
+        const borders = lists.every(inspectBordersEntry);
+
+        const rows = [
+          ...document.querySelectorAll<HTMLAnchorElement>('.action-row'),
+        ];
+
+        return {
+          borders,
+          nested: Boolean(
+            document.querySelector<HTMLAnchorElement>(
+              'a a, .editorial-description a, .editorial-metadata a',
+            ),
+          ),
+          markers: rows.every((row): boolean => {
+            return (
+              row.querySelectorAll<HTMLElement>('.external-link-icon').length <=
+              1
+            );
+          }),
+          overflow: document.documentElement.scrollWidth > innerWidth,
+          categoryActions: Boolean(
+            document.querySelector<HTMLAnchorElement>('.category-summary a'),
+          ),
+        };
+      },
+    );
+
+    assert.deepEqual(actual, {
+      borders: true,
+      nested: false,
+      markers: true,
+      overflow: false,
+      categoryActions: false,
+    });
+  } finally {
+    await page.$eval('html', (root): void => {
+      root.removeAttribute('data-layout-structure-test');
+    });
+  }
 }
 
 async function inspectClicks(page: Page): Promise<void> {
@@ -287,33 +299,7 @@ async function inspectClicks(page: Page): Promise<void> {
       });
     });
 
-    const expected = await row.evaluate((element): string => {
-      if (!(element instanceof HTMLAnchorElement)) {
-        throw new Error('Expected HTMLAnchorElement: element');
-      }
-
-      return element.href;
-    });
-
-    const box = await row.boundingBox();
-
-    if (box === null) {
-      throw new Error('Missing required box');
-    }
-
-    await page.mouse.click(box.x + 2, box.y + box.height / 2);
-    await page.click(`${selector} .action-row-title`);
-    await page.click(`${selector} .external-link-icon`);
-    assert.deepEqual(
-      await page.evaluate((): string[] => {
-        return window.listingClicks;
-      }),
-      [
-        expected,
-        expected,
-        expected,
-      ],
-    );
+    await clickActionRow(page, row, selector);
     await row.focus();
     await page.keyboard.press('Enter');
     assert.equal(
@@ -347,6 +333,7 @@ async function inspectClicks(page: Page): Promise<void> {
 
 async function inspectTextZoom(page: Page): Promise<void> {
   await page.$eval('html', (root): void => {
+    root.setAttribute('data-layout-zoom-test', 'true');
     root.style.fontSize = '200%';
   });
 
@@ -363,6 +350,7 @@ async function inspectTextZoom(page: Page): Promise<void> {
   } finally {
     await page.$eval('html', (root): void => {
       root.style.removeProperty('font-size');
+      root.removeAttribute('data-layout-zoom-test');
     });
   }
 }
@@ -499,6 +487,10 @@ async function inspectRoute(inputValue: {
     });
     await page.evaluate((): Promise<FontFaceSet> => {
       return document.fonts.ready;
+    });
+    await page.addStyleTag({
+      content:
+        ':root:is([data-layout-zoom-test="true"], [data-layout-structure-test="true"])[data-interface="voxel"] .category-card { content-visibility: visible !important; }',
     });
 
     const session = await page.createCDPSession();
