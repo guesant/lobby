@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageRecord } from '../features/content/content.types.ts';
-  import NavigationLink from '#lib/components/NavigationLink.svelte';
+  import { resolve } from '$app/paths';
   import {
     currentPage,
     emptyAttribute,
@@ -20,14 +20,14 @@
 <ul class="navigation-links {placement}-navigation-links">
   {#each pages as entry (entry.id)}
     <li>
-      <NavigationLink
+      <a
         data-navigation-page={entry.id}
         data-now-shortcut={emptyAttribute(entry.id === 'now')}
-        href={entry.url}
+        href={resolve(entry.url.slice(1))}
         aria-current={currentPage(entry.id === currentID)}
       >
         {entry.title}
-      </NavigationLink>
+      </a>
     </li>
   {/each}
 </ul>
