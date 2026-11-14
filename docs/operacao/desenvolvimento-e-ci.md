@@ -50,6 +50,9 @@ docker compose -f .config/compose.yaml run --build --rm scorecard
 docker compose -f .config/compose.yaml run --build --rm renovate --platform=local --dry-run=extract
 ```
 
+Esse comando inspeciona apenas a extração local. O workflow agendado e o manual
+executam o Renovate em modo normal e podem criar ou atualizar PRs.
+
 O Scorecard local verifica o checkout. O workflow oficial separado publica
 o resultado para o badge. O Dependency Review compara as revisões de cada
 PR pelo Dependency Graph do GitHub.
