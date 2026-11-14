@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { PageRecord } from '../features/content/content.types.ts';
-  import { resolve } from '$app/paths';
   import {
     currentPage,
     emptyAttribute,
   } from '#lib/features/listings/presentation.model.ts';
+  import { resolve } from '$app/paths';
 
   const {
     pages,
@@ -19,11 +19,12 @@
 
 <ul class="navigation-links {placement}-navigation-links">
   {#each pages as entry (entry.id)}
+    {@const path = entry.url.slice(1)}
     <li>
       <a
         data-navigation-page={entry.id}
         data-now-shortcut={emptyAttribute(entry.id === 'now')}
-        href={resolve(entry.url.slice(1))}
+        href={resolve(path)}
         aria-current={currentPage(entry.id === currentID)}
       >
         {entry.title}

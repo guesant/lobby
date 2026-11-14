@@ -3,6 +3,7 @@ import { lighthouseThresholds } from './lighthouse-thresholds.ts';
 
 export function lighthouseFailures(result: LighthouseResult): string[] {
   const failures: string[] = [];
+
   const thresholds = lighthouseThresholds();
 
   for (const [

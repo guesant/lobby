@@ -1,47 +1,19 @@
 import { medianResult } from '../lighthouse-baseline/median-result.ts';
 import { assertLighthouse } from './assert-lighthouse.ts';
+import { conservativeLighthouseResult } from './conservative-lighthouse-result.ts';
 import type { LighthouseResult } from './lighthouse-audit.types.ts';
 import { lighthouseFailures } from './lighthouse-failures.ts';
-import { runLighthouse } from './run-lighthouse.ts';
+import { runLighthouseSample } from './run-lighthouse-sample.ts';
 
 export async function runConservativeLighthouse(
   url: string,
   output: string,
 ): Promise<LighthouseResult> {
-  const first = await runLighthouse(url, `${output}-run-1`);
+  const first = await runLighthouseSample(url, `${output}-run-1`, 1);
 
-  console.log({
-    run: 1,
-    ...first,
-  });
+  const second = await runLighthouseSample(url, `${output}-run-2`, 2);
 
-  const second = await runLighthouse(url, `${output}-run-2`);
-
-  console.log({
-    run: 2,
-    ...second,
-  });
-
-  const conservative: LighthouseResult = {
-    ...first,
-    scores: {},
-  };
-
-  for (const key of Object.keys(first.scores)) {
-    const firstScore = first.scores[key];
-    const secondScore = second.scores[key];
-
-    if (
-      firstScore === undefined ||
-      secondScore === undefined ||
-      first.path !== second.path ||
-      first.formFactor !== second.formFactor
-    ) {
-      throw new Error('Inconsistent Lighthouse measurements');
-    }
-
-    conservative.scores[key] = Math.min(firstScore, secondScore);
-  }
+  const conservative = conservativeLighthouseResult(first, second);
 
   if (!lighthouseFailures(conservative).length) {
     assertLighthouse(conservative);
@@ -49,12 +21,7 @@ export async function runConservativeLighthouse(
     return conservative;
   }
 
-  const third = await runLighthouse(url, `${output}-run-3`);
-
-  console.log({
-    run: 3,
-    ...third,
-  });
+  const third = await runLighthouseSample(url, `${output}-run-3`, 3);
 
   const results = [
     first,
