@@ -11,6 +11,7 @@ import type {
 } from './layout-helpers.types.ts';
 import { measureIconography } from './layout-iconography.ts';
 import type { LayoutContext } from './layout-pages.types.ts';
+import { waitForRenderFrame } from './layout-pages/wait-for-render-frame.ts';
 import assert from 'node:assert/strict';
 import type { ElementHandle, Page } from 'puppeteer-core';
 
@@ -203,6 +204,14 @@ export async function inspectHomeCategories(input: {
     });
 
     for (const anchor of await page.$$('.category-preview-link')) {
+      await anchor.evaluate((link): void => {
+        link.scrollIntoView({
+          block: 'center',
+        });
+      });
+      await page.evaluate(waitForRenderFrame);
+      await page.evaluate(waitForRenderFrame);
+
       const expected = await anchor.evaluate((link): string => {
         if (!(link instanceof HTMLAnchorElement)) {
           throw new Error('Expected HTMLAnchorElement: link');
