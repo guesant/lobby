@@ -2,8 +2,7 @@ import type { readConfiguration } from '../configuration.ts';
 import { assertLighthouse } from './assert-lighthouse.ts';
 import { auditPageURLs } from './audit-page-urls.ts';
 import type { LighthouseResult } from './lighthouse-audit.types.ts';
-import { runHomepageLighthouse } from './run-homepage-lighthouse.ts';
-import { runLighthouse } from './run-lighthouse.ts';
+import { runConservativeLighthouse } from './run-conservative-lighthouse.ts';
 import { resolve } from 'node:path';
 
 export async function runAuditPages(
@@ -23,13 +22,7 @@ export async function runAuditPages(
 
     const url = `http://127.0.0.1:4173${path}`;
 
-    let measure = runLighthouse;
-
-    if (path.indexOf('/', 1) === path.length - 1) {
-      measure = runHomepageLighthouse;
-    }
-
-    const result = await measure(url, output);
+    const result = await runConservativeLighthouse(url, output);
 
     results.push(result);
 

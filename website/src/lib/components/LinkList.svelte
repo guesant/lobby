@@ -9,6 +9,7 @@
     ui,
     thirdPartyLabel,
     destination,
+    detailed,
     preview = false,
     sectionID,
     headingLevel = 3,
@@ -17,6 +18,7 @@
     ui: Record<string, string>;
     thirdPartyLabel: string;
     destination: ListingDestination;
+    detailed: boolean;
     preview?: boolean;
     sectionID: string;
     headingLevel?: 2 | 3 | 4;
@@ -29,7 +31,13 @@
     <ul class:category-preview={preview} class="link-list divided-list">
       {#each items as item (item.id)}
         <li class="link-row">
-          <LinkCard {item} {thirdPartyLabel} {destination} {preview} />
+          <LinkCard
+            {item}
+            {thirdPartyLabel}
+            {destination}
+            {preview}
+            {detailed}
+          />
         </li>
       {/each}
     </ul>
