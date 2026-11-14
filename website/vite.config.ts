@@ -22,6 +22,7 @@ export default defineConfig({
       paths: {
         relative: false,
       },
+      inlineStyleThreshold: 2048,
       adapter: adapter({
         pages: directory,
         assets: directory,
