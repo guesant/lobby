@@ -221,7 +221,7 @@ async function inspectComponents(
       function shortcutsStayInsideHeader(): boolean {
         return (
           shortcuts.closest('.profile') !== null &&
-          shortcuts.children.length === 8 &&
+          shortcuts.children.length === 9 &&
           shortcutsBox.top >= navigation.getBoundingClientRect().bottom &&
           shortcutsBox.bottom <= profileBox.bottom &&
           shortcutsBox.left >= profileBox.left &&

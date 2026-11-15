@@ -158,11 +158,15 @@ export function measureContent(): Pick<
       const columns =
         getComputedStyle(grid).gridTemplateColumns.split(' ').length;
 
-      function expectedQuickContactColumns(): 4 | 8 {
+      function expectedQuickContactColumns(): 4 | 8 | 9 {
         const siteShell = window.lobbyAssertions.element(
           document,
           '.site-shell',
         );
+
+        if (siteShell.clientWidth >= 640) {
+          return 9;
+        }
 
         if (siteShell.clientWidth >= 576) {
           return 8;
@@ -172,7 +176,7 @@ export function measureContent(): Pick<
       }
 
       return (
-        buttons.length === 8 &&
+        buttons.length === 9 &&
         columns === expectedQuickContactColumns() &&
         buttons.every((button): boolean => {
           const rect = button.getBoundingClientRect();

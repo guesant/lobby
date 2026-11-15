@@ -36,11 +36,9 @@
   border: var(--space-0);
 }
 
-:root[data-interface='voxel'][data-link-view='compact']
-  .category-card
-  .link-row {
-  content-visibility: auto;
-  contain-intrinsic-block-size: auto var(--listing-row-height);
+.link-card > .action-row,
+.editorial-entry-card-link .action-row {
+  color: inherit;
 }
 
 :root[data-interface] .action-row {
@@ -159,6 +157,21 @@
   gap: var(--space-0);
 }
 
+:root[data-interface] .link-card:is(:hover, :focus-visible) {
+  background: var(--listing-hover-background);
+  color: var(--listing-hover-text);
+}
+
+:root[data-interface] .link-card:focus-visible {
+  outline: var(--listing-focus-width) solid var(--listing-focus);
+  outline-offset: calc(-1 * var(--listing-focus-width));
+}
+
+:root[data-interface] .link-card:active {
+  background: var(--listing-active-background);
+  color: var(--listing-active-text);
+}
+
 :root[data-interface='voxel'][data-link-view='detailed'] .link-card {
   --listing-icon-size: var(--icon-frame-size);
 }
@@ -168,6 +181,7 @@
   > .action-row {
   font-family: var(--font-pixel);
   font-size: var(--font-size-title);
+  padding: var(--space-0);
 }
 
 :root[data-interface='voxel'][data-link-view='detailed']
@@ -192,6 +206,33 @@
   min-height: var(--listing-row-height);
   padding: var(--listing-padding-block) var(--listing-padding-inline);
   font-size: var(--font-size-small);
+}
+
+.editorial-entry-card-link {
+  display: grid;
+  min-width: var(--space-0);
+  color: inherit;
+  text-decoration: none;
+}
+
+.editorial-entry-card-link .editorial-entry {
+  padding-block: var(--listing-padding-block);
+  padding-inline: var(--space-0);
+}
+
+.editorial-entry-card-link:is(:hover, :focus-visible) {
+  background: var(--listing-hover-background);
+  color: var(--listing-hover-text);
+}
+
+.editorial-entry-card-link:focus-visible {
+  outline: var(--listing-focus-width) solid var(--listing-focus);
+  outline-offset: calc(-1 * var(--listing-focus-width));
+}
+
+.editorial-entry-card-link:active {
+  background: var(--listing-active-background);
+  color: var(--listing-active-text);
 }
 
 .editorial-entry

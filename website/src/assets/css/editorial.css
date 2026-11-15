@@ -56,7 +56,8 @@
     flex: 1;
     min-width: var(--space-0);
     font-family: var(--font-body);
-    font-size: var(--font-size-body);
+    font-size: var(--font-size-category);
+    font-weight: 700;
     line-height: var(--line-height-tight);
   }
 
@@ -66,7 +67,8 @@
   }
 
   .editorial-details {
-    justify-self: start;
+    justify-self: stretch;
+    width: var(--size-full);
     font-size: var(--font-size-small);
   }
 
@@ -79,6 +81,8 @@
   .editorial-description {
     color: var(--color-text-muted);
     font-size: var(--font-size-small);
+    text-align: justify;
+    hyphens: auto;
   }
 
   .editorial-metadata,

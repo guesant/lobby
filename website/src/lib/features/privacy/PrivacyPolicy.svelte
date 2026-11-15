@@ -78,6 +78,8 @@
     font-size: var(--font-size-small);
     line-height: var(--line-height-body);
     color: var(--color-text-muted);
+    text-align: justify;
+    hyphens: auto;
   }
 
   :global(:root[data-interface='voxel']) :global(.privacy-policy-contact) {
