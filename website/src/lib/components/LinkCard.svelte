@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { DisplayLinkRecord } from '../features/content/content.types.ts';
-  import ActionRow from '#lib/components/ActionRow.svelte';
+  import ActionRowContent from '#lib/components/ActionRowContent.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import IconButton from '#lib/components/IconButton.svelte';
   import { linkActionClass } from '#lib/components/link-action-class.model.ts';
+  import NavigationLink from '#lib/components/NavigationLink.svelte';
   import { previewLinkID } from '#lib/components/preview-link-id.model.ts';
   import type { ListingDestination } from '#lib/features/listings/listing.types.ts';
 
@@ -36,19 +37,24 @@
   const presentation = $derived.by(createPresentation);
 </script>
 
-<article class="link-card">
+<NavigationLink
+  class="link-card"
+  href={presentation.target.href}
+  target={presentation.target.target}
+  rel={presentation.target.rel}
+  data-link-id={item.id}
+  data-preview-id={presentation.previewID}
+>
   <span class="frame-rivet frame-rivet-top-start" aria-hidden="true"></span>
   <span class="frame-rivet frame-rivet-top-end" aria-hidden="true"></span>
   <span class="frame-rivet frame-rivet-bottom-start" aria-hidden="true"></span>
   <span class="frame-rivet frame-rivet-bottom-end" aria-hidden="true"></span>
-  <ActionRow
+  <ActionRowContent
     title={item.title}
     action={presentation.target}
     {thirdPartyLabel}
     icon={item.icon}
     className={presentation.actionClass}
-    linkID={item.id}
-    previewID={presentation.previewID}
   />
   {#if detailed}
     <div class="link-card-details">
@@ -110,4 +116,4 @@
       {/if}
     </div>
   {/if}
-</article>
+</NavigationLink>

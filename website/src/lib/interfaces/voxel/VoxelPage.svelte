@@ -42,6 +42,10 @@
     birthDate: data.config.profile.birth_date,
   });
 
+  const quickHomeLabel = $derived(
+    data.config.navigation.home.labels[data.locale],
+  );
+
   const createPresentation = (): ReturnType<typeof pagePresentation> => {
     const origin = navigationOrigin();
 
@@ -128,6 +132,17 @@
           role="group"
           aria-labelledby="profile-quick-access-title"
         >
+          <NavigationLink
+            class="quick-contact-link quick-contact-home"
+            href={`/${data.locale}/`}
+            title={quickHomeLabel}
+            aria-label={quickHomeLabel}
+          >
+            <span class="quick-contact-icon">
+              <Icon name={data.config.navigation.home.icon} optical />
+            </span>
+            <span class="quick-contact-label">{quickHomeLabel}</span>
+          </NavigationLink>
           {#each data.quickLinks as item (item.id)}
             <NavigationLink
               class="quick-contact-link"

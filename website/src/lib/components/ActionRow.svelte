@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { LinkDestination } from '../features/content/content.types.ts';
-  import Icon from '#lib/components/Icon.svelte';
+  import ActionRowContent from '#lib/components/ActionRowContent.svelte';
   import NavigationLink from '#lib/components/NavigationLink.svelte';
 
   const {
@@ -34,22 +34,5 @@
   data-link-id={linkID}
   data-preview-id={previewID}
 >
-  {#if icon}
-    <span class="action-row-icon link-icon" aria-hidden="true">
-      <Icon name={icon} optical />
-    </span>
-  {/if}
-  <span class="action-row-title link-title">{title}</span>
-  <span class="action-row-indicators">
-    {#if action.thirdParty}
-      <span class="link-third-party-badge">
-        {thirdPartyLabel}
-      </span>
-    {/if}
-    {#if action.external}
-      <span class="external-link-icon" aria-hidden="true">
-        <Icon name="external-link" />
-      </span>
-    {/if}
-  </span>
+  <ActionRowContent {title} {action} {thirdPartyLabel} {icon} wrapped={false} />
 </NavigationLink>

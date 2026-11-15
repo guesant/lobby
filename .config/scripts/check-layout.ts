@@ -73,9 +73,46 @@ const widths = [
   1440,
 ];
 
+const responsiveBreakpointWidths = [
+  576,
+  577,
+  608,
+  639,
+  640,
+  641,
+  672,
+  680,
+];
+
+const horizontalOverflowWidths: number[] = [];
+
+for (let width = 577; width <= 680; width += 1) {
+  horizontalOverflowWidths.push(width);
+}
+
 function viewportsForRoute(route: LayoutRoute): number[] {
+  if (
+    route.language === primaryLanguageID &&
+    (route.id === 'home' || route.id === 'career')
+  ) {
+    return [
+      ...widths,
+      ...horizontalOverflowWidths,
+    ];
+  }
+
   if (route.language === primaryLanguageID || route.id === 'home') {
-    return widths;
+    return [
+      ...widths,
+      ...responsiveBreakpointWidths,
+    ];
+  }
+
+  if (route.id === 'career' || route.id === 'privacy') {
+    return [
+      1440,
+      ...responsiveBreakpointWidths,
+    ];
   }
 
   return [

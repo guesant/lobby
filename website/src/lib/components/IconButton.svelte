@@ -3,7 +3,7 @@
 
   const {
     name,
-    optical = false,
+    optical = true,
   }: {
     name: string;
     optical?: boolean;

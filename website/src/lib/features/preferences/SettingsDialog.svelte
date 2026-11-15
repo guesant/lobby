@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageLoadData } from '../content/content.types.ts';
+  import { closeSettingsDialog } from './close-settings-dialog.ts';
   import { openDialog } from './open-dialog.controller.ts';
   import { createPreferenceController } from './preferences.controller.ts';
   import { settingsPresentation } from './settings.viewmodel.ts';
@@ -49,6 +50,8 @@
   }>({
     dialog: undefined,
   });
+
+  const closeBeforeNavigation = closeSettingsDialog.bind(null, dialogContext);
 
   const syncDialog = syncSettingsDialog.bind(null, dialogContext, controls);
 
@@ -222,7 +225,11 @@
         {localized.ui['analytics_consent_manage']}
       </button>
     {/if}
-    <NavigationLink class="settings-privacy-link" href={data.privacyURL}>
+    <NavigationLink
+      class="settings-privacy-link"
+      href={data.privacyURL}
+      onclick={closeBeforeNavigation}
+    >
       {localized.ui['privacy_policy']}
     </NavigationLink>
   </div>

@@ -1,6 +1,7 @@
 import type { ConfiguredPage } from '../../website/src/lib/features/navigation/routes.types.ts';
 import { createBrowserAudit } from './browser-presentation.ts';
 import { pagesFor } from './configuration.ts';
+import { quickHomeShortcutIsValid } from './quick-home-shortcut.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import type { Browser, Page } from 'puppeteer-core';
@@ -140,12 +141,19 @@ async function inspectGeometry(page: Page): Promise<void> {
     },
   );
 
-  assert.deepEqual(actual, {
-    insideHeader: true,
-    overflow: false,
-    linksFit: true,
-    textOnly: true,
-  });
+  assert.deepEqual(
+    {
+      ...actual,
+      homeShortcutValid: await page.evaluate(quickHomeShortcutIsValid),
+    },
+    {
+      insideHeader: true,
+      overflow: false,
+      linksFit: true,
+      textOnly: true,
+      homeShortcutValid: true,
+    },
+  );
 }
 
 async function inspectKeyboardNavigation(
