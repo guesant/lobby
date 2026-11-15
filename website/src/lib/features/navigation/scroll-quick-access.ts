@@ -7,7 +7,7 @@ export function scrollQuickAccess(navigation: AfterNavigate): void {
 
   const {
     from,
-    to,
+    to
   } = navigation;
 
   if (!from || !to || to.url.hash || from.url.pathname === to.url.pathname) {
